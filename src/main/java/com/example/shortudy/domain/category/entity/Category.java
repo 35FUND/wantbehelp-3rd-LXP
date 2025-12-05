@@ -1,5 +1,6 @@
 package com.example.shortudy.domain.category.entity;
 
+import com.example.shortudy.domain.category.dto.request.CategoryRequest;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -8,7 +9,7 @@ import java.time.LocalDateTime;
 public class Category {
 
     @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(unique = true, nullable = false)
@@ -16,8 +17,6 @@ public class Category {
 
     @Column
     private Long parentId = null;
-
-    private int sortOrder;
 
     private LocalDateTime createdAt;
 
@@ -36,5 +35,6 @@ public class Category {
     public String getName() {
         return name;
     }
+
 }
 
