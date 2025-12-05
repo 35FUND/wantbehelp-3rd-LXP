@@ -1,5 +1,13 @@
 package com.example.shortudy.domain.shorts.dto;
 
-public class ShortsUploadRequest {
+public record ShortsUploadRequest(
+    Long userId,
+    Long categoryId,
+    String title,
+    String description,
+    String videoUrl,
+    String thumbnailUrl,
+    Integer durationSec
+){
 }
 
