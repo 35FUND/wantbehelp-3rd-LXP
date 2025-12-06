@@ -97,6 +97,21 @@ public class Shorts extends BaseTimeEntity {
     public ShortsStatus getShortsStatus() {
         return shortsStatus;
     }
+
+    public void updateShorts(String title, String description, String thumbnailUrl, Category category) {
+        if (title != null && !title.isBlank()) {
+            this.title = title;
+        }
+        if (description != null) {
+            this.description = description;
+        }
+        if (thumbnailUrl != null && !thumbnailUrl.isBlank()) {
+            this.thumbnailUrl = thumbnailUrl;
+        }
+        if (category != null) {
+            this.category = category;
+        }
+    }
 }
 
 
