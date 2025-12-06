@@ -7,7 +7,8 @@ import com.example.shortudy.domain.category.repository.CategoryRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestBody;
+
+import java.util.List;
 
 @Service
 public class CategoryService {
@@ -19,7 +20,7 @@ public class CategoryService {
     }
 
     @Transactional
-    public CategoryResponse create(CategoryRequest request) {
+    public CategoryResponse createCategory(CategoryRequest request) {
 
         Category created = categoryRepository.save(
                 new Category(
@@ -31,12 +32,30 @@ public class CategoryService {
     }
 
     @Transactional
-    public CategoryResponse read(Long categoryId) {
+    public CategoryResponse readCategory(Long id) {
 
-        Category found = categoryRepository.findById(categoryId).orElseThrow(()->
+        Category found = categoryRepository.findById(id).orElseThrow(() ->
                 new EntityNotFoundException("Not Found"));
 
         return CategoryResponse.of(found);
+    }
+
+    @Transactional
+    public List<CategoryResponse> readAllCategories() {
+
+        return categoryRepository.findAll()
+                .stream()
+                .map(CategoryResponse::of)
+                .toList();
+    }
+
+    @Transactional
+    public void delete(Long id) {
+
+        Category toErase = categoryRepository.findById(id)
+                .orElseThrow(() -> new  EntityNotFoundException("Not Found"));
+
+        categoryRepository.deleteById(toErase.getId());
     }
 }
 
