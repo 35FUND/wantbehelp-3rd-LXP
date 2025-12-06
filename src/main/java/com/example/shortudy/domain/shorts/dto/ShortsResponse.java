@@ -24,7 +24,7 @@ public record ShortsResponse (
                 shorts.getUser().getNickname(),
                 shorts.getCategory().getName(),
                 shorts.getTitle(),
-                shorts.getTitle(),
+                shorts.getDescription(),
                 shorts.getVideoUrl(),
                 shorts.getThumbnailUrl(),
                 shorts.getShortsStatus(),
