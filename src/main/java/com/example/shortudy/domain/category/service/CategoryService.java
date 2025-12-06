@@ -20,7 +20,7 @@ public class CategoryService {
     }
 
     @Transactional
-    public CategoryResponse create(CategoryRequest request) {
+    public CategoryResponse createCategory(CategoryRequest request) {
 
         Category created = categoryRepository.save(
                 new Category(
@@ -32,7 +32,7 @@ public class CategoryService {
     }
 
     @Transactional
-    public CategoryResponse read(Long id) {
+    public CategoryResponse readCategory(Long id) {
 
         Category found = categoryRepository.findById(id).orElseThrow(() ->
                 new EntityNotFoundException("Not Found"));
@@ -41,7 +41,7 @@ public class CategoryService {
     }
 
     @Transactional
-    public List<CategoryResponse> readAll() {
+    public List<CategoryResponse> readAllCategories() {
 
         return categoryRepository.findAll()
                 .stream()

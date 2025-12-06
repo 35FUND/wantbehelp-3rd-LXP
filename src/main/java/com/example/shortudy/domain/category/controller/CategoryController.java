@@ -20,24 +20,24 @@ public class CategoryController {
     }
 
     @PostMapping
-    public ResponseEntity<CategoryResponse> createCategory(@RequestBody CategoryRequest request) {
+    public ResponseEntity<CategoryResponse> create(@RequestBody CategoryRequest request) {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(categoryService.create(request));
+                .body(categoryService.createCategory(request));
     }
 
     @GetMapping
-    public ResponseEntity<List<CategoryResponse>> readAll() {
+    public ResponseEntity<List<CategoryResponse>> readAllCategories() {
 
         return ResponseEntity
-                .ok(categoryService.readAll());
+                .ok(categoryService.readAllCategories());
     }
 
     @GetMapping("/{categoryId}")
-    public ResponseEntity<CategoryResponse> read(@PathVariable Long categoryId) {
+    public ResponseEntity<CategoryResponse> readCategory(@PathVariable Long categoryId) {
 
-        return ResponseEntity.ok(categoryService.read(categoryId));
+        return ResponseEntity.ok(categoryService.readCategory(categoryId));
     }
 
     @DeleteMapping("{categoryId}")
