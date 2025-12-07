@@ -1,0 +1,17 @@
+package com.example.shorts.global.entity;
+
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
+
+@MappedSuperclass
+public abstract class BaseEntity extends BaseTimeEntity { // 시간 상속 받음
+    @Id // @Id 어노테이션 추가
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    public Long getId() {
+        return id;
+    }
+}
