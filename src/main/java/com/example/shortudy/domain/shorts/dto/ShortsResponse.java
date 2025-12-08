@@ -13,6 +13,7 @@ public record ShortsResponse (
        String description,
        String videoUrl,
        String thumbnailUrl,
+       Integer durationSec,
        ShortsStatus status,
        LocalDateTime createdAt
 
@@ -24,9 +25,10 @@ public record ShortsResponse (
                 shorts.getUser().getNickname(),
                 shorts.getCategory().getName(),
                 shorts.getTitle(),
-                shorts.getTitle(),
+                shorts.getDescription(),
                 shorts.getVideoUrl(),
                 shorts.getThumbnailUrl(),
+                shorts.getDurationSec(),
                 shorts.getShortsStatus(),
                 shorts.getCreatedAt()
 
