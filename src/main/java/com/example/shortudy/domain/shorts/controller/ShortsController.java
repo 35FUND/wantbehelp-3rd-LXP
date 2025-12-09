@@ -7,8 +7,6 @@ import com.example.shortudy.domain.shorts.service.ShortsService;
 import com.example.shortudy.global.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -17,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Tag(name = "Shorts", description = "숏폼 영상 API")
 @RestController
@@ -42,16 +42,16 @@ public class ShortsController {
         return ApiResponse.success(response);
     }
 
-    @Operation(summary = "숏폼 상세 조회", description = "특정 숏폼의 상세 정보를 조회합니다.")
+    @Operation(summary = "숏폼 상세 조회 (스크롤링)", description = "특정 숏폼을 포함한 추천 영상들을 배열로 반환합니다. (스크롤링용)")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "숏폼을 찾을 수 없음")
     })
     @GetMapping("/{shortId}")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<ShortsResponse> getShortsDetails(
+    public ApiResponse<List<ShortsResponse>> getShortsDetails(
             @Parameter(description = "숏폼 ID", example = "1") @PathVariable Long shortId) {
-        ShortsResponse response = shortsService.getShortsDetails(shortId);
+        List<ShortsResponse> response = shortsService.getShortsDetailsWithRecommended(shortId);
         return ApiResponse.success(response);
     }
 

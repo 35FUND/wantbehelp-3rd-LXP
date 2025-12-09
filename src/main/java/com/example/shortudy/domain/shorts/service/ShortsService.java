@@ -16,8 +16,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -78,6 +78,33 @@ public class ShortsService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 숏츠입니다."));
 
         return ShortsResponse.from(shorts);
+    }
+
+    /**
+     * 숏폼 상세 조회 + 추천 영상 (스크롤링용)
+     * 요청한 영상을 첫 번째로, 나머지 추천 영상들을 배열로 반환
+     */
+    @Transactional(readOnly = true)
+    public List<ShortsResponse> getShortsDetailsWithRecommended(Long shortsId) {
+        // 요청한 영상 조회
+        Shorts shorts = shortsRepository.findWithDetailsById(shortsId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 숏츠입니다."));
+
+        List<ShortsResponse> result = new ArrayList<>();
+        result.add(ShortsResponse.from(shorts));
+
+        // 추천 영상 조회 (같은 카테고리, 현재 영상 제외, 최대 10개)
+        List<Shorts> recommendedShorts = shortsRepository.findByCategoryIdAndIdNotOrderByCreatedAtDesc(
+                shorts.getCategory().getId(),
+                shortsId
+        );
+
+        // 추천 영상을 배열에 추가
+        recommendedShorts.stream()
+                .limit(10)
+                .forEach(s -> result.add(ShortsResponse.from(s)));
+
+        return result;
     }
 
     @Transactional(readOnly = true)
