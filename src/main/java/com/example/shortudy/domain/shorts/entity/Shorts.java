@@ -6,6 +6,7 @@ import com.example.shortudy.domain.tagging.Tagging;
 import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.global.common.BaseTimeEntity;
 import jakarta.persistence.*;
+import org.springframework.util.Assert;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -111,7 +112,7 @@ public class Shorts extends BaseTimeEntity {
         return shortsStatus;
     }
 
-    public void updateShorts(String title, String description, String thumbnailUrl, Category category) {
+    public void updateShorts(String title, String description, String thumbnailUrl) {
         if (title != null && !title.isBlank()) {
             this.title = title;
         }
@@ -121,9 +122,11 @@ public class Shorts extends BaseTimeEntity {
         if (thumbnailUrl != null && !thumbnailUrl.isBlank()) {
             this.thumbnailUrl = thumbnailUrl;
         }
-        if (category != null) {
-            this.category = category;
-        }
+    }
+    public void updateCategory(Category category) {
+
+        Assert.notNull(category, "변경할 카테고리 정보는 필수입니다.");
+        this.category = category;
     }
 }
 
