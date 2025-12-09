@@ -22,6 +22,9 @@ public class User extends BaseEntity {
     @Column(nullable = false, unique = true, length = 100)
     private String email;
 
+    @Column
+    private String nickname;
+
     @Column(nullable = false, length = 100)
     private String password;
 
@@ -45,6 +48,10 @@ public class User extends BaseEntity {
 
     public static User createUser(String email, String password, String name) {
         return new User(email, password, name);
+    }
+
+    public String getNickname() {
+        return nickname;
     }
 
     public String getEmail() {
