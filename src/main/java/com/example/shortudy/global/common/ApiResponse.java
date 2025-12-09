@@ -1,35 +1,58 @@
 package com.example.shortudy.global.common;
 
+import com.example.shortudy.global.error.ErrorResponse;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL) // null 필드는 JOST으로 변환 시 포함하지 않음
 public class ApiResponse<T> {
 
-    private String message; // 응답 메시지 (예: "Success", "Fail")
-    private T data;         // 실제 데이터 (Generic으로 유연하게 받음)
+    private final boolean success;
+    private final T data;
+    private final ErrorResponse errors;
 
-    // 생성자 (private으로 막고 정적 팩토리 메서드 사용 권장)
-    public ApiResponse(String message, T data) {
-        this.message = message;
+    // 성공 시 생성자
+
+    public ApiResponse(boolean success, T data) {
+        this.success = success;
         this.data = data;
+        this.errors = null;
+    }
+    // 실패 시 생성 자
+
+    public ApiResponse(boolean success, ErrorResponse errors) {
+        this.success = success;
+        this.data = null;
+        this.errors = errors;
     }
 
-    // == 정적 팩토리 메서드 (생성 편의성) ==
-
-    // 성공 시 데이터와 함께 반환
-    public static <T> ApiResponse<T> success(T data) {
-        return new ApiResponse<>("Success", data);
-    }
-
-    // 성공이지만 반환할 데이터가 없을 때 (예: 삭제 성공)
-    public static <T> ApiResponse<T> success() {
-        return new ApiResponse<>("Success", null);
-    }
-
-    // == Getter (JSON 변환을 위해 필수) ==
-    public String getMessage() {
-        return message;
+    public boolean isSuccess() {
+        return success;
     }
 
     public T getData() {
         return data;
     }
-}
 
+    public ErrorResponse getErrors() {
+        return errors;
+    }
+
+    // --------------------------------
+
+    // 성공 응답 생성 static 메서드
+    public static <T> ApiResponse<T> success(T data) {
+        return new ApiResponse<>(true, data);
+    }
+
+    // 데이터 없는 성공 응답
+    public static <T> ApiResponse<T> success() {
+
+        return new ApiResponse<>(true, null);
+    }
+
+    // 실패 응답 생성 static 메서드
+    public static <T> ApiResponse<T> failure(ErrorResponse errors) {
+        return new ApiResponse<>(false, errors);
+        // == Getter (JSON 변환을 위해 필수) ==
+    }
+}
