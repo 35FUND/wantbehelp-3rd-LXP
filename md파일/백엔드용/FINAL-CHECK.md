@@ -31,8 +31,20 @@
 | User.roles @JsonIgnore | ✅ |
 | email 본인만 조회 가능 | ✅ |
 | JWT 인증 | ✅ |
+| 권한별 접근 제어 | ✅ |
 
-### 3. Controller Swagger 적용
+### 3. 권한 체크
+| 대상 | 요청 | 필요 권한 | 상태 |
+|------|------|----------|------|
+| Categories | POST (생성) | ROLE_ADMIN | ✅ |
+| Categories | PUT (수정) | ROLE_ADMIN | ✅ |
+| Categories | DELETE (삭제) | ROLE_ADMIN | ✅ |
+| Shorts | POST (업로드) | User 인증 | ✅ |
+| Shorts | PATCH (수정) | User 인증 | ✅ |
+| Shorts | DELETE (삭제) | User 인증 | ✅ |
+| Files | 업로드 | User 인증 | ✅ |
+
+### 4. Controller Swagger 적용
 | Controller | Tag 이름 | 상태 |
 |------------|---------|------|
 | ShortsController | Shorts | ✅ |

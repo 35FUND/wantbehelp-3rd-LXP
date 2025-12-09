@@ -167,13 +167,13 @@ Authorization: Bearer {accessToken}
 
 ### 📁 Categories (카테고리)
 
-| Method | Endpoint | 설명 | 인증 |
-|--------|----------|------|------|
-| POST | `/api/v1/categories` | 카테고리 생성 | ✅ (Admin) |
-| GET | `/api/v1/categories` | 전체 카테고리 조회 | ❌ |
-| GET | `/api/v1/categories/{categoryId}` | 카테고리 조회 | ❌ |
-| PUT | `/api/v1/categories/{categoryId}` | 카테고리 수정 | ✅ (Admin) |
-| DELETE | `/api/v1/categories/{categoryId}` | 카테고리 삭제 | ✅ (Admin) |
+| Method | Endpoint | 설명 | 인증 | 권한 |
+|--------|----------|------|------|------|
+| POST | `/api/v1/categories` | 카테고리 생성 | ✅ | ADMIN |
+| GET | `/api/v1/categories` | 전체 카테고리 조회 | ❌ | - |
+| GET | `/api/v1/categories/{categoryId}` | 카테고리 조회 | ❌ | - |
+| PUT | `/api/v1/categories/{categoryId}` | 카테고리 수정 | ✅ | ADMIN |
+| DELETE | `/api/v1/categories/{categoryId}` | 카테고리 삭제 | ✅ | ADMIN |
 
 #### POST /api/v1/categories
 **Request Body:**
