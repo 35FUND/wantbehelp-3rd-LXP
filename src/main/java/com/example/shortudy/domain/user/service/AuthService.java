@@ -7,4 +7,6 @@ import com.example.shortudy.domain.user.dto.response.UserLoginResponse;
 public interface AuthService {
     void signup(UserSignUpRequest request);
     UserLoginResponse login(UserLoginRequest request);
+
+    void logout(String accessToken);
 }
