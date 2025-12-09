@@ -97,7 +97,7 @@ gradlew.bat bootRun
 
 ## 📄 API 문서
 
-자세한 API 명세는 [API-DOCS.md](./API-DOCS.md)를 참조하세요.
+자세한 API 명세는 [API-DOCS.md](API-DOCS.md)를 참조하세요.
 
 ## 🌐 웹 페이지
 
