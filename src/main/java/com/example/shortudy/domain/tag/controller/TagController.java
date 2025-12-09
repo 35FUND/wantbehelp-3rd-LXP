@@ -2,8 +2,6 @@ package com.example.shortudy.domain.tag.controller;
 
 import com.example.shortudy.domain.tag.dto.request.TagRequest;
 import com.example.shortudy.domain.tag.dto.response.TagResponse;
-import com.example.shortudy.domain.tag.entity.Tag;
-import com.example.shortudy.domain.tag.repository.TagRepository;
 import com.example.shortudy.domain.tag.service.TagService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,5 +19,33 @@ public class TagController {
         this.tagService = tagService;
     }
 
+    @PostMapping
+    public ResponseEntity<TagResponse> createTag(@RequestBody TagRequest request) {
+        TagResponse response = tagService.createTag(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
 
+    @GetMapping
+    public ResponseEntity<List<TagResponse>> getAllTags() {
+        List<TagResponse> response = tagService.getAllTags();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{tagId}")
+    public ResponseEntity<TagResponse> getTag(@PathVariable Long tagId) {
+        TagResponse response = tagService.getTag(tagId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{tagId}")
+    public ResponseEntity<TagResponse> updateTag(@PathVariable Long tagId, @RequestBody TagRequest request) {
+        TagResponse response = tagService.updateTag(tagId, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{tagId}")
+    public ResponseEntity<Void> deleteTag(@PathVariable Long tagId) {
+        tagService.deleteTag(tagId);
+        return ResponseEntity.noContent().build();
+    }
 }

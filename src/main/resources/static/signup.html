@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 - Shortudy</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+            background: #0f0f0f;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+        .signup-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+            background: #1a1a1a;
+            border-radius: 16px;
+        }
+        .logo {
+            text-align: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: #ff4757;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 32px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #aaa;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #ff4757;
+        }
+        .form-group .hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+        .form-group.error input {
+            border-color: #ff4757;
+        }
+        .form-group.error .hint {
+            color: #ff4757;
+        }
+        .form-group.success input {
+            border-color: #2ed573;
+        }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: #ff4757;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: #ff6b7a;
+        }
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .links {
+            margin-top: 24px;
+            text-align: center;
+        }
+        .links a {
+            color: #ff4757;
+            text-decoration: none;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+        .error-message {
+            background: #ff4757;
+            color: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .success-message {
+            background: #2ed573;
+            color: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .back-link {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 24px;
+        }
+        .terms {
+            margin: 20px 0;
+            font-size: 13px;
+            color: #888;
+        }
+        .terms label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .terms input {
+            width: 18px;
+            height: 18px;
+        }
+        .terms a {
+            color: #ff4757;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">←</a>
+
+    <div class="signup-container">
+        <div class="logo">📚 Shortudy</div>
+        <p class="subtitle">새로운 학습 여정을 시작하세요</p>
+
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+
+        <form id="signupForm">
+            <div class="form-group" id="emailGroup">
+                <label>이메일</label>
+                <input type="email" id="email" placeholder="example@email.com" required>
+                <p class="hint">로그인에 사용할 이메일 주소</p>
+            </div>
+
+            <div class="form-group" id="nameGroup">
+                <label>이름</label>
+                <input type="text" id="name" placeholder="홍길동" required>
+            </div>
+
+            <div class="form-group" id="passwordGroup">
+                <label>비밀번호</label>
+                <input type="password" id="password" placeholder="8자 이상 입력하세요" required minlength="8">
+                <p class="hint">최소 8자 이상</p>
+            </div>
+
+            <div class="form-group" id="confirmPasswordGroup">
+                <label>비밀번호 확인</label>
+                <input type="password" id="confirmPassword" placeholder="비밀번호를 다시 입력하세요" required>
+            </div>
+
+            <div class="terms">
+                <label>
+                    <input type="checkbox" id="agreeTerms" required>
+                    <span><a href="#">이용약관</a> 및 <a href="#">개인정보처리방침</a>에 동의합니다</span>
+                </label>
+            </div>
+
+            <button type="submit" class="btn" id="signupBtn">회원가입</button>
+        </form>
+
+        <div class="links">
+            <p>이미 계정이 있으신가요? <a href="login.html">로그인</a></p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api/v1';
+
+        // 비밀번호 확인 체크
+        document.getElementById('confirmPassword').addEventListener('input', function() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = this.value;
+            const group = document.getElementById('confirmPasswordGroup');
+
+            if (confirmPassword && password !== confirmPassword) {
+                group.className = 'form-group error';
+                group.querySelector('.hint')?.remove();
+                const hint = document.createElement('p');
+                hint.className = 'hint';
+                hint.textContent = '비밀번호가 일치하지 않습니다';
+                group.appendChild(hint);
+            } else if (confirmPassword) {
+                group.className = 'form-group success';
+                group.querySelector('.hint')?.remove();
+            } else {
+                group.className = 'form-group';
+                group.querySelector('.hint')?.remove();
+            }
+        });
+
+        // 폼 제출
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const btn = document.getElementById('signupBtn');
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password !== confirmPassword) {
+                errorDiv.textContent = '비밀번호가 일치하지 않습니다.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '가입 중...';
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+
+            try {
+                const res = await fetch(`${API_BASE}/auth/signup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById('email').value,
+                        name: document.getElementById('name').value,
+                        password: password
+                    })
+                });
+
+                if (res.ok) {
+                    successDiv.textContent = '회원가입이 완료되었습니다! 로그인 페이지로 이동합니다.';
+                    successDiv.style.display = 'block';
+                    setTimeout(() => {
+                        location.href = 'login.html';
+                    }, 2000);
+                } else {
+                    const data = await res.json();
+                    throw new Error(data.message || '회원가입에 실패했습니다.');
+                }
+            } catch (err) {
+                errorDiv.textContent = err.message;
+                errorDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '회원가입';
+            }
+        });
+    </script>
+</body>
+</html>
+

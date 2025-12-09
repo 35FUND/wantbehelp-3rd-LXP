@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 영상 - Shortudy</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+            background: #0f0f0f;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 1000;
+            border-bottom: 1px solid #333;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .back-btn {
+            color: #fff;
+            text-decoration: none;
+            font-size: 24px;
+        }
+
+        .header h1 {
+            font-size: 18px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #ff4757;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #ff6b7a;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 80px auto 40px;
+            padding: 0 24px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 16px;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: #333;
+            color: #fff;
+        }
+
+        .tab:hover {
+            color: #fff;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #888;
+        }
+
+        .empty-state .icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h2 {
+            font-size: 20px;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .empty-state p {
+            margin-bottom: 24px;
+        }
+
+        /* 비디오 리스트 */
+        .video-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .video-item {
+            display: flex;
+            gap: 16px;
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 16px;
+            transition: background 0.2s;
+        }
+
+        .video-item:hover {
+            background: #222;
+        }
+
+        .video-thumbnail {
+            width: 120px;
+            aspect-ratio: 9/16;
+            background: #333;
+            border-radius: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .video-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .video-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+
+        .video-title:hover {
+            color: #ff4757;
+        }
+
+        .video-meta {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        .video-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: #888;
+        }
+
+        .video-status {
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .status-badge.published {
+            background: rgba(46, 213, 115, 0.2);
+            color: #2ed573;
+        }
+
+        .status-badge.draft {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
+        .status-badge.deleted {
+            background: rgba(255, 71, 87, 0.2);
+            color: #ff4757;
+        }
+
+        .video-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            background: #333;
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #444;
+        }
+
+        .action-btn.danger {
+            color: #ff4757;
+        }
+
+        .action-btn.danger:hover {
+            background: rgba(255, 71, 87, 0.2);
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .video-item {
+                flex-direction: column;
+            }
+            .video-thumbnail {
+                width: 100%;
+                max-width: 200px;
+            }
+            .video-actions {
+                flex-direction: row;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <a href="mypage.html" class="back-btn">←</a>
+            <h1>내 영상</h1>
+        </div>
+        <a href="upload.html" class="btn btn-primary">+ 새 영상 업로드</a>
+    </header>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="filterVideos('all')">전체</button>
+            <button class="tab" onclick="filterVideos('published')">공개</button>
+            <button class="tab" onclick="filterVideos('draft')">비공개</button>
+        </div>
+
+        <div class="video-list" id="videoList">
+            <!-- 동적으로 생성 -->
+        </div>
+
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <div class="icon">🎬</div>
+            <h2>아직 업로드한 영상이 없습니다</h2>
+            <p>첫 번째 숏폼을 업로드해보세요!</p>
+            <a href="upload.html" class="btn btn-primary">영상 업로드</a>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api/v1';
+        let allVideos = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMyShorts();
+        });
+
+        async function loadMyShorts() {
+            const token = localStorage.getItem('accessToken');
+
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/users/me/shorts`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    console.log('내 숏폼 응답:', data);
+
+                    // 응답 구조에 따라 처리
+                    if (data.content) {
+                        // Page 객체 직접 반환
+                        allVideos = data.content;
+                    } else if (data.data && data.data.content) {
+                        // ApiResponse로 감싼 경우
+                        allVideos = data.data.content;
+                    } else if (Array.isArray(data)) {
+                        allVideos = data;
+                    } else {
+                        allVideos = [];
+                    }
+
+                    renderVideos(allVideos);
+                } else {
+                    console.error('API 오류:', res.status);
+                    throw new Error('Failed');
+                }
+            } catch (e) {
+                console.error('내 숏폼 로드 실패:', e);
+                // 에러 시 빈 목록 표시
+                allVideos = [];
+                renderVideos(allVideos);
+            }
+        }
+
+        function renderVideos(videos) {
+            const list = document.getElementById('videoList');
+            const empty = document.getElementById('emptyState');
+
+            if (videos.length === 0) {
+                list.style.display = 'none';
+                empty.style.display = 'block';
+                return;
+            }
+
+            list.style.display = 'flex';
+            empty.style.display = 'none';
+
+            list.innerHTML = videos.map(v => `
+                <div class="video-item">
+                    <div class="video-thumbnail" onclick="location.href='watch.html?id=${v.shortsId}'">
+                        <img src="${v.thumbnailUrl || 'https://via.placeholder.com/120x213/333/fff?text=Video'}" alt="">
+                    </div>
+                    <div class="video-info">
+                        <h3 class="video-title" onclick="location.href='watch.html?id=${v.shortsId}'">${v.title}</h3>
+                        <div class="video-meta">${v.categoryName} • ${formatDuration(v.durationSec)}</div>
+                        <div class="video-stats">
+                            <span>👁️ ${formatNumber(v.viewCount || 0)} 조회</span>
+                            <span>❤️ ${formatNumber(v.likeCount || 0)} 좋아요</span>
+                        </div>
+                        <div class="video-status">
+                            <span class="status-badge ${(v.status || v.shortsStatus || 'published').toLowerCase()}">${getStatusText(v.status || v.shortsStatus)}</span>
+                            <span style="color: #666; font-size: 12px;">${formatDate(v.createdAt)}</span>
+                        </div>
+                    </div>
+                    <div class="video-actions">
+                        <button class="action-btn" onclick="editVideo(${v.shortsId})">✏️ 수정</button>
+                        <button class="action-btn danger" onclick="deleteVideo(${v.shortsId})">🗑️ 삭제</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterVideos(status) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (status === 'all') {
+                renderVideos(allVideos);
+            } else {
+                const filtered = allVideos.filter(v =>
+                    (v.status || v.shortsStatus || '').toLowerCase() === status
+                );
+                renderVideos(filtered);
+            }
+        }
+
+        function editVideo(id) {
+            location.href = `edit.html?id=${id}`;
+        }
+
+        async function deleteVideo(id) {
+            if (!confirm('정말로 이 영상을 삭제하시겠습니까?')) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/shorts/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
+                });
+
+                if (res.ok) {
+                    alert('영상이 삭제되었습니다.');
+                    loadMyShorts();
+                } else {
+                    throw new Error('Failed');
+                }
+            } catch (e) {
+                alert('삭제 중 오류가 발생했습니다.');
+            }
+        }
+
+        function getStatusText(status) {
+            switch ((status || '').toUpperCase()) {
+                case 'PUBLISHED': return '공개';
+                case 'DRAFT': return '비공개';
+                case 'DELETED': return '삭제됨';
+                default: return '공개';
+            }
+        }
+
+        function formatDuration(seconds) {
+            if (!seconds) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function formatNumber(num) {
+            if (num >= 10000) return (num / 10000).toFixed(1) + '만';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+            return num;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('ko-KR');
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>설정 - Shortudy</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+            background: #0f0f0f;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            z-index: 1000;
+            border-bottom: 1px solid #333;
+        }
+
+        .back-btn {
+            color: #fff;
+            text-decoration: none;
+            font-size: 24px;
+            margin-right: 16px;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: #ff4757;
+            text-decoration: none;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 80px auto 40px;
+            padding: 0 24px;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 32px;
+        }
+
+        .settings-section {
+            background: #1a1a1a;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .section-title {
+            padding: 16px 20px;
+            font-size: 14px;
+            color: #888;
+            border-bottom: 1px solid #333;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .setting-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid #282828;
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-info {
+            flex: 1;
+        }
+
+        .setting-name {
+            font-size: 15px;
+            margin-bottom: 4px;
+        }
+
+        .setting-desc {
+            font-size: 13px;
+            color: #888;
+        }
+
+        /* 토글 스위치 */
+        .toggle {
+            position: relative;
+            width: 48px;
+            height: 26px;
+            background: #333;
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle.active {
+            background: #ff4757;
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border-radius: 50%;
+            transition: left 0.3s;
+        }
+
+        .toggle.active::after {
+            left: 25px;
+        }
+
+        /* 선택 박스 */
+        .setting-select {
+            padding: 8px 16px;
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .setting-select:focus {
+            outline: none;
+            border-color: #ff4757;
+        }
+
+        /* 버튼 */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-danger {
+            background: transparent;
+            color: #ff4757;
+            border: 1px solid #ff4757;
+        }
+
+        .btn-danger:hover {
+            background: rgba(255, 71, 87, 0.1);
+        }
+
+        .btn-primary {
+            background: #ff4757;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #ff6b7a;
+        }
+
+        /* 링크 아이템 */
+        .link-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            color: #fff;
+            text-decoration: none;
+            border-bottom: 1px solid #282828;
+            transition: background 0.2s;
+        }
+
+        .link-item:last-child {
+            border-bottom: none;
+        }
+
+        .link-item:hover {
+            background: #282828;
+        }
+
+        .link-item .arrow {
+            color: #666;
+        }
+
+        /* 앱 정보 */
+        .app-info {
+            text-align: center;
+            padding: 32px;
+            color: #666;
+        }
+
+        .app-info .version {
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .app-info .copyright {
+            font-size: 12px;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .message.success {
+            background: rgba(46, 213, 115, 0.2);
+            color: #2ed573;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="mypage.html" class="back-btn">←</a>
+        <a href="index.html" class="logo">📚 Shortudy</a>
+    </header>
+
+    <div class="container">
+        <h1>설정</h1>
+
+        <div id="message" class="message"></div>
+
+        <!-- 알림 설정 -->
+        <div class="settings-section">
+            <div class="section-title">알림</div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-name">푸시 알림</div>
+                    <div class="setting-desc">새 영상, 좋아요, 댓글 알림 받기</div>
+                </div>
+                <div class="toggle active" onclick="toggleSetting(this, 'pushNotification')"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-name">이메일 알림</div>
+                    <div class="setting-desc">주간 요약, 추천 영상 이메일 받기</div>
+                </div>
+                <div class="toggle" onclick="toggleSetting(this, 'emailNotification')"></div>
+            </div>
+        </div>
+
+        <!-- 재생 설정 -->
+        <div class="settings-section">
+            <div class="section-title">재생</div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-name">자동 재생</div>
+                    <div class="setting-desc">영상이 끝나면 다음 영상 자동 재생</div>
+                </div>
+                <div class="toggle active" onclick="toggleSetting(this, 'autoPlay')"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-name">기본 화질</div>
+                    <div class="setting-desc">영상 재생 시 기본 화질 설정</div>
+                </div>
+                <select class="setting-select" onchange="saveSetting('quality', this.value)">
+                    <option value="auto">자동</option>
+                    <option value="1080p">1080p</option>
+                    <option value="720p">720p</option>
+                    <option value="480p">480p</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-name">음소거로 재생</div>
+                    <div class="setting-desc">영상 시작 시 음소거 상태로 재생</div>
+                </div>
+                <div class="toggle" onclick="toggleSetting(this, 'muteByDefault')"></div>
+            </div>
+        </div>
+
+        <!-- 개인정보 -->
+        <div class="settings-section">
+            <div class="section-title">개인정보</div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-name">시청 기록 저장</div>
+                    <div class="setting-desc">시청한 영상 기록 저장하기</div>
+                </div>
+                <div class="toggle active" onclick="toggleSetting(this, 'saveHistory')"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-name">시청 기록 삭제</div>
+                    <div class="setting-desc">모든 시청 기록을 삭제합니다</div>
+                </div>
+                <button class="btn btn-danger" onclick="clearWatchHistory()">삭제</button>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-name">좋아요 목록 삭제</div>
+                    <div class="setting-desc">모든 좋아요 기록을 삭제합니다</div>
+                </div>
+                <button class="btn btn-danger" onclick="clearLikedVideos()">삭제</button>
+            </div>
+        </div>
+
+        <!-- 테마 -->
+        <div class="settings-section">
+            <div class="section-title">화면</div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-name">테마</div>
+                    <div class="setting-desc">앱 테마 설정</div>
+                </div>
+                <select class="setting-select" onchange="saveSetting('theme', this.value)">
+                    <option value="dark">다크 모드</option>
+                    <option value="light" disabled>라이트 모드 (준비중)</option>
+                    <option value="system" disabled>시스템 설정</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 기타 -->
+        <div class="settings-section">
+            <div class="section-title">기타</div>
+            <a href="#" class="link-item">
+                <span>이용약관</span>
+                <span class="arrow">›</span>
+            </a>
+            <a href="#" class="link-item">
+                <span>개인정보처리방침</span>
+                <span class="arrow">›</span>
+            </a>
+            <a href="#" class="link-item">
+                <span>오픈소스 라이선스</span>
+                <span class="arrow">›</span>
+            </a>
+            <a href="#" class="link-item">
+                <span>문의하기</span>
+                <span class="arrow">›</span>
+            </a>
+        </div>
+
+        <!-- 계정 -->
+        <div class="settings-section">
+            <div class="section-title">계정</div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-name">로그아웃</div>
+                    <div class="setting-desc">현재 계정에서 로그아웃합니다</div>
+                </div>
+                <button class="btn btn-danger" onclick="logout()">로그아웃</button>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-name">계정 삭제</div>
+                    <div class="setting-desc">계정과 모든 데이터가 삭제됩니다</div>
+                </div>
+                <button class="btn btn-danger" onclick="deleteAccount()">계정 삭제</button>
+            </div>
+        </div>
+
+        <!-- 앱 정보 -->
+        <div class="app-info">
+            <div class="version">Shortudy v1.0.0</div>
+            <div class="copyright">© 2025 Shortudy. All rights reserved.</div>
+        </div>
+    </div>
+
+    <script>
+        const SETTINGS_KEY = 'app_settings';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+        });
+
+        function loadSettings() {
+            const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+
+            // 토글 상태 설정
+            if (settings.pushNotification !== false) {
+                document.querySelector('[onclick*="pushNotification"]').classList.add('active');
+            }
+            if (settings.autoPlay !== false) {
+                document.querySelector('[onclick*="autoPlay"]').classList.add('active');
+            }
+            if (settings.saveHistory !== false) {
+                document.querySelector('[onclick*="saveHistory"]').classList.add('active');
+            }
+        }
+
+        function toggleSetting(element, key) {
+            element.classList.toggle('active');
+            const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+            settings[key] = element.classList.contains('active');
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+            showMessage('설정이 저장되었습니다.');
+        }
+
+        function saveSetting(key, value) {
+            const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+            settings[key] = value;
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+            showMessage('설정이 저장되었습니다.');
+        }
+
+        function clearWatchHistory() {
+            if (confirm('시청 기록을 모두 삭제하시겠습니까?')) {
+                localStorage.setItem('watch_history', '[]');
+                showMessage('시청 기록이 삭제되었습니다.');
+            }
+        }
+
+        function clearLikedVideos() {
+            if (confirm('좋아요 목록을 모두 삭제하시겠습니까?')) {
+                localStorage.setItem('liked_videos', '[]');
+                showMessage('좋아요 목록이 삭제되었습니다.');
+            }
+        }
+
+        function logout() {
+            if (confirm('로그아웃 하시겠습니까?')) {
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                location.href = 'index.html';
+            }
+        }
+
+        function deleteAccount() {
+            if (confirm('정말로 계정을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) {
+                if (confirm('삭제된 계정과 데이터는 복구할 수 없습니다. 계속하시겠습니까?')) {
+                    // TODO: 서버에 계정 삭제 요청
+                    localStorage.clear();
+                    alert('계정이 삭제되었습니다.');
+                    location.href = 'index.html';
+                }
+            }
+        }
+
+        function showMessage(text) {
+            const msgDiv = document.getElementById('message');
+            msgDiv.textContent = text;
+            msgDiv.className = 'message success';
+            setTimeout(() => {
+                msgDiv.className = 'message';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
+

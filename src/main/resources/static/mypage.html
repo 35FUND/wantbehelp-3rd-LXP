@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마이페이지 - Shortudy</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+            background: #0f0f0f;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            z-index: 1000;
+            border-bottom: 1px solid #333;
+        }
+
+        .back-btn {
+            color: #fff;
+            text-decoration: none;
+            font-size: 24px;
+            margin-right: 16px;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: #ff4757;
+            text-decoration: none;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 80px auto 40px;
+            padding: 0 24px;
+        }
+
+        /* 프로필 섹션 */
+        .profile-section {
+            background: #1a1a1a;
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            font-weight: bold;
+            margin: 0 auto 16px;
+        }
+
+        .profile-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .profile-email {
+            color: #888;
+            margin-bottom: 16px;
+        }
+
+        .profile-stats {
+            display: flex;
+            justify-content: center;
+            gap: 48px;
+            padding-top: 16px;
+            border-top: 1px solid #333;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff4757;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-secondary {
+            background: #333;
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: #444;
+        }
+
+        /* 메뉴 섹션 */
+        .menu-section {
+            background: #1a1a1a;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .menu-title {
+            padding: 16px 20px;
+            font-size: 14px;
+            color: #888;
+            border-bottom: 1px solid #333;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            color: #fff;
+            text-decoration: none;
+            transition: background 0.2s;
+            border-bottom: 1px solid #282828;
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .menu-item:hover {
+            background: #282828;
+        }
+
+        .menu-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .menu-item .icon {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .menu-item .arrow {
+            color: #666;
+        }
+
+        .menu-item.danger {
+            color: #ff4757;
+        }
+
+        /* 설정 폼 */
+        .settings-form {
+            background: #1a1a1a;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .settings-form h2 {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #ff4757;
+        }
+
+        .form-group input:disabled {
+            background: #282828;
+            color: #888;
+        }
+
+        .btn-primary {
+            background: #ff4757;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #ff6b7a;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .message.success {
+            background: rgba(46, 213, 115, 0.2);
+            color: #2ed573;
+        }
+
+        .message.error {
+            background: rgba(255, 71, 87, 0.2);
+            color: #ff4757;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="index.html" class="back-btn">←</a>
+        <a href="index.html" class="logo">📚 Shortudy</a>
+    </header>
+
+    <div class="container">
+        <!-- 프로필 섹션 -->
+        <div class="profile-section">
+            <div class="profile-avatar" id="profileAvatar">G</div>
+            <h1 class="profile-name" id="profileName">로딩 중...</h1>
+            <p class="profile-email" id="profileEmail">-</p>
+            <div class="profile-stats">
+                <div class="stat">
+                    <div class="stat-value" id="videoCount">0</div>
+                    <div class="stat-label">업로드 영상</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="totalViews">0</div>
+                    <div class="stat-label">총 조회수</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="totalLikes">0</div>
+                    <div class="stat-label">받은 좋아요</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 내 콘텐츠 메뉴 -->
+        <div class="menu-section">
+            <div class="menu-title">내 콘텐츠</div>
+            <a href="my-shorts.html" class="menu-item">
+                <div class="menu-item-left">
+                    <span class="icon">🎬</span>
+                    <span>내 영상</span>
+                </div>
+                <span class="arrow">›</span>
+            </a>
+            <a href="liked.html" class="menu-item">
+                <div class="menu-item-left">
+                    <span class="icon">❤️</span>
+                    <span>좋아요한 영상</span>
+                </div>
+                <span class="arrow">›</span>
+            </a>
+            <a href="history.html" class="menu-item">
+                <div class="menu-item-left">
+                    <span class="icon">📜</span>
+                    <span>시청 기록</span>
+                </div>
+                <span class="arrow">›</span>
+            </a>
+        </div>
+
+        <!-- 프로필 수정 -->
+        <div class="settings-form">
+            <h2>프로필 수정</h2>
+            <div id="profileMessage"></div>
+            <form id="profileForm">
+                <div class="form-group">
+                    <label>이메일</label>
+                    <input type="email" id="email" disabled>
+                </div>
+                <div class="form-group">
+                    <label>이름</label>
+                    <input type="text" id="name" placeholder="이름을 입력하세요">
+                </div>
+                <div class="form-group">
+                    <label>닉네임</label>
+                    <input type="text" id="nickname" placeholder="닉네임을 입력하세요">
+                </div>
+                <button type="submit" class="btn btn-primary">저장하기</button>
+            </form>
+        </div>
+
+        <!-- 계정 메뉴 -->
+        <div class="menu-section">
+            <div class="menu-title">계정</div>
+            <a href="settings.html" class="menu-item">
+                <div class="menu-item-left">
+                    <span class="icon">⚙️</span>
+                    <span>설정</span>
+                </div>
+                <span class="arrow">›</span>
+            </a>
+            <a href="#" class="menu-item" onclick="logout()">
+                <div class="menu-item-left">
+                    <span class="icon">🚪</span>
+                    <span>로그아웃</span>
+                </div>
+                <span class="arrow">›</span>
+            </a>
+            <a href="#" class="menu-item danger" onclick="deleteAccount()">
+                <div class="menu-item-left">
+                    <span class="icon">🗑️</span>
+                    <span>계정 삭제</span>
+                </div>
+                <span class="arrow">›</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api/v1';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProfile();
+        });
+
+        async function loadProfile() {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/users/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    renderProfile(data);
+                } else {
+                    throw new Error('Unauthorized');
+                }
+            } catch (e) {
+                // 더미 데이터
+                renderProfile({
+                    email: 'user@example.com',
+                    name: '홍길동',
+                    nickname: '길동이'
+                });
+            }
+        }
+
+        function renderProfile(user) {
+            document.getElementById('profileAvatar').textContent = (user.name || 'U').charAt(0);
+            document.getElementById('profileName').textContent = user.nickname || user.name || '사용자';
+            document.getElementById('profileEmail').textContent = user.email;
+
+            document.getElementById('email').value = user.email;
+            document.getElementById('name').value = user.name || '';
+            document.getElementById('nickname').value = user.nickname || '';
+        }
+
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const msgDiv = document.getElementById('profileMessage');
+            msgDiv.innerHTML = '';
+
+            try {
+                // TODO: 프로필 업데이트 API 호출
+                msgDiv.className = 'message success';
+                msgDiv.textContent = '프로필이 저장되었습니다.';
+            } catch (err) {
+                msgDiv.className = 'message error';
+                msgDiv.textContent = '저장 중 오류가 발생했습니다.';
+            }
+        });
+
+        function logout() {
+            if (confirm('로그아웃 하시겠습니까?')) {
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                location.href = 'index.html';
+            }
+        }
+
+        function deleteAccount() {
+            if (confirm('정말로 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                // TODO: 계정 삭제 API 호출
+                alert('계정이 삭제되었습니다.');
+                localStorage.clear();
+                location.href = 'index.html';
+            }
+        }
+    </script>
+</body>
+</html>
+

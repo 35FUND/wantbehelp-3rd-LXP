@@ -1,20 +1,18 @@
 package com.example.shortudy.domain.user.entity;
 
-import com.example.shortudy.global.common.BaseEntity;
+import com.example.shortudy.global.entity.BaseEntity;
 import jakarta.persistence.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 사용자 엔티티
  * - email: 로그인용 이메일 (유니크)
  * - password: 암호화된 비밀번호
  * - nickname: 닉네임 (nullable)
- * - active: 계정 활성화 상태
+ * - name: 사용자 이름
  */
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Entity
 @Table(name = "users")
 public class User extends BaseEntity {
@@ -28,25 +26,31 @@ public class User extends BaseEntity {
     @Column(nullable = false, length = 100)
     private String name;
 
+    @Column
+    private String nickname;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "role")
-    private List<String> roles = new ArrayList<>();
+    private final List<String> roles = new ArrayList<>();
 
+    // == 생성자 ==
     protected User() {
     }
 
-    protected User(String email, String password, String name) {
+    private User(String email, String password, String name) {
         this.email = email;
         this.password = password;
         this.name = name;
         this.roles.add("ROLE_USER");
     }
 
+    // == 정적 팩토리 메서드 ==
     public static User createUser(String email, String password, String name) {
         return new User(email, password, name);
     }
 
+    // == Getter ==
     public String getEmail() {
         return email;
     }
@@ -57,6 +61,10 @@ public class User extends BaseEntity {
 
     public String getName() {
         return name;
+    }
+
+    public String getNickname() {
+        return nickname;
     }
 
     public List<String> getRoles() {

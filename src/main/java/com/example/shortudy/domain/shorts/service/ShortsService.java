@@ -8,13 +8,17 @@ import com.example.shortudy.domain.shorts.dto.ShortsUploadRequest;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
+import com.example.shortudy.domain.tag.entity.Tag;
+import com.example.shortudy.domain.tag.service.TagService;
 import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.domain.user.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
@@ -24,11 +28,14 @@ public class ShortsService {
     private final ShortsRepository shortsRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final TagService tagService;
 
-    public ShortsService(ShortsRepository shortsRepository, UserRepository userRepository, CategoryRepository categoryRepository) {
+    public ShortsService(ShortsRepository shortsRepository, UserRepository userRepository,
+                         CategoryRepository categoryRepository, TagService tagService) {
         this.shortsRepository = shortsRepository;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
+        this.tagService = tagService;
     }
 
     @Transactional
@@ -51,8 +58,18 @@ public class ShortsService {
                 ShortsStatus.PUBLISHED
         );
 
+        // 태그 추가
+        if (shortsUploadRequest.tagNames() != null && !shortsUploadRequest.tagNames().isEmpty()) {
+            for (String tagName : shortsUploadRequest.tagNames()) {
+                Tag tag = tagService.getOrCreateTag(tagName);
+                if (tag != null) {
+                    shorts.addTag(tag);
+                }
+            }
+        }
+
         Shorts savedShorts = shortsRepository.save(shorts);
-        return  ShortsResponse.from(savedShorts);
+        return ShortsResponse.from(savedShorts);
     }
 
     @Transactional(readOnly = true)
@@ -60,14 +77,13 @@ public class ShortsService {
         Shorts shorts = shortsRepository.findWithDetailsById(shortsId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 숏츠입니다."));
 
-        // TODO :조회수 증가 로직(V2 추가 예정)
-
         return ShortsResponse.from(shorts);
     }
 
+    @Transactional(readOnly = true)
     public Page<ShortsResponse> getShortsList(Pageable pageable) {
 
-        return  shortsRepository.findAll(pageable).map(ShortsResponse::from);
+        return shortsRepository.findAll(pageable).map(ShortsResponse::from);
     }
 
     @Transactional
@@ -75,6 +91,10 @@ public class ShortsService {
 
         Shorts shorts = shortsRepository.findById(shortsId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 숏츠입니다."));
+
+        if(request.durationSec() != null && request.durationSec() <= 0){
+            throw new IllegalArgumentException("영상 길이는 1초 이상이어야 합니다.");
+        }
 
         Category category = null;
         if(request.categoryId() != null){
@@ -87,6 +107,17 @@ public class ShortsService {
                 request.thumbnailUrl(),
                 category
         );
+
+        // 태그 업데이트 (기존 태그 삭제 후 새로 추가)
+        if (request.tagNames() != null) {
+            shorts.clearTags();
+            for (String tagName : request.tagNames()) {
+                Tag tag = tagService.getOrCreateTag(tagName);
+                if (tag != null) {
+                    shorts.addTag(tag);
+                }
+            }
+        }
 
         return ShortsResponse.from(shorts);
     }
@@ -101,4 +132,3 @@ public class ShortsService {
         shortsRepository.deleteById(shortsId);
     }
 }
-

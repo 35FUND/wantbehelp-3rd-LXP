@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shortudy - 숏폼 학습 플랫폼</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+            background: #0f0f0f;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        /* 헤더 */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 1000;
+            border-bottom: 1px solid #333;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff4757;
+            text-decoration: none;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: #333;
+            border-radius: 20px;
+            padding: 8px 16px;
+            width: 400px;
+        }
+
+        .search-box input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            width: 100%;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .search-box button {
+            background: transparent;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #ff4757;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #ff6b7a;
+        }
+
+        .btn-secondary {
+            background: #333;
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: #444;
+        }
+
+        .user-menu {
+            position: relative;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: 50px;
+            right: 0;
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 8px 0;
+            min-width: 200px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            display: none;
+        }
+
+        .user-dropdown.active {
+            display: block;
+        }
+
+        .user-dropdown a {
+            display: block;
+            padding: 12px 20px;
+            color: #fff;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .user-dropdown a:hover {
+            background: #333;
+        }
+
+        /* 사이드바 */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 60px;
+            bottom: 0;
+            width: 240px;
+            background: #1a1a1a;
+            padding: 16px 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 24px;
+            color: #fff;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .sidebar-item:hover, .sidebar-item.active {
+            background: #333;
+        }
+
+        .sidebar-item .icon {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .sidebar-divider {
+            height: 1px;
+            background: #333;
+            margin: 12px 0;
+        }
+
+        .sidebar-title {
+            padding: 12px 24px;
+            color: #888;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        /* 메인 콘텐츠 */
+        .main-content {
+            margin-left: 240px;
+            margin-top: 60px;
+            padding: 24px;
+        }
+
+        /* 카테고리 필터 */
+        .category-filter {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .category-chip {
+            padding: 8px 16px;
+            background: #333;
+            border-radius: 20px;
+            color: #fff;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .category-chip:hover, .category-chip.active {
+            background: #fff;
+            color: #000;
+        }
+
+        /* 비디오 그리드 */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .video-card {
+            background: #1a1a1a;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .video-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .video-thumbnail {
+            position: relative;
+            aspect-ratio: 9/16;
+            background: #333;
+            overflow: hidden;
+        }
+
+        .video-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-duration {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.8);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .video-info {
+            padding: 12px;
+        }
+
+        .video-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .video-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #888;
+            font-size: 12px;
+        }
+
+        .video-uploader {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .uploader-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .video-tags {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            padding: 2px 8px;
+            background: #333;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #aaa;
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .search-box {
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 -->
+    <header class="header">
+        <a href="index.html" class="logo">📚 Shortudy</a>
+
+        <div class="search-box">
+            <input type="text" placeholder="검색어를 입력하세요..." id="searchInput">
+            <button onclick="search()">🔍</button>
+        </div>
+
+        <div class="header-actions">
+            <a href="upload.html" class="btn btn-primary">+ 업로드</a>
+            <div class="user-menu">
+                <div class="user-avatar" onclick="toggleUserMenu()" id="userAvatar">G</div>
+                <div class="user-dropdown" id="userDropdown">
+                    <a href="mypage.html">👤 마이페이지</a>
+                    <a href="my-shorts.html">🎬 내 영상</a>
+                    <a href="settings.html">⚙️ 설정</a>
+                    <a href="#" onclick="logout()">🚪 로그아웃</a>
+                </div>
+            </div>
+            <div id="authButtons" style="display: none;">
+                <a href="login.html" class="btn btn-secondary">로그인</a>
+                <a href="signup.html" class="btn btn-primary">회원가입</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 사이드바 -->
+    <aside class="sidebar">
+        <a href="index.html" class="sidebar-item active">
+            <span class="icon">🏠</span>
+            <span>홈</span>
+        </a>
+        <a href="trending.html" class="sidebar-item">
+            <span class="icon">🔥</span>
+            <span>인기</span>
+        </a>
+        <a href="latest.html" class="sidebar-item">
+            <span class="icon">⏰</span>
+            <span>최신</span>
+        </a>
+
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-title">카테고리</div>
+
+        <a href="category.html?id=1" class="sidebar-item">
+            <span class="icon">💻</span>
+            <span>프로그래밍</span>
+        </a>
+        <a href="category.html?id=2" class="sidebar-item">
+            <span class="icon">🎨</span>
+            <span>디자인</span>
+        </a>
+        <a href="category.html?id=3" class="sidebar-item">
+            <span class="icon">📈</span>
+            <span>마케팅</span>
+        </a>
+
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-title">내 콘텐츠</div>
+
+        <a href="my-shorts.html" class="sidebar-item">
+            <span class="icon">🎬</span>
+            <span>내 영상</span>
+        </a>
+        <a href="liked.html" class="sidebar-item">
+            <span class="icon">❤️</span>
+            <span>좋아요</span>
+        </a>
+        <a href="history.html" class="sidebar-item">
+            <span class="icon">📜</span>
+            <span>시청 기록</span>
+        </a>
+    </aside>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main-content">
+        <!-- 카테고리 필터 -->
+        <div class="category-filter">
+            <a href="#" class="category-chip active">전체</a>
+            <a href="#" class="category-chip">프로그래밍</a>
+            <a href="#" class="category-chip">디자인</a>
+            <a href="#" class="category-chip">마케팅</a>
+            <a href="#" class="category-chip">Java</a>
+            <a href="#" class="category-chip">Spring Boot</a>
+            <a href="#" class="category-chip">React</a>
+            <a href="#" class="category-chip">Python</a>
+            <a href="#" class="category-chip">UI/UX</a>
+        </div>
+
+        <!-- 비디오 그리드 -->
+        <div class="video-grid" id="videoGrid">
+            <!-- 비디오 카드들이 동적으로 생성됨 -->
+        </div>
+
+        <!-- 로딩 표시 -->
+        <div id="loading" style="text-align: center; padding: 40px; display: none;">
+            <p>로딩 중...</p>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api/v1';
+        let currentPage = 0;
+        let isLoading = false;
+
+        // 페이지 로드
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            loadShorts();
+            loadCategories();
+        });
+
+        // 인증 상태 확인
+        async function checkAuth() {
+            const token = localStorage.getItem('accessToken');
+            if (token) {
+                try {
+                    const res = await fetch(`${API_BASE}/auth/stat`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const data = await res.json();
+                    if (data.isLoggedIn) {
+                        document.getElementById('userAvatar').textContent = data.name.charAt(0);
+                        document.getElementById('authButtons').style.display = 'none';
+                        document.querySelector('.user-menu').style.display = 'block';
+                    } else {
+                        showAuthButtons();
+                    }
+                } catch (e) {
+                    showAuthButtons();
+                }
+            } else {
+                showAuthButtons();
+            }
+        }
+
+        function showAuthButtons() {
+            document.getElementById('authButtons').style.display = 'flex';
+            document.querySelector('.user-menu').style.display = 'none';
+        }
+
+        // 숏폼 목록 로드
+        async function loadShorts(page = 0) {
+            if (isLoading) return;
+            isLoading = true;
+            document.getElementById('loading').style.display = 'block';
+
+            try {
+                const res = await fetch(`${API_BASE}/shorts?page=${page}&size=12`);
+                const data = await res.json();
+                console.log('숏폼 목록 응답:', data);
+
+                let shorts = [];
+                // ApiResponse로 감싼 경우
+                if (data.success && data.data && data.data.content) {
+                    shorts = data.data.content;
+                }
+                // Page 객체 직접 반환한 경우
+                else if (data.content) {
+                    shorts = data.content;
+                }
+                // 배열인 경우
+                else if (Array.isArray(data)) {
+                    shorts = data;
+                }
+
+                if (shorts.length > 0) {
+                    renderShorts(shorts, page === 0);
+                    currentPage = page;
+                } else if (page === 0) {
+                    // 첫 페이지인데 데이터가 없으면 더미 데이터 표시
+                    renderDummyShorts();
+                }
+            } catch (e) {
+                console.error('Failed to load shorts:', e);
+                // 더미 데이터로 렌더링
+                renderDummyShorts();
+            } finally {
+                isLoading = false;
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // 숏폼 렌더링
+        function renderShorts(shorts, clear = false) {
+            const grid = document.getElementById('videoGrid');
+            if (clear) grid.innerHTML = '';
+
+            shorts.forEach(short => {
+                const card = document.createElement('div');
+                card.className = 'video-card';
+                card.onclick = () => location.href = `watch.html?id=${short.shortsId}`;
+
+                card.innerHTML = `
+                    <div class="video-thumbnail">
+                        <img src="${short.thumbnailUrl || 'https://via.placeholder.com/300x533/333/fff?text=No+Thumbnail'}" alt="${short.title}">
+                        <span class="video-duration">${formatDuration(short.durationSec)}</span>
+                    </div>
+                    <div class="video-info">
+                        <h3 class="video-title">${short.title}</h3>
+                        <div class="video-meta">
+                            <div class="video-uploader">
+                                <div class="uploader-avatar"></div>
+                                <span>${short.uploaderNickname || '익명'}</span>
+                            </div>
+                            <span>•</span>
+                            <span>${short.categoryName}</span>
+                        </div>
+                        <div class="video-tags">
+                            ${(short.tagNames || []).slice(0, 3).map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // 더미 데이터
+        function renderDummyShorts() {
+            const dummyData = [
+                { shortsId: 1, title: 'Spring Boot 시작하기 - 입문자를 위한 완벽 가이드', uploaderNickname: '개발하는정대리', categoryName: '프로그래밍', durationSec: 58, tagNames: ['Java', 'Spring'] },
+                { shortsId: 2, title: 'React Hooks 완벽 정리 - useState부터 useEffect까지', uploaderNickname: '코딩애플', categoryName: '프로그래밍', durationSec: 45, tagNames: ['React', 'JavaScript'] },
+                { shortsId: 3, title: 'Figma 기초 - UI 디자인 시작하기', uploaderNickname: '디자인베이스', categoryName: '디자인', durationSec: 60, tagNames: ['Figma', 'UI/UX'] },
+                { shortsId: 4, title: 'JPA N+1 문제 해결하기', uploaderNickname: '우아한형제들', categoryName: '프로그래밍', durationSec: 55, tagNames: ['JPA', 'Spring'] },
+                { shortsId: 5, title: 'Git 브랜치 전략 - GitFlow vs Trunk', uploaderNickname: '노마드코더', categoryName: '프로그래밍', durationSec: 42, tagNames: ['Git', 'DevOps'] },
+                { shortsId: 6, title: '마케팅 퍼널 설계하기', uploaderNickname: '마케터박', categoryName: '마케팅', durationSec: 50, tagNames: ['마케팅', '퍼널'] },
+            ];
+            renderShorts(dummyData, true);
+        }
+
+        // 카테고리 로드
+        async function loadCategories() {
+            try {
+                const res = await fetch(`${API_BASE}/categories`);
+                const data = await res.json();
+                // 카테고리 렌더링 (필요시)
+            } catch (e) {
+                console.error('Failed to load categories:', e);
+            }
+        }
+
+        // 시간 포맷
+        function formatDuration(seconds) {
+            if (!seconds) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // 검색
+        function search() {
+            const query = document.getElementById('searchInput').value;
+            if (query) {
+                location.href = `search.html?q=${encodeURIComponent(query)}`;
+            }
+        }
+
+        // 엔터키 검색
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') search();
+        });
+
+        // 유저 메뉴 토글
+        function toggleUserMenu() {
+            document.getElementById('userDropdown').classList.toggle('active');
+        }
+
+        // 로그아웃
+        async function logout() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            location.reload();
+        }
+
+        // 클릭 외부 영역 닫기
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.user-menu')) {
+                document.getElementById('userDropdown').classList.remove('active');
+            }
+        });
+
+        // 무한 스크롤
+        window.addEventListener('scroll', () => {
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
+                loadShorts(currentPage + 1);
+            }
+        });
+    </script>
+</body>
+</html>
+

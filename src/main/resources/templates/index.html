@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shortudy - 숏폼 학습 플랫폼</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        .api-links {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .api-link {
+            background: rgba(255,255,255,0.2);
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        .api-link:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .status {
+            margin-top: 50px;
+            padding: 20px;
+            background: rgba(0,255,0,0.2);
+            border-radius: 10px;
+        }
+        .status-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: #00ff00;
+            border-radius: 50%;
+            margin-right: 10px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Shortudy</h1>
+        <p>숏폼 학습 플랫폼에 오신 것을 환영합니다!</p>
+
+        <div class="api-links">
+            <a href="/api/v1/categories" class="api-link">📁 카테고리 API</a>
+            <a href="/api/v1/shorts" class="api-link">🎥 숏폼 API</a>
+        </div>
+
+        <div class="status">
+            <span class="status-dot"></span>
+            서버가 정상적으로 실행중입니다!
+        </div>
+    </div>
+</body>
+</html>
+
