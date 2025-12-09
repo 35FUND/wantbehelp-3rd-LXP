@@ -11,9 +11,7 @@ import jakarta.persistence.*;
  * - active: 계정 활성화 상태
  */
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "users")
@@ -69,5 +67,11 @@ public class User extends BaseEntity {
     public List<String> getRoles() {
         return roles;
     }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
 }
+
+
 
