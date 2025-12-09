@@ -38,7 +38,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
 
                         // 회원가입과 로그인은 공개(토큰 발급/가입용)
-                        .requestMatchers("/api/v1/auth/signup" ,"/api/v1/auth/login").permitAll()
+                        .requestMatchers("/api/v1/auth/signup","/api/v1/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").permitAll()
                         //그 외는 인증 필요 (필요시 role 기반 분기 가능)
                         .anyRequest().authenticated()
