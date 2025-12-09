@@ -16,8 +16,6 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @Tag(name = "Shorts", description = "숏폼 영상 API")
 @RestController
 @RequestMapping("/api/v1/shorts")
@@ -42,20 +40,22 @@ public class ShortsController {
         return ApiResponse.success(response);
     }
 
-    @Operation(summary = "숏폼 상세 조회 (스크롤링)", description = "특정 숏폼을 포함한 추천 영상들을 배열로 반환합니다. (스크롤링용)")
+    @Operation(summary = "숏폼 상세 조회", description = "특정 숏폼을 포함한 페이징 데이터를 조회합니다. (page=0, size=20)")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "숏폼을 찾을 수 없음")
     })
     @GetMapping("/{shortId}")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<List<ShortsResponse>> getShortsDetails(
-            @Parameter(description = "숏폼 ID", example = "1") @PathVariable Long shortId) {
-        List<ShortsResponse> response = shortsService.getShortsDetailsWithRecommended(shortId);
+    public ApiResponse<Page<ShortsResponse>> getShortsDetails(
+            @Parameter(description = "숏폼 ID", example = "1") @PathVariable Long shortId,
+            @Parameter(description = "페이지 정보 (기본: page=0, size=20)")
+            @PageableDefault(size = 20) Pageable pageable) {
+        Page<ShortsResponse> response = shortsService.getShortsDetailsWithPaging(shortId, pageable);
         return ApiResponse.success(response);
     }
 
-    @Operation(summary = "숏폼 목록 조회", description = "숏폼 목록을 페이징하여 조회합니다.")
+    @Operation(summary = "숏폼 목록 조회", description = "숏폼 목록을 페이징하여 조회합니다. (스크롤링용: page=0&size=10)")
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Page<ShortsResponse>> getShortsList(
@@ -92,3 +92,4 @@ public class ShortsController {
         return ApiResponse.success(null);
     }
 }
+

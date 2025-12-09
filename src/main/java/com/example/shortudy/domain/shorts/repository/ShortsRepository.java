@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -39,12 +38,5 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
      */
     @EntityGraph(attributePaths = {"user", "category"})
     Page<Shorts> findByUserId(Long userId, Pageable pageable);
-
-    /**
-     * 추천 영상 조회 (같은 카테고리, 현재 영상 제외)
-     * 최신순 정렬
-     */
-    @EntityGraph(attributePaths = {"user", "category"})
-    List<Shorts> findByCategoryIdAndIdNotOrderByCreatedAtDesc(Long categoryId, Long shortsId);
 }
 
