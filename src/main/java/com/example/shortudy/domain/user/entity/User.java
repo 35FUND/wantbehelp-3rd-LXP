@@ -1,6 +1,7 @@
 package com.example.shortudy.domain.user.entity;
 
 import com.example.shortudy.global.entity.BaseEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -9,7 +10,7 @@ import java.util.List;
 /**
  * 사용자 엔티티
  * - email: 로그인용 이메일 (유니크)
- * - password: 암호화된 비밀번호
+ * - password: 암호화된 비밀번호 (절대 노출 X)
  * - nickname: 닉네임 (nullable)
  * - name: 사용자 이름
  */
@@ -20,6 +21,7 @@ public class User extends BaseEntity {
     @Column(nullable = false, unique = true, length = 100)
     private String email;
 
+    @JsonIgnore  // JSON 직렬화 시 제외 (보안)
     @Column(nullable = false, length = 100)
     private String password;
 
@@ -29,6 +31,7 @@ public class User extends BaseEntity {
     @Column
     private String nickname;
 
+    @JsonIgnore  // roles도 외부 노출 불필요
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "role")

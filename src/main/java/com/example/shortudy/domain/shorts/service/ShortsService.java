@@ -105,7 +105,8 @@ public class ShortsService {
                 request.title(),
                 request.description(),
                 request.thumbnailUrl(),
-                category
+                category,
+                request.status()
         );
 
         // 태그 업데이트 (기존 태그 삭제 후 새로 추가)

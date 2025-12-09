@@ -1,10 +1,14 @@
 package com.example.shortudy.domain.category.dto.response;
 
-import com.example.shortudy.domain.category.dto.request.CategoryRequest;
 import com.example.shortudy.domain.category.entity.Category;
+import io.swagger.v3.oas.annotations.media.Schema;
 
+@Schema(description = "카테고리 응답")
 public record CategoryResponse(
+        @Schema(description = "카테고리 ID", example = "1")
         Long id,
+
+        @Schema(description = "카테고리 이름", example = "프로그래밍")
         String name
 ) {
 
