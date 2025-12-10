@@ -4,14 +4,18 @@ public class UserResponse {
     private Long id;
     private String email;
     private String name;
+    private String nickname;
+    private String profileImageUrl;
 
     public UserResponse() {
     }
 
-    public UserResponse(Long id, String email, String name) {
+    public UserResponse(Long id, String email, String name, String nickname, String profileImageUrl) {
         this.id = id;
         this.email = email;
         this.name = name;
+        this.nickname = nickname;
+        this.profileImageUrl = profileImageUrl;
     }
 
     public Long getId() {
@@ -36,6 +40,16 @@ public class UserResponse {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getNickname() {return nickname;}
+
+    public void setNickname(String nickname) {this.nickname = nickname;}
+
+    public String getProfileImageUrl() {return profileImageUrl;}
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 }
 

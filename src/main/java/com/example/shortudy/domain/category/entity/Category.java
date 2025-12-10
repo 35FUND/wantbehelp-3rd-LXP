@@ -1,13 +1,18 @@
 package com.example.shortudy.domain.category.entity;
 
-import com.example.shortudy.global.common.BaseTimeEntity;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
+import java.time.LocalDateTime;
 
 @Entity
-public class Category extends BaseTimeEntity {
+public class Category {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
 
     @Column(unique = true, nullable = false)
@@ -15,6 +20,12 @@ public class Category extends BaseTimeEntity {
 
     @Column
     private Long parentId = null;
+
+    private int sortOrder;
+
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
 
     protected Category() {}
 
@@ -29,6 +40,5 @@ public class Category extends BaseTimeEntity {
     public String getName() {
         return name;
     }
-
 }
 

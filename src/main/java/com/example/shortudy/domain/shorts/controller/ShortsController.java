@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import  org.springframework.data.domain.Pageable;
 
 @RestController
-@RequestMapping("api/v1/shorts")
+@RequestMapping("/api/v1/shorts")
 public class ShortsController {
 
     private final ShortsService shortsService;
@@ -28,7 +28,7 @@ public class ShortsController {
         return ApiResponse.success(response);
     }
 
-    @GetMapping
+    @GetMapping("/{shortId}")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<ShortsResponse> getShortsDetails(@PathVariable Long shortId) {
         ShortsResponse response = shortsService.getShortsDetails(shortId);

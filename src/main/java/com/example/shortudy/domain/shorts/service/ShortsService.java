@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.NoSuchElementException;
 
 @Service
-@Transactional(readOnly = true)
 public class ShortsService {
 
     private final ShortsRepository shortsRepository;
@@ -71,21 +70,23 @@ public class ShortsService {
     }
 
     @Transactional
-    public ShortsResponse updateShorts(Long shortsId, ShortsUpdateRequest request){
+    public ShortsResponse updateShorts(Long shortsId, ShortsUpdateRequest request) {
 
         Shorts shorts = shortsRepository.findById(shortsId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 숏츠입니다."));
 
-        Category category = null;
-        if(request.categoryId() != null){
-            category = categoryRepository.findById(request.categoryId())
+
+        if (request.categoryId() != null) {
+            Category category = categoryRepository.findById(request.categoryId())
                     .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
+
+            shorts.updateCategory(category);
         }
+
         shorts.updateShorts(
                 request.title(),
                 request.description(),
-                request.thumbnailUrl(),
-                category
+                request.thumbnailUrl()
         );
 
         return ShortsResponse.from(shorts);

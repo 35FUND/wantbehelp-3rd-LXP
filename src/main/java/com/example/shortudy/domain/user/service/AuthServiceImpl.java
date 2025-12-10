@@ -1,5 +1,6 @@
 package com.example.shortudy.domain.user.service;
 
+import com.example.shortudy.domain.user.dto.UserResponse;
 import com.example.shortudy.domain.user.dto.request.UserLoginRequest;
 import com.example.shortudy.domain.user.dto.request.UserSignUpRequest;
 import com.example.shortudy.domain.user.dto.response.UserLoginResponse;
@@ -81,7 +82,8 @@ public class AuthServiceImpl implements AuthService {
         User user = User.createUser(
                 request.getEmail(),
                 passwordEncoder.encode(request.getPassword()),
-                request.getName()
+                request.getName(),
+                request.getNickname()
         );
         userRepository.save(user);
     }
@@ -108,15 +110,24 @@ public class AuthServiceImpl implements AuthService {
         // * JWT Provider에서 Long 타입의 만료시점 (밀리초)을 반환해야 함을 가정
         Long expirationMillis = jwtTokenProvider.getRefreshTokenExpiration();
 
-        //Long (밀리초) -> LocalDateTime 변환 로깆ㄱ
+        //Long (밀리초) -> LocalDateTime 변환 로직
         LocalDateTime expiryDate = Instant.ofEpochMilli(expirationMillis)
                                             .atZone(ZoneId.systemDefault())
                                            .toLocalDateTime();
 
-        // DB Refresh Token 저장/갱신
+        // DB에 Refresh Token 저장/갱신
         issueRefreshToken(accessToken, refreshToken, expiryDate);
 
-        return new UserLoginResponse(accessToken, refreshToken);
+        // 유저 정보를 담는 DTO 생성
+        UserResponse userInfo = new UserResponse(
+                user.getId(), // User 엔티티에서 ID 꺼내기
+                user.getEmail(), // User 엔티티에서 이메일 꺼내기
+                user.getName(), // User 엔티티에서 이름 꺼내기
+                user.getNickname(), // User 엔티티에서 닉네임 꺼내기
+                null // 프로필 이미지 URL이 없으므로 null로 설정
+        );
+        // 토큰 + 유저 정보 반환
+        return new UserLoginResponse(accessToken, refreshToken, userInfo);
     }
 
 

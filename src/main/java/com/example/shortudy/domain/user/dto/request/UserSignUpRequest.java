@@ -32,7 +32,7 @@ public class UserSignUpRequest {
         return name;
     }
 
-    public String getNickname() {
-        return nickname;
-    }
+    public String getNickname() {return nickname;}
+
+    public void setNickname(String nickname) {this.nickname = nickname;}
 }

@@ -8,8 +8,6 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 public class CategoryService {
 
@@ -20,7 +18,7 @@ public class CategoryService {
     }
 
     @Transactional
-    public CategoryResponse createCategory(CategoryRequest request) {
+    public CategoryResponse create(CategoryRequest request) {
 
         Category created = categoryRepository.save(
                 new Category(
@@ -32,30 +30,12 @@ public class CategoryService {
     }
 
     @Transactional
-    public CategoryResponse readCategory(Long id) {
+    public CategoryResponse read(Long categoryId) {
 
-        Category found = categoryRepository.findById(id).orElseThrow(() ->
+        Category found = categoryRepository.findById(categoryId).orElseThrow(()->
                 new EntityNotFoundException("Not Found"));
 
         return CategoryResponse.of(found);
-    }
-
-    @Transactional
-    public List<CategoryResponse> readAllCategories() {
-
-        return categoryRepository.findAll()
-                .stream()
-                .map(CategoryResponse::of)
-                .toList();
-    }
-
-    @Transactional
-    public void delete(Long id) {
-
-        Category toErase = categoryRepository.findById(id)
-                .orElseThrow(() -> new  EntityNotFoundException("Not Found"));
-
-        categoryRepository.deleteById(toErase.getId());
     }
 }
 

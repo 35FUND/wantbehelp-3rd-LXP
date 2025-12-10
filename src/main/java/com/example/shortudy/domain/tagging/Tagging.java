@@ -2,7 +2,7 @@ package com.example.shortudy.domain.tagging;
 
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.tag.entity.Tag;
-import com.example.shortudy.global.common.BaseTimeEntity;
+import com.example.shortudy.global.common.BaseEntity;
 import jakarta.persistence.*;
 import static jakarta.persistence.GenerationType.*;
 
@@ -16,11 +16,7 @@ import static jakarta.persistence.GenerationType.*;
                 )
         }
 )
-public class Tagging extends BaseTimeEntity {
-
-    @Id
-    @GeneratedValue(strategy = IDENTITY)
-    private Long id;
+public class Tagging extends BaseEntity {
 
     // 어떤 숏폼에 달린 태그인지
     @ManyToOne(fetch = FetchType.LAZY)
@@ -38,10 +34,6 @@ public class Tagging extends BaseTimeEntity {
     public Tagging(Shorts shorts, Tag tag) {
         this.shorts = shorts;
         this.tag = tag;
-    }
-
-    public Long getId() {
-        return id;
     }
 
     public Shorts getShorts() {

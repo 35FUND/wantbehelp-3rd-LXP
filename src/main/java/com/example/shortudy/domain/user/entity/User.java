@@ -20,11 +20,11 @@ public class User extends BaseEntity {
     @Column(nullable = false, unique = true, length = 100)
     private String email;
 
-    @Column
-    private String nickname;
-
     @Column(nullable = false, length = 100)
     private String password;
+
+    @Column(nullable = false, unique = true, length = 100)
+    private String nickname;
 
     @Column(nullable = false, length = 100)
     private String name;
@@ -37,15 +37,16 @@ public class User extends BaseEntity {
     protected User() {
     }
 
-    protected User(String email, String password, String name) {
+    protected User(String email, String password, String name, String nickname) {
         this.email = email;
         this.password = password;
         this.name = name;
+        this.nickname = nickname;
         this.roles.add("ROLE_USER");
     }
 
-    public static User createUser(String email, String password, String name) {
-        return new User(email, password, name);
+    public static User createUser(String email, String password, String name, String nickname) {
+        return new User(email, password, name, nickname);
     }
 
     public String getNickname() {

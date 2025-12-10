@@ -5,12 +5,13 @@ import com.example.shortudy.domain.category.dto.response.CategoryResponse;
 import com.example.shortudy.domain.category.service.CategoryService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/categories")
 public class CategoryController {
 
     private final CategoryService categoryService;
@@ -19,30 +20,18 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
-    @PostMapping
-    public ResponseEntity<CategoryResponse> create(@RequestBody CategoryRequest request) {
+    @PostMapping("/category")
+    public ResponseEntity<CategoryResponse> createCategory(@RequestBody CategoryRequest request) {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(categoryService.createCategory(request));
+                .body(categoryService.create(request));
     }
 
-    @GetMapping
-    public ResponseEntity<List<CategoryResponse>> readAllCategories() {
+    @GetMapping("/(categoryId)")
+    public ResponseEntity<CategoryResponse> read(@RequestParam("categoryId") Long categoryId) {
 
-        return ResponseEntity
-                .ok(categoryService.readAllCategories());
-    }
-
-    @GetMapping("/{categoryId}")
-    public ResponseEntity<CategoryResponse> readCategory(@PathVariable Long categoryId) {
-
-        return ResponseEntity.ok(categoryService.readCategory(categoryId));
-    }
-
-    @DeleteMapping("{categoryId}")
-    public void deleteCategory(@PathVariable Long categoryId) {
-        categoryService.delete(categoryId);
+        return ResponseEntity.ok(categoryService.read(categoryId));
     }
 }
 
