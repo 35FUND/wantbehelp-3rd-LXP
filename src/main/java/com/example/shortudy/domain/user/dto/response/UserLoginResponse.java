@@ -1,14 +1,36 @@
 package com.example.shortudy.domain.user.dto.response;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import com.example.shortudy.domain.user.dto.UserResponse;
 
-@Schema(description = "로그인 응답")
-public record UserLoginResponse(
-        @Schema(description = "액세스 토큰", example = "eyJhbGciOiJIUzI1NiIs...")
-        String accessToken,
+public class UserLoginResponse {
+    private String accessToken;
+    private String refreshToken;
+    private UserResponse user;
 
-        @Schema(description = "리프레시 토큰", example = "eyJhbGciOiJIUzI1NiIs...")
-        String refreshToken
-) {
+    public UserLoginResponse() {
+    }
+
+    public UserLoginResponse(String accessToken, String refreshToken, UserResponse user) {
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+        this.user = user;
+    }
+
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public UserResponse getUser() {return user;}
 }
-

@@ -1,47 +1,55 @@
 package com.example.shortudy.domain.user.dto;
 
-import com.example.shortudy.domain.user.entity.User;
-import io.swagger.v3.oas.annotations.media.Schema;
+public class UserResponse {
+    private Long id;
+    private String email;
+    private String name;
+    private String nickname;
+    private String profileImageUrl;
 
-/**
- * 사용자 응답 DTO (내 정보 조회용)
- * - email: 본인만 볼 수 있음
- * - password: 절대 노출 X
- */
-@Schema(description = "사용자 응답")
-public record UserResponse(
-        @Schema(description = "사용자 ID", example = "1")
-        Long id,
-
-        @Schema(description = "이메일 (본인만 조회 가능)", example = "user@example.com")
-        String email,
-
-        @Schema(description = "이름", example = "홍길동")
-        String name,
-
-        @Schema(description = "닉네임", example = "길동이")
-        String nickname
-) {
-    public static UserResponse from(User user) {
-        return new UserResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getName(),
-                user.getNickname()
-        );
+    public UserResponse() {
     }
 
-    /**
-     * 공개 프로필용 (다른 사용자가 볼 때)
-     * - email 제외
-     */
-    public static UserResponse publicProfile(User user) {
-        return new UserResponse(
-                user.getId(),
-                null,  // email 숨김
-                user.getName(),
-                user.getNickname()
-        );
+    public UserResponse(Long id, String email, String name, String nickname, String profileImageUrl) {
+        this.id = id;
+        this.email = email;
+        this.name = name;
+        this.nickname = nickname;
+        this.profileImageUrl = profileImageUrl;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getNickname() {return nickname;}
+
+    public void setNickname(String nickname) {this.nickname = nickname;}
+
+    public String getProfileImageUrl() {return profileImageUrl;}
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 }
 

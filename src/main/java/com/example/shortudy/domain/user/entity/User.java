@@ -1,19 +1,18 @@
 package com.example.shortudy.domain.user.entity;
 
-import com.example.shortudy.global.entity.BaseEntity;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.example.shortudy.global.common.BaseEntity;
 import jakarta.persistence.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 사용자 엔티티
  * - email: 로그인용 이메일 (유니크)
- * - password: 암호화된 비밀번호 (절대 노출 X)
+ * - password: 암호화된 비밀번호
  * - nickname: 닉네임 (nullable)
- * - name: 사용자 이름
+ * - active: 계정 활성화 상태
  */
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "users")
 public class User extends BaseEntity {
@@ -21,39 +20,39 @@ public class User extends BaseEntity {
     @Column(nullable = false, unique = true, length = 100)
     private String email;
 
-    @JsonIgnore  // JSON 직렬화 시 제외 (보안)
     @Column(nullable = false, length = 100)
     private String password;
+
+    @Column(nullable = false, unique = true, length = 100)
+    private String nickname;
 
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Column
-    private String nickname;
-
-    @JsonIgnore  // roles도 외부 노출 불필요
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "role")
-    private final List<String> roles = new ArrayList<>();
+    private List<String> roles = new ArrayList<>();
 
-    // == 생성자 ==
     protected User() {
     }
 
-    private User(String email, String password, String name) {
+    protected User(String email, String password, String name, String nickname) {
         this.email = email;
         this.password = password;
         this.name = name;
+        this.nickname = nickname;
         this.roles.add("ROLE_USER");
     }
 
-    // == 정적 팩토리 메서드 ==
-    public static User createUser(String email, String password, String name) {
-        return new User(email, password, name);
+    public static User createUser(String email, String password, String name, String nickname) {
+        return new User(email, password, name, nickname);
     }
 
-    // == Getter ==
+    public String getNickname() {
+        return nickname;
+    }
+
     public String getEmail() {
         return email;
     }
@@ -66,12 +65,14 @@ public class User extends BaseEntity {
         return name;
     }
 
-    public String getNickname() {
-        return nickname;
-    }
-
     public List<String> getRoles() {
         return roles;
     }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
 }
+
+
 
