@@ -3,8 +3,6 @@ package com.example.shortudy.domain.shorts.dto;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import java.util.List;
-
 /**
  * 숏폼 응답 DTO (MVP 명세)
  * - 필수 필드만 포함
@@ -83,7 +81,7 @@ public record ShortsResponse (
                         shorts.getUser().getNickname() != null
                                 ? shorts.getUser().getNickname()
                                 : shorts.getUser().getName(),
-                        null  // profileUrl은 User 엔티티에 없음
+                        shorts.getUser().getProfileUrl()
                 ),
                 new CategoryDto(
                         shorts.getCategory().getId(),

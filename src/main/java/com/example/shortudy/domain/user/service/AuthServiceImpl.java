@@ -1,5 +1,6 @@
 package com.example.shortudy.domain.user.service;
 
+import com.example.shortudy.domain.user.dto.UserResponse;
 import com.example.shortudy.domain.user.dto.request.TokenRefreshRequest;
 import com.example.shortudy.domain.user.dto.request.UserLoginRequest;
 import com.example.shortudy.domain.user.dto.request.UserSignUpRequest;
@@ -55,7 +56,9 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtTokenProvider.createAccessToken(user.getEmail(), user.getRoles());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail(), user.getRoles());
 
-        return new UserLoginResponse(accessToken, refreshToken);
+        // user 정보를 함께 반환
+        UserResponse userResponse = UserResponse.from(user);
+        return new UserLoginResponse(accessToken, refreshToken, userResponse);
     }
 
     @Override
@@ -96,7 +99,9 @@ public class AuthServiceImpl implements AuthService {
         String newAccessToken = jwtTokenProvider.createAccessToken(user.getEmail(), user.getRoles());
         String newRefreshToken = jwtTokenProvider.createRefreshToken(user.getEmail(), user.getRoles());
 
-        return new UserLoginResponse(newAccessToken, newRefreshToken);
+        // user 정보를 함께 반환
+        UserResponse userResponse = UserResponse.from(user);
+        return new UserLoginResponse(newAccessToken, newRefreshToken, userResponse);
     }
 
     private User findUserByEmail(String email) {

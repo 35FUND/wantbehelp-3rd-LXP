@@ -20,14 +20,18 @@ public record UserResponse(
         String name,
 
         @Schema(description = "닉네임", example = "길동이")
-        String nickname
+        String nickname,
+
+        @Schema(description = "프로필 URL", example = "https://cdn.xxx/profile.jpg")
+        String profileUrl
 ) {
     public static UserResponse from(User user) {
         return new UserResponse(
                 user.getId(),
                 user.getEmail(),
                 user.getName(),
-                user.getNickname()
+                user.getNickname(),
+                user.getProfileUrl()
         );
     }
 
@@ -40,7 +44,8 @@ public record UserResponse(
                 user.getId(),
                 null,  // email 숨김
                 user.getName(),
-                user.getNickname()
+                user.getNickname(),
+                user.getProfileUrl()
         );
     }
 }

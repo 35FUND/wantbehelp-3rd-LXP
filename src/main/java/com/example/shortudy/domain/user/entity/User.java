@@ -31,6 +31,9 @@ public class User extends BaseEntity {
     @Column
     private String nickname;
 
+    @Column
+    private String profileUrl;
+
     @JsonIgnore  // roles도 외부 노출 불필요
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
@@ -68,6 +71,10 @@ public class User extends BaseEntity {
 
     public String getNickname() {
         return nickname;
+    }
+
+    public String getProfileUrl() {
+        return profileUrl;
     }
 
     public List<String> getRoles() {
