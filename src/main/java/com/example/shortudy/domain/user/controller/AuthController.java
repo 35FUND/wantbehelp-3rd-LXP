@@ -123,7 +123,6 @@ public class AuthController {
         cookie.setSecure(false);            // HTTPS에서만 전송 (개발 환경이므로 false, 프로덕션에서는 true)
         cookie.setPath("/");                // 모든 경로에서 유효
         cookie.setMaxAge(REFRESH_TOKEN_EXPIRY);  // 7일
-        cookie.setSameSite("Strict");       // CSRF 방지
         response.addCookie(cookie);
     }
 

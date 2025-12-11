@@ -21,7 +21,7 @@ public record AuthStatusResponse(
     }
 
     public static AuthStatusResponse notLoggedIn() {
-        return new AuthStatusResponse(false, null, null, null);
+        return new AuthStatusResponse(false, "", "", "");  // 빈 문자열로 변경
     }
 }
 
