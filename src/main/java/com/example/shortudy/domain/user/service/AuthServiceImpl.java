@@ -16,6 +16,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
 @Transactional(readOnly = true)
 public class AuthServiceImpl implements AuthService {
@@ -46,7 +49,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public UserLoginResponse login(UserLoginRequest request) {
+    public Map<String, Object> login(UserLoginRequest request) {
         User user = findUserByEmail(request.email());
 
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
@@ -56,9 +59,16 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtTokenProvider.createAccessToken(user.getEmail(), user.getRoles());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail(), user.getRoles());
 
-        // user 정보를 함께 반환
+        // user 정보만 반환 (토큰은 Controller에서 쿠키로 전달)
         UserResponse userResponse = UserResponse.from(user);
-        return new UserLoginResponse(accessToken, refreshToken, userResponse);
+        UserLoginResponse response = new UserLoginResponse(userResponse);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("accessToken", accessToken);
+        result.put("refreshToken", refreshToken);
+        result.put("response", response);
+
+        return result;
     }
 
     @Override
@@ -84,7 +94,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public UserLoginResponse refreshToken(TokenRefreshRequest request) {
+    public Map<String, Object> refreshToken(TokenRefreshRequest request) {
         String refreshToken = request.refreshToken();
 
         // Refresh Token 유효성 검증
@@ -101,7 +111,14 @@ public class AuthServiceImpl implements AuthService {
 
         // user 정보를 함께 반환
         UserResponse userResponse = UserResponse.from(user);
-        return new UserLoginResponse(newAccessToken, newRefreshToken, userResponse);
+        UserLoginResponse response = new UserLoginResponse(userResponse);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("accessToken", newAccessToken);
+        result.put("refreshToken", newRefreshToken);
+        result.put("response", response);
+
+        return result;
     }
 
     private User findUserByEmail(String email) {

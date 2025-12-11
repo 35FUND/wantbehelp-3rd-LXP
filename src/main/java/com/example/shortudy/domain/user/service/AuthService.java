@@ -6,10 +6,12 @@ import com.example.shortudy.domain.user.dto.request.UserSignUpRequest;
 import com.example.shortudy.domain.user.dto.response.AuthStatusResponse;
 import com.example.shortudy.domain.user.dto.response.UserLoginResponse;
 
+import java.util.Map;
+
 public interface AuthService {
     void signup(UserSignUpRequest request);
-    UserLoginResponse login(UserLoginRequest request);
+    Map<String, Object> login(UserLoginRequest request);  // 토큰 + UserLoginResponse 반환
     void logout(String email);
     AuthStatusResponse getAuthStatus(String email);
-    UserLoginResponse refreshToken(TokenRefreshRequest request);
+    Map<String, Object> refreshToken(TokenRefreshRequest request);  // 토큰 + UserLoginResponse 반환
 }

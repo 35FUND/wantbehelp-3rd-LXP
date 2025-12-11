@@ -17,7 +17,7 @@ public abstract class BaseTimeEntity {
 
     @CreatedDate
     @Comment("생성 일시")
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     @LastModifiedDate

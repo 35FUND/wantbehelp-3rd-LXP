@@ -2,6 +2,7 @@ package com.example.shortudy.global.jwt;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -15,13 +16,14 @@ import java.util.List;
 
 /**
  * JWT 인증 필터
- * - Authorization 헤더에서 Bearer 토큰 추출
+ * - Authorization 헤더 또는 쿠키에서 Access Token 추출
  * - 토큰 검증 후 SecurityContext에 인증 정보 저장
  */
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
+    private static final String ACCESS_TOKEN_COOKIE = "accessToken";
 
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -54,13 +56,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Authorization 헤더에서 토큰 추출
+     * Authorization 헤더 또는 쿠키에서 토큰 추출
+     * 1. Authorization 헤더 확인 (Bearer 토큰)
+     * 2. 쿠키 확인 (accessToken)
      */
     private String resolveToken(HttpServletRequest request) {
+        // 1. Authorization 헤더에서 토큰 추출
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
             return bearerToken.substring(BEARER_PREFIX.length());
         }
+
+        // 2. 쿠키에서 Access Token 추출
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (ACCESS_TOKEN_COOKIE.equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+
         return null;
     }
 }

@@ -14,18 +14,39 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
+/**
+ * 인증 컨트롤러
+ * - 토큰은 ResponseCookie로 설정 (sameSite 지원)
+ * - 환경별로 sameSite, secure 설정 변경 가능
+ */
 @Tag(name = "Auth", description = "인증/인가 API")
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
 
     private final AuthService authService;
+
+    // 쿠키 설정
+    private static final String ACCESS_TOKEN_COOKIE = "accessToken";
     private static final String REFRESH_TOKEN_COOKIE = "refreshToken";
+    private static final int ACCESS_TOKEN_EXPIRY = 30 * 60; // 30분
     private static final int REFRESH_TOKEN_EXPIRY = 7 * 24 * 60 * 60; // 7일
+
+    // 환경별 쿠키 설정 (application.properties에서 주입)
+    @Value("${app.cookie.same-site:Lax}")
+    private String cookieSameSite;
+
+    @Value("${app.cookie.secure:false}")
+    private boolean cookieSecure;
 
     public AuthController(AuthService authService) {
         this.authService = authService;
@@ -43,7 +64,7 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
-    @Operation(summary = "로그인", description = "이메일과 비밀번호로 로그인합니다. Access Token은 응답 본문, Refresh Token은 HTTP Only 쿠키로 반환합니다.")
+    @Operation(summary = "로그인", description = "이메일과 비밀번호로 로그인합니다. Access Token(30분)과 Refresh Token(7일)은 HTTP Only 쿠키로 반환합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "로그인 성공"),
             @ApiResponse(responseCode = "401", description = "인증 실패 (이메일 또는 비밀번호 오류)")
@@ -51,20 +72,64 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<UserLoginResponse> login(
             @RequestBody @Valid UserLoginRequest request,
-            HttpServletResponse response) {
-        UserLoginResponse loginResponse = authService.login(request);
+            HttpServletResponse httpResponse) {
 
-        // Refresh Token을 HTTP Only 쿠키에 저장
-        setRefreshTokenCookie(response, loginResponse.refreshToken());
+        // 1. 서비스 로직 수행 (Access Token, Refresh Token, User 정보 받아옴)
+        Map<String, Object> loginResult = authService.login(request);
 
-        return ResponseEntity.ok(loginResponse);
+        String accessToken = (String) loginResult.get("accessToken");
+        String refreshToken = (String) loginResult.get("refreshToken");
+        UserLoginResponse response = (UserLoginResponse) loginResult.get("response");
+
+        // 2. Access Token을 ResponseCookie로 생성 (30분, sameSite 지원)
+        ResponseCookie accessTokenCookie = ResponseCookie.from(ACCESS_TOKEN_COOKIE, accessToken)
+                .httpOnly(true)       // XSS 공격 방지 (JavaScript 접근 불가)
+                .secure(cookieSecure)  // HTTPS 전송 (로컬: false, 프로덕션: true)
+                .path("/")            // 모든 경로에서 유효
+                .maxAge(ACCESS_TOKEN_EXPIRY)  // 30분
+                .sameSite(cookieSameSite)  // 로컬: Lax, 프로덕션: None (CORS 대응)
+                .build();
+
+        // 3. Refresh Token을 ResponseCookie로 생성 (7일, sameSite 지원)
+        ResponseCookie refreshTokenCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE, refreshToken)
+                .httpOnly(true)       // XSS 공격 방지
+                .secure(cookieSecure)  // HTTPS 전송
+                .path("/")            // 모든 경로에서 유효
+                .maxAge(REFRESH_TOKEN_EXPIRY)  // 7일
+                .sameSite(cookieSameSite)  // CORS 대응
+                .build();
+
+        // 4. 응답 헤더에 쿠키 심기
+        httpResponse.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
+        httpResponse.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+
+        return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "로그아웃", description = "로그아웃합니다. Refresh Token 쿠키를 삭제합니다.")
+    @Operation(summary = "로그아웃", description = "로그아웃합니다. Access Token과 Refresh Token 쿠키를 삭제합니다.")
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletResponse response) {
+    public ResponseEntity<Void> logout(HttpServletResponse httpResponse) {
+        // Access Token 쿠키 삭제
+        ResponseCookie deleteAccessCookie = ResponseCookie.from(ACCESS_TOKEN_COOKIE, "")
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .path("/")
+                .maxAge(0)  // 즉시 삭제
+                .sameSite(cookieSameSite)
+                .build();
+
         // Refresh Token 쿠키 삭제
-        deleteRefreshTokenCookie(response);
+        ResponseCookie deleteRefreshCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE, "")
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .path("/")
+                .maxAge(0)  // 즉시 삭제
+                .sameSite(cookieSameSite)
+                .build();
+
+        httpResponse.addHeader(HttpHeaders.SET_COOKIE, deleteAccessCookie.toString());
+        httpResponse.addHeader(HttpHeaders.SET_COOKIE, deleteRefreshCookie.toString());
+
         return ResponseEntity.ok().build();
     }
 
@@ -75,7 +140,7 @@ public class AuthController {
         return ResponseEntity.ok(authStatus);
     }
 
-    @Operation(summary = "토큰 재발급", description = "Refresh Token으로 새로운 Access Token을 발급받습니다. 새 Refresh Token은 HTTP Only 쿠키로 반환합니다.")
+    @Operation(summary = "토큰 재발급", description = "Refresh Token으로 새로운 Access Token을 발급받습니다. 새 토큰들은 HTTP Only 쿠키로 반환합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "재발급 성공"),
             @ApiResponse(responseCode = "401", description = "유효하지 않은 Refresh Token")
@@ -83,7 +148,8 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<UserLoginResponse> refreshToken(
             HttpServletRequest request,
-            HttpServletResponse response) {
+            HttpServletResponse httpResponse) {
+
         // 쿠키에서 Refresh Token 추출
         String refreshTokenFromCookie = extractRefreshTokenFromCookie(request);
         if (refreshTokenFromCookie == null) {
@@ -91,12 +157,34 @@ public class AuthController {
         }
 
         TokenRefreshRequest tokenRefreshRequest = new TokenRefreshRequest(refreshTokenFromCookie);
-        UserLoginResponse refreshResponse = authService.refreshToken(tokenRefreshRequest);
+        Map<String, Object> refreshResult = authService.refreshToken(tokenRefreshRequest);
 
-        // 새로운 Refresh Token을 HTTP Only 쿠키에 저장
-        setRefreshTokenCookie(response, refreshResponse.refreshToken());
+        String newAccessToken = (String) refreshResult.get("accessToken");
+        String newRefreshToken = (String) refreshResult.get("refreshToken");
+        UserLoginResponse response = (UserLoginResponse) refreshResult.get("response");
 
-        return ResponseEntity.ok(refreshResponse);
+        // 새로운 Access Token을 ResponseCookie로 생성
+        ResponseCookie accessTokenCookie = ResponseCookie.from(ACCESS_TOKEN_COOKIE, newAccessToken)
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .path("/")
+                .maxAge(ACCESS_TOKEN_EXPIRY)
+                .sameSite(cookieSameSite)
+                .build();
+
+        // 새로운 Refresh Token을 ResponseCookie로 생성
+        ResponseCookie refreshTokenCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE, newRefreshToken)
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .path("/")
+                .maxAge(REFRESH_TOKEN_EXPIRY)
+                .sameSite(cookieSameSite)
+                .build();
+
+        httpResponse.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
+        httpResponse.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -113,28 +201,5 @@ public class AuthController {
         }
         return null;
     }
-
-    /**
-     * Refresh Token을 HTTP Only 쿠키에 저장
-     */
-    private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
-        Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE, refreshToken);
-        cookie.setHttpOnly(true);           // JavaScript에서 접근 불가 (보안)
-        cookie.setSecure(false);            // HTTPS에서만 전송 (개발 환경이므로 false, 프로덕션에서는 true)
-        cookie.setPath("/");                // 모든 경로에서 유효
-        cookie.setMaxAge(REFRESH_TOKEN_EXPIRY);  // 7일
-        response.addCookie(cookie);
-    }
-
-    /**
-     * Refresh Token 쿠키 삭제
-     */
-    private void deleteRefreshTokenCookie(HttpServletResponse response) {
-        Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE, null);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false);
-        cookie.setPath("/");
-        cookie.setMaxAge(0);  // 쿠키 삭제
-        response.addCookie(cookie);
-    }
 }
+
