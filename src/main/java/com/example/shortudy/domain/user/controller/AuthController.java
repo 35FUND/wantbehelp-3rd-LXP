@@ -6,8 +6,8 @@ import com.example.shortudy.domain.user.dto.request.UserSignUpRequest;
 import com.example.shortudy.domain.user.dto.response.AuthStatusResponse;
 import com.example.shortudy.domain.user.dto.response.UserLoginResponse;
 import com.example.shortudy.domain.user.service.AuthService;
+import com.example.shortudy.global.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
@@ -54,23 +54,23 @@ public class AuthController {
 
     @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "회원가입 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청"),
-            @ApiResponse(responseCode = "409", description = "이미 존재하는 이메일")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "회원가입 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "이미 존재하는 이메일")
     })
     @PostMapping("/signup")
-    public ResponseEntity<Void> signup(@RequestBody @Valid UserSignUpRequest request) {
+    public ResponseEntity<ApiResponse<Void>> signup(@RequestBody @Valid UserSignUpRequest request) {
         authService.signup(request);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success());
     }
 
     @Operation(summary = "로그인", description = "이메일과 비밀번호로 로그인합니다. Access Token(30분)과 Refresh Token(7일)은 HTTP Only 쿠키로 반환합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "로그인 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 실패 (이메일 또는 비밀번호 오류)")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그인 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패 (이메일 또는 비밀번호 오류)")
     })
     @PostMapping("/login")
-    public ResponseEntity<UserLoginResponse> login(
+    public ResponseEntity<ApiResponse<UserLoginResponse>> login(
             @RequestBody @Valid UserLoginRequest request,
             HttpServletResponse httpResponse) {
 
@@ -103,12 +103,12 @@ public class AuthController {
         httpResponse.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
         httpResponse.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @Operation(summary = "로그아웃", description = "로그아웃합니다. Access Token과 Refresh Token 쿠키를 삭제합니다.")
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletResponse httpResponse) {
+    public ResponseEntity<ApiResponse<Void>> logout(HttpServletResponse httpResponse) {
         // Access Token 쿠키 삭제
         ResponseCookie deleteAccessCookie = ResponseCookie.from(ACCESS_TOKEN_COOKIE, "")
                 .httpOnly(true)
@@ -130,23 +130,23 @@ public class AuthController {
         httpResponse.addHeader(HttpHeaders.SET_COOKIE, deleteAccessCookie.toString());
         httpResponse.addHeader(HttpHeaders.SET_COOKIE, deleteRefreshCookie.toString());
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success());
     }
 
     @Operation(summary = "로그인 상태 조회", description = "현재 로그인 상태를 확인합니다. (토큰 필요)")
     @GetMapping("/stat")
-    public ResponseEntity<AuthStatusResponse> getAuthStatus(@AuthenticationPrincipal String email) {
+    public ResponseEntity<ApiResponse<AuthStatusResponse>> getAuthStatus(@AuthenticationPrincipal String email) {
         AuthStatusResponse authStatus = authService.getAuthStatus(email);
-        return ResponseEntity.ok(authStatus);
+        return ResponseEntity.ok(ApiResponse.success(authStatus));
     }
 
     @Operation(summary = "토큰 재발급", description = "Refresh Token으로 새로운 Access Token을 발급받습니다. 새 토큰들은 HTTP Only 쿠키로 반환합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "재발급 성공"),
-            @ApiResponse(responseCode = "401", description = "유효하지 않은 Refresh Token")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "재발급 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "유효하지 않은 Refresh Token")
     })
     @PostMapping("/refresh")
-    public ResponseEntity<UserLoginResponse> refreshToken(
+    public ResponseEntity<ApiResponse<UserLoginResponse>> refreshToken(
             HttpServletRequest request,
             HttpServletResponse httpResponse) {
 
@@ -184,7 +184,7 @@ public class AuthController {
         httpResponse.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
         httpResponse.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     /**
