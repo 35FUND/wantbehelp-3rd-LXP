@@ -1,6 +1,7 @@
 package com.example.shortudy.domain.shorts.dto;
 
 import com.example.shortudy.domain.shorts.entity.Shorts;
+import com.example.shortudy.domain.shorts.entity.ShortsStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
@@ -25,6 +26,12 @@ public record ShortsResponse (
        @Schema(description = "썸네일 URL", example = "https://cdn.xxx/t.png")
        String thumbnailUrl,
 
+       @Schema(description = "영상 길이(초)", example = "60")
+       Integer durationSec,
+
+       @Schema(description = "상태", example = "PUBLISHED")
+       ShortsStatus status,
+
        @Schema(description = "업로더 정보")
        UploaderDto uploader,
 
@@ -36,8 +43,6 @@ public record ShortsResponse (
        // String uploaderNickname,
        // Long categoryId,
        // String categoryName,
-       // Integer durationSec,
-       // ShortsStatus status,
        // LocalDateTime createdAt,
        // List<String> tagNames
 ) {
@@ -76,6 +81,8 @@ public record ShortsResponse (
                 shorts.getDescription(),
                 shorts.getVideoUrl(),
                 shorts.getThumbnailUrl(),
+                shorts.getDurationSec(),
+                shorts.getShortsStatus(),
                 new UploaderDto(
                         shorts.getUser().getId(),
                         shorts.getUser().getNickname() != null
