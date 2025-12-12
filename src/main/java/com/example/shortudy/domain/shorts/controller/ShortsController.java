@@ -60,7 +60,7 @@ public class ShortsController {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Page<ShortsResponse>> getShortsList(
             @Parameter(description = "페이지 정보 (page, size, sort)")
-            @PageableDefault(size = 8, sort = "id", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 8, sort = "id", direction = org.springframework.data.domain.Sort.Direction.ASC) Pageable pageable) {
         Page<ShortsResponse> response = shortsService.getShortsList(pageable);
         return ApiResponse.success(response);
     }

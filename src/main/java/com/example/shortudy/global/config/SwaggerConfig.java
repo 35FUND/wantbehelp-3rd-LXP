@@ -81,17 +81,17 @@ public class SwaggerConfig {
             if (operation.getParameters() != null) {
                 operation.getParameters().forEach(parameter -> {
                     // sort 파라미터 찾기
-                    if ("sort".equals(parameter.getName())) {
-                        // 기본 예제를 "id,desc"로 설정
-                        parameter.setExample("id,desc");
-                        parameter.setDescription(
-                            "정렬 기준 (예: id,desc 또는 createdAt,desc). " +
-                            "사용 가능한 속성: id, title, createdAt, updatedAt, durationSec"
-                        );
-                        if (parameter.getSchema() instanceof StringSchema) {
-                            ((StringSchema) parameter.getSchema()).setDefault("id,desc");
-                        }
+                if ("sort".equals(parameter.getName())) {
+                    // 기본 예제를 "id,asc"로 설정
+                    parameter.setExample("id,asc");
+                    parameter.setDescription(
+                        "정렬 기준 (예: id,asc 또는 createdAt,desc). " +
+                        "사용 가능한 속성: id, title, createdAt, updatedAt, durationSec"
+                    );
+                    if (parameter.getSchema() instanceof StringSchema) {
+                        ((StringSchema) parameter.getSchema()).setDefault("id,asc");
                     }
+                }
                 });
             }
             return operation;

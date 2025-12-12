@@ -96,9 +96,40 @@ public class ShortsService {
 
     @Transactional(readOnly = true)
     public Page<ShortsResponse> getShortsList(Pageable pageable) {
-        // 안전한 정렬 처리 - 잘못된 속성이 있으면 기본 정렬 사용
-        Pageable safePageable = createSafePageable(pageable);
-        return shortsRepository.findAll(safePageable).map(ShortsResponse::from);
+        // sort 파라미터가 없거나 잘못된 경우 → id 오름차순 (1→60)
+        // sort 파라미터가 유효한 경우 → 해당 정렬 적용
+
+        if (!pageable.getSort().isSorted()) {
+            // 정렬 파라미터 없음 → id 오름차순
+            Pageable defaultPageable = org.springframework.data.domain.PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "id")
+            );
+            return shortsRepository.findAll(defaultPageable).map(ShortsResponse::from);
+        }
+
+        // 유효한 정렬 속성 목록
+        java.util.Set<String> validProperties = java.util.Set.of(
+            "id", "title", "durationSec", "createdAt", "updatedAt"
+        );
+
+        // 정렬 속성 검증
+        boolean hasInvalidProperty = pageable.getSort().stream()
+            .anyMatch(order -> !validProperties.contains(order.getProperty()));
+
+        if (hasInvalidProperty) {
+            // 잘못된 정렬 속성 (예: sort=string) → id 오름차순
+            Pageable defaultPageable = org.springframework.data.domain.PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "id")
+            );
+            return shortsRepository.findAll(defaultPageable).map(ShortsResponse::from);
+        }
+
+        // 유효한 정렬 → 해당 정렬로 조회
+        return shortsRepository.findAll(pageable).map(ShortsResponse::from);
     }
 
     /**

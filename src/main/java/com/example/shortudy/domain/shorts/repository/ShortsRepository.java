@@ -38,5 +38,12 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
      */
     @EntityGraph(attributePaths = {"user", "category"})
     Page<Shorts> findByUserId(Long userId, Pageable pageable);
-}
 
+    /**
+     * 랜덤 정렬 목록 조회 (숏폼 피드용)
+     */
+    @Query(value = "SELECT s.* FROM shorts_form s ORDER BY RAND()",
+           countQuery = "SELECT COUNT(*) FROM shorts_form",
+           nativeQuery = true)
+    Page<Shorts> findAllRandom(Pageable pageable);
+}
