@@ -84,17 +84,56 @@ public class ShortsService {
     @Transactional(readOnly = true)
     public Page<ShortsResponse> getShortsDetailsWithPaging(Long shortsId, Pageable pageable) {
         // 요청한 영상이 존재하는지 확인
-        Shorts requestedShorts = shortsRepository.findWithDetailsById(shortsId)
+        shortsRepository.findWithDetailsById(shortsId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 숏츠입니다."));
 
+        // 안전한 정렬 처리
+        Pageable safePageable = createSafePageable(pageable);
+
         // 전체 목록을 페이징으로 조회
-        return shortsRepository.findAll(pageable).map(ShortsResponse::from);
+        return shortsRepository.findAll(safePageable).map(ShortsResponse::from);
     }
 
     @Transactional(readOnly = true)
     public Page<ShortsResponse> getShortsList(Pageable pageable) {
+        // 안전한 정렬 처리 - 잘못된 속성이 있으면 기본 정렬 사용
+        Pageable safePageable = createSafePageable(pageable);
+        return shortsRepository.findAll(safePageable).map(ShortsResponse::from);
+    }
 
-        return shortsRepository.findAll(pageable).map(ShortsResponse::from);
+    /**
+     * 안전한 Pageable 생성 - 유효하지 않은 정렬 속성 방지
+     */
+    private Pageable createSafePageable(Pageable pageable) {
+        // 정렬이 없으면 기본 정렬 적용
+        if (!pageable.getSort().isSorted()) {
+            return org.springframework.data.domain.PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "id")
+            );
+        }
+
+        // 유효한 정렬 속성 목록
+        java.util.Set<String> validProperties = java.util.Set.of(
+            "id", "title", "durationSec", "createdAt", "updatedAt",
+            "videoUrl", "thumbnailUrl", "description"
+        );
+
+        // 정렬 속성 검증
+        boolean hasInvalidProperty = pageable.getSort().stream()
+            .anyMatch(order -> !validProperties.contains(order.getProperty()));
+
+        if (hasInvalidProperty) {
+            // 잘못된 정렬 속성이 있으면 기본 정렬 사용
+            return org.springframework.data.domain.PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "id")
+            );
+        }
+
+        return pageable;
     }
 
     @Transactional

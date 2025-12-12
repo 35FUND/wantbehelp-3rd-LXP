@@ -4,9 +4,11 @@ import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
+import org.springdoc.core.customizers.OperationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -66,6 +68,34 @@ public class SwaggerConfig {
                 .contact(new Contact()
                         .name("Shortudy Team")
                         .email("support@shortudy.com"));
+    }
+
+    /**
+     * Pageable 파라미터의 sort 기본값을 올바르게 설정
+     * Swagger UI에서 "string" 대신 "id,desc" 표시
+     */
+    @Bean
+    public OperationCustomizer operationCustomizer() {
+        return (operation, handlerMethod) -> {
+            // Pageable 파라미터가 있는 경우
+            if (operation.getParameters() != null) {
+                operation.getParameters().forEach(parameter -> {
+                    // sort 파라미터 찾기
+                    if ("sort".equals(parameter.getName())) {
+                        // 기본 예제를 "id,desc"로 설정
+                        parameter.setExample("id,desc");
+                        parameter.setDescription(
+                            "정렬 기준 (예: id,desc 또는 createdAt,desc). " +
+                            "사용 가능한 속성: id, title, createdAt, updatedAt, durationSec"
+                        );
+                        if (parameter.getSchema() instanceof StringSchema) {
+                            ((StringSchema) parameter.getSchema()).setDefault("id,desc");
+                        }
+                    }
+                });
+            }
+            return operation;
+        };
     }
 }
 

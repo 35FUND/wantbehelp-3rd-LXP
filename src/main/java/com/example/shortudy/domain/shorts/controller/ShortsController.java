@@ -50,7 +50,7 @@ public class ShortsController {
     public ApiResponse<Page<ShortsResponse>> getShortsDetails(
             @Parameter(description = "숏폼 ID", example = "1") @PathVariable Long shortId,
             @Parameter(description = "페이지 정보 (기본: page=0, size=20)")
-            @PageableDefault(size = 20) Pageable pageable) {
+            @PageableDefault(size = 20, sort = "id", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
         Page<ShortsResponse> response = shortsService.getShortsDetailsWithPaging(shortId, pageable);
         return ApiResponse.success(response);
     }
@@ -60,7 +60,7 @@ public class ShortsController {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Page<ShortsResponse>> getShortsList(
             @Parameter(description = "페이지 정보 (page, size, sort)")
-            @PageableDefault(size = 8) Pageable pageable) {
+            @PageableDefault(size = 8, sort = "id", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
         Page<ShortsResponse> response = shortsService.getShortsList(pageable);
         return ApiResponse.success(response);
     }
