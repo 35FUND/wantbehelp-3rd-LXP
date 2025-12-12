@@ -89,7 +89,7 @@ public class ShortsController {
     public ApiResponse<Void> deleteShorts(
             @Parameter(description = "숏폼 ID", example = "1") @PathVariable Long shortId) {
         shortsService.deleteShorts(shortId);
-        return ApiResponse.success();  // null 제거
+        return ApiResponse.success();
     }
 }
 
