@@ -52,12 +52,13 @@ public class SecurityConfig {
                                 "/api/v1/categories",
                                 "/api/v1/categories/{id}",
                                 "/api/v1/tags",
-                                "/api/v1/tags/{id}"
+                                "/api/v1/tags/{id}",
+                                "/api/v1/auth/logout"
                         ).permitAll()
 
                         // 사용자 인증 필요
                         .requestMatchers(
-                                "/api/v1/auth/logout",
+
                                 "/api/v1/auth/stat",
                                 "/api/v1/users/me",
                                 "/api/v1/users/me/shorts",

@@ -20,7 +20,7 @@ public class PageableConfig implements WebMvcConfigurer {
         sortResolver.setFallbackSort(Sort.by(Sort.Direction.DESC, "id"));
 
         PageableHandlerMethodArgumentResolver pageableResolver = new PageableHandlerMethodArgumentResolver(sortResolver);
-        pageableResolver.setFallbackPageable(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "id")));
+        pageableResolver.setFallbackPageable(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id")));
         pageableResolver.setMaxPageSize(100);
 
         resolvers.add(pageableResolver);
