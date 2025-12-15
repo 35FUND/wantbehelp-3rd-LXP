@@ -36,11 +36,13 @@ public class Shorts extends BaseTimeEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(nullable = false)
+    @Column(name = "video_url", nullable = false, length = 500)
     private String videoUrl;
 
+    @Column(name = "thumbnail_url", length = 500)
     private String thumbnailUrl;
 
+    @Column(name = "duration_sec")
     private Integer durationSec;
 
     @Enumerated(EnumType.STRING)
