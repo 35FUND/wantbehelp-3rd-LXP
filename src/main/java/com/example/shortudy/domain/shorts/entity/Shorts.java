@@ -44,7 +44,8 @@ public class Shorts extends BaseTimeEntity {
     private Integer durationSec;
 
     @Enumerated(EnumType.STRING)
-    private ShortsStatus shortsStatus;
+    @Column(name = "status")
+    private ShortsStatus status = ShortsStatus.PUBLISHED;
 
     protected Shorts() {
     }
@@ -60,7 +61,7 @@ public class Shorts extends BaseTimeEntity {
         this.taggings.clear(); // orphanRemoval = true 라면 tagging row 삭제됨
     }
 
-    public Shorts(User user, Category category, String title, String description, String videoUrl, String thumbnailUrl, Integer durationSec, ShortsStatus shortsStatus) {
+    public Shorts(User user, Category category, String title, String description, String videoUrl, String thumbnailUrl, Integer durationSec, ShortsStatus status) {
         this.user = user;
         this.category = category;
         this.title = title;
@@ -68,7 +69,7 @@ public class Shorts extends BaseTimeEntity {
         this.videoUrl = videoUrl;
         this.thumbnailUrl = thumbnailUrl;
         this.durationSec = durationSec;
-        this.shortsStatus = shortsStatus;
+        this.status = status;
     }
 
     public Long getId() {
@@ -107,8 +108,8 @@ public class Shorts extends BaseTimeEntity {
         return durationSec;
     }
 
-    public ShortsStatus getShortsStatus() {
-        return shortsStatus;
+    public ShortsStatus getStatus() {
+        return status;
     }
 
     public void updateShorts(String title, String description, String thumbnailUrl, Category category, ShortsStatus status) {
@@ -125,7 +126,7 @@ public class Shorts extends BaseTimeEntity {
             this.category = category;
         }
         if (status != null) {
-            this.shortsStatus = status;
+            this.status = status;
         }
     }
 }

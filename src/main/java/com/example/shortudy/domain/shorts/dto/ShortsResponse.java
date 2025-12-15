@@ -82,7 +82,7 @@ public record ShortsResponse (
                 shorts.getVideoUrl(),
                 shorts.getThumbnailUrl(),
                 shorts.getDurationSec(),
-                shorts.getShortsStatus(),
+                shorts.getStatus(),
                 new UploaderDto(
                         shorts.getUser().getId(),
                         shorts.getUser().getNickname() != null
