@@ -4,6 +4,7 @@ import com.example.shortudy.global.common.BaseTimeEntity;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name = "category")
 public class Category extends BaseTimeEntity {
 
     @Id
