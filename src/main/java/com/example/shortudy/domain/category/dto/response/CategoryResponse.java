@@ -9,13 +9,17 @@ public record CategoryResponse(
         Long id,
 
         @Schema(description = "카테고리 이름", example = "프로그래밍")
-        String name
+        String name,
+
+        @Schema(description = "부모 카테고리 ID (null이면 최상위)", example = "null")
+        Long parentId
 ) {
 
     public static CategoryResponse of(Category category) {
         return new CategoryResponse(
                 category.getId(),
-                category.getName()
+                category.getName(),
+                category.getParentId()
         );
     }
 }

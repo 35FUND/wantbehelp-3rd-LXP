@@ -31,6 +31,10 @@ public class Category extends BaseTimeEntity {
         return name;
     }
 
+    public Long getParentId() {
+        return parentId;
+    }
+
     public void updateName(String name) {
         this.name = name;
     }
