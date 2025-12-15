@@ -96,17 +96,12 @@ public class ShortsService {
 
     @Transactional(readOnly = true)
     public Page<ShortsResponse> getShortsList(Pageable pageable) {
-        // sort 파라미터가 없거나 잘못된 경우 → id 오름차순 (1→60)
-        // sort 파라미터가 유효한 경우 → 해당 정렬 적용
+        // sort 파라미터가 없으면 → 랜덤 조회 (메인 페이지)
+        // sort 파라미터가 있고 유효하면 → 해당 정렬 적용
 
         if (!pageable.getSort().isSorted()) {
-            // 정렬 파라미터 없음 → id 오름차순
-            Pageable defaultPageable = org.springframework.data.domain.PageRequest.of(
-                pageable.getPageNumber(),
-                pageable.getPageSize(),
-                org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "id")
-            );
-            return shortsRepository.findAll(defaultPageable).map(ShortsResponse::from);
+            // 정렬 파라미터 없음 → 랜덤 조회
+            return shortsRepository.findAllRandom(pageable).map(ShortsResponse::from);
         }
 
         // 유효한 정렬 속성 목록
@@ -119,13 +114,8 @@ public class ShortsService {
             .anyMatch(order -> !validProperties.contains(order.getProperty()));
 
         if (hasInvalidProperty) {
-            // 잘못된 정렬 속성 (예: sort=string) → id 오름차순
-            Pageable defaultPageable = org.springframework.data.domain.PageRequest.of(
-                pageable.getPageNumber(),
-                pageable.getPageSize(),
-                org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "id")
-            );
-            return shortsRepository.findAll(defaultPageable).map(ShortsResponse::from);
+            // 잘못된 정렬 속성 → 랜덤 조회
+            return shortsRepository.findAllRandom(pageable).map(ShortsResponse::from);
         }
 
         // 유효한 정렬 → 해당 정렬로 조회
