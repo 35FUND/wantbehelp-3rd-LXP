@@ -1,10 +1,9 @@
 package com.example.shortudy.domain.shorts.entity;
 
 import com.example.shortudy.domain.category.entity.Category;
-import com.example.shortudy.domain.tag.entity.Tag;
+import com.example.shortudy.domain.keyword.entity.Tag;
 import com.example.shortudy.domain.tagging.Tagging;
 import com.example.shortudy.domain.user.entity.User;
-import com.example.shortudy.global.common.BaseTimeEntity;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;

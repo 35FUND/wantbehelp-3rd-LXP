@@ -1,10 +1,8 @@
-package com.example.shortudy.domain.tag.entity;
+package com.example.shortudy.domain.keyword.entity;
 
 import com.example.shortudy.domain.tagging.Tagging;
-import com.example.shortudy.global.common.BaseTimeEntity;
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 

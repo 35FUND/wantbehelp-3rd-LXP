@@ -1,9 +1,9 @@
-package com.example.shortudy.domain.tag.service;
+package com.example.shortudy.domain.keyword.service;
 
-import com.example.shortudy.domain.tag.dto.request.TagRequest;
-import com.example.shortudy.domain.tag.dto.response.TagResponse;
-import com.example.shortudy.domain.tag.entity.Tag;
-import com.example.shortudy.domain.tag.repository.TagRepository;
+import com.example.shortudy.domain.keyword.dto.request.TagRequest;
+import com.example.shortudy.domain.keyword.dto.response.TagResponse;
+import com.example.shortudy.domain.keyword.entity.Tag;
+import com.example.shortudy.domain.keyword.repository.TagRepository;
 import com.example.shortudy.global.util.TagNormalizer;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
