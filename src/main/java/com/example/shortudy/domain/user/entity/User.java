@@ -1,84 +1,72 @@
 package com.example.shortudy.domain.user.entity;
 
-import com.example.shortudy.global.entity.BaseEntity;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDateTime;
 
-/**
- * 사용자 엔티티
- * - email: 로그인용 이메일 (유니크)
- * - password: 암호화된 비밀번호 (절대 노출 X)
- * - nickname: 닉네임 (nullable)
- * - name: 사용자 이름
- */
+@Getter
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "users")
-public class User extends BaseEntity {
+public class User {
+
+    //TODO UUID 사용 여부 결정, LocalTimeDate 프론트엔드 분들과 논의
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(nullable = false, unique = true, length = 100)
     private String email;
 
-    @JsonIgnore  // JSON 직렬화 시 제외 (보안)
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false, length = 100)
-    private String name;
-
-    @Column
+    @Column(nullable = false)
     private String nickname;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserRole role;
 
     @Column
     private String profileUrl;
 
-    @JsonIgnore  // roles도 외부 노출 불필요
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
-    @Column(name = "role")
-    private final List<String> roles = new ArrayList<>();
+    @Column(nullable = false)
+    private UserStatus status;
 
-    // == 생성자 ==
-    protected User() {
-    }
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
-    private User(String email, String password, String name) {
+    @LastModifiedDate
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    protected User() {}
+
+    private User(String email, String password, String nickname, UserRole role, String profileUrl) {
         this.email = email;
         this.password = password;
-        this.name = name;
-        this.roles.add("ROLE_USER");
+        this.nickname = nickname;
+        this.role = role;
+        this.profileUrl = profileUrl;
+        this.status = UserStatus.ACTIVE;
     }
 
-    // == 정적 팩토리 메서드 ==
-    public static User createUser(String email, String password, String name) {
-        return new User(email, password, name);
-    }
-
-    // == Getter ==
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getNickname() {
-        return nickname;
-    }
-
-    public String getProfileUrl() {
-        return profileUrl;
-    }
-
-    public List<String> getRoles() {
-        return roles;
+    public static User create(String email, String password, String nickname, UserRole role, String profileUrl) {
+        return new User(email, password, nickname, role, profileUrl);
     }
 }
 
