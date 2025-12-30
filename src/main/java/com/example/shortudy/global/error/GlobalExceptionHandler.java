@@ -1,9 +1,6 @@
 package com.example.shortudy.global.error;
 
 import com.example.shortudy.global.common.ApiResponse;
-import com.example.shortudy.global.error.exception.EmailAlreadyExistsException;
-import com.example.shortudy.global.error.exception.InvalidPasswordException;
-import com.example.shortudy.global.error.exception.UserNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

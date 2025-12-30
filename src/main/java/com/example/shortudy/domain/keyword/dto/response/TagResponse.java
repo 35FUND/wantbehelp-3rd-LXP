@@ -1,6 +1,6 @@
-package com.example.shortudy.domain.tag.dto.response;
+package com.example.shortudy.domain.keyword.dto.response;
 
-import com.example.shortudy.domain.tag.entity.Tag;
+import com.example.shortudy.domain.keyword.entity.Tag;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "태그 응답")

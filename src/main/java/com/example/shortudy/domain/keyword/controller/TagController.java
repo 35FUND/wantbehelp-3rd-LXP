@@ -1,8 +1,8 @@
-package com.example.shortudy.domain.tag.controller;
+package com.example.shortudy.domain.keyword.controller;
 
-import com.example.shortudy.domain.tag.dto.request.TagRequest;
-import com.example.shortudy.domain.tag.dto.response.TagResponse;
-import com.example.shortudy.domain.tag.service.TagService;
+import com.example.shortudy.domain.keyword.dto.request.TagRequest;
+import com.example.shortudy.domain.keyword.dto.response.TagResponse;
+import com.example.shortudy.domain.keyword.service.TagService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

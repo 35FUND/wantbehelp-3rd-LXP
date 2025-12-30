@@ -1,6 +1,5 @@
 package com.example.shortudy.domain.category.entity;
 
-import com.example.shortudy.global.common.BaseTimeEntity;
 import jakarta.persistence.*;
 
 @Entity
