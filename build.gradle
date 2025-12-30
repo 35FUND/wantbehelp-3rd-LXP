@@ -32,7 +32,8 @@ dependencies {
     // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
     implementation 'io.jsonwebtoken:jjwt-impl:0.12.3' // runtimeOnly 대신 implementation
-    implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3' // runtimeOnly 대신 implementation
+    implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+    implementation 'org.projectlombok:lombok'// runtimeOnly 대신 implementation
 
     // Database
     runtimeOnly 'com.mysql:mysql-connector-j:8.0.33'
@@ -52,8 +53,8 @@ bootJar {
 }
 
 // OpenAPI 문서 생성 설정
-openApi {
-    apiDocsUrl.set("http://localhost:8080/v3/api-docs")
-    outputDir.set(file("$buildDir/docs"))
-    outputFileName.set("openapi.json")
-}
+//openApi {
+//    apiDocsUrl.set("http://localhost:8080/v3/api-docs")
+//    outputDir.set(file("$buildDir/docs"))
+//    outputFileName.set("openapi.json")
+//}
