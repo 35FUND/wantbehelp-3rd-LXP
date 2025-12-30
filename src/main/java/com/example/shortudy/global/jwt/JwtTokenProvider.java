@@ -1,52 +1,34 @@
 package com.example.shortudy.global.jwt;
 
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 
-/**
- * JWT 토큰 생성 및 검증
- * - Access Token: 인증용 (짧은 만료 시간)
- * - Refresh Token: Access Token 재발급용 (긴 만료 시간)
- */
 @Component
 public class JwtTokenProvider {
 
-    private final SecretKey secretKey;
-    private final long accessTokenValidity;
-    private final long refreshTokenValidity;
+    @Value("${jwt.secret}")
+    private String secretKey;
 
-    public JwtTokenProvider(
-            @Value("${jwt.secret:mySecretKeyForJwtTokenMustBeLongEnough123456}") String secret,
-            @Value("${jwt.access-token-validity:3600000}") long accessTokenValidity,    // 기본 1시간
-            @Value("${jwt.refresh-token-validity:604800000}") long refreshTokenValidity  // 기본 7일
-    ) {
-        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        this.accessTokenValidity = accessTokenValidity;
-        this.refreshTokenValidity = refreshTokenValidity;
-    }
+    @Value("${jwt.access-expiration}")
+    private long accessExpiration;
 
-    /**
-     * Access Token 생성
-     */
+    @Value("${jwt.refresh-expiration}")
+    private long refreshExpiration;
+
     public String createAccessToken(String email, List<String> roles) {
         return createToken(email, roles, accessTokenValidity);
     }
 
-    /**
-     * Refresh Token 생성
-     */
     public String createRefreshToken(String email, List<String> roles) {
         return createToken(email, roles, refreshTokenValidity);
     }
 
-    private String createToken(String email, List<String> roles, long validity) {
+    private String createToken(String email, long validity) {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + validity);
 
