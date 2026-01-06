@@ -9,7 +9,6 @@ public class BaseException extends RuntimeException {
         this.errorCode = errorCode;
     }
 
-
     public BaseException(ErrorCode errorCode, String customMessage) {
         super(customMessage);
         this.errorCode = errorCode;
