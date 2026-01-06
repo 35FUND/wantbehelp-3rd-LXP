@@ -1,5 +1,8 @@
 package com.example.shortudy.global.common;
 
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
+
 /**
  * API 공통 응답 클래스
  * - success: 요청 성공 여부
@@ -9,13 +12,17 @@ package com.example.shortudy.global.common;
 public class ApiResponse<T> {
 
     private boolean success;
+    private String code;
     private String message;
+    private String request;
     private T data;
 
     // 생성자
-    private ApiResponse(boolean success, String message, T data) {
+    private ApiResponse(boolean success, String name, String message, String request, T data) {
         this.success = success;
+        this.code = name;
         this.message = message;
+        this.request = request;
         this.data = data;
     }
 
@@ -25,21 +32,14 @@ public class ApiResponse<T> {
      * 성공 응답 (데이터 포함)
      */
     public static <T> ApiResponse<T> success(T data) {
-        return new ApiResponse<>(true, "Success", data);
-    }
-
-    /**
-     * 성공 응답 (데이터 없음)
-     */
-    public static <T> ApiResponse<T> success() {
-        return new ApiResponse<>(true, "Success", null);
+        return new ApiResponse<>(true, "Success", null, data);
     }
 
     /**
      * 에러 응답
      */
-    public static <T> ApiResponse<T> error(String message) {
-        return new ApiResponse<>(false, message, null);
+    public static <T> ApiResponse<T> error(String message, String code, String request) {
+        return new ApiResponse<>(false, message, code, request, null);
     }
 
     // == Getter ==
