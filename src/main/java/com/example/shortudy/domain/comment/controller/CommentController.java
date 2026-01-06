@@ -28,3 +28,11 @@ public class CommentController {
     ) {
         return ResponseEntity.ok(commentService.createComment(me.getUserId(), shortsId, commentRequest));
     }
+
+    @GetMapping("shorts/{shortsId}/comments")
+    public ResponseEntity<List<CommentResponse>> getAllComments(
+            @PathVariable Long shortsId
+    ) {
+       return
+    }
+}

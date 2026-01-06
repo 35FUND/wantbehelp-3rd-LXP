@@ -42,3 +42,20 @@ public class CommentService {
 
         return CommentResponse.from(commentRepository.save(comment));
     }
+
+    @Transactional(readOnly = true)
+    public List<CommentResponse> getAllComments(Long shortsId) {
+
+        shortsRepository.findById(shortsId).orElseThrow(() ->
+                new BaseException(ErrorCode.SHORTS_NOT_FOUND));
+
+        return commentRepository.findAllByShortsId(shortsId)
+                .stream()
+                .map(this::from)
+                .toList();
+    }
+
+    private CommentResponse from(Comment comment) {
+        return CommentResponse.from(comment);
+    }
+}
