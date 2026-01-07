@@ -13,7 +13,6 @@ import com.example.shortudy.global.error.ErrorCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -38,13 +37,13 @@ public class CommentService {
         Shorts shorts = shortsRepository.findById(shortsId).orElseThrow(() ->
                 new BaseException(ErrorCode.SHORTS_NOT_FOUND));
 
-        Comment comment = new Comment(user, shorts, null, request.content());
+        Comment comment = Comment.create(user, shorts, request.content());
 
         return CommentResponse.from(commentRepository.save(comment));
     }
 
     @Transactional(readOnly = true)
-    public List<CommentResponse> getAllComments(Long shortsId) {
+    public List<CommentResponse> getCommentsByShortsId(Long shortsId) {
 
         shortsRepository.findById(shortsId).orElseThrow(() ->
                 new BaseException(ErrorCode.SHORTS_NOT_FOUND));
@@ -57,5 +56,32 @@ public class CommentService {
 
     private CommentResponse from(Comment comment) {
         return CommentResponse.from(comment);
+
+    }
+
+    @Transactional
+    public CommentResponse updateComment(Long userId, Long commentId, CommentRequest request) {
+
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() ->
+                new BaseException(ErrorCode.COMMENT_NOT_FOUND));
+
+        if(comment.isWrittenBy(userId)) {
+            throw new BaseException(ErrorCode.COMMENT_FORBIDDEN);
+        }
+        comment.updateContent(request.content());
+
+        return CommentResponse.from(comment);
+    }
+
+    @Transactional
+    public void deleteComment(Long userId, Long commentId) {
+
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() ->
+                new BaseException(ErrorCode.COMMENT_NOT_FOUND));
+
+        if(comment.isWrittenBy(userId)) {
+            throw new BaseException(ErrorCode.COMMENT_FORBIDDEN);
+        }
+        commentRepository.deleteById(commentId);
     }
 }
