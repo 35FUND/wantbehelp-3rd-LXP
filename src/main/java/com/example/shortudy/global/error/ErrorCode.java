@@ -16,7 +16,15 @@ public enum ErrorCode {
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "USER_409", "이미 사용 중인 이메일입니다."),
 
     // shorts
-    SHORTS_NOT_FOUND(HttpStatus.NOT_FOUND, "SHORTS_404", "해당 숏츠를 찾을 수 없습니다.")
+    SHORTS_NOT_FOUND(HttpStatus.NOT_FOUND, "SHORTS_404", "해당 숏츠를 찾을 수 없습니다."),
+
+    // comment
+    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMENT_404", "해당 댓글을 찾을 수 없습니다."),
+    COMMENT_FORBIDDEN(HttpStatus.FORBIDDEN, "COMMENT_403", "해당 댓글에 대한 접근 권한이 없습니다."),
+
+
+
+
 
     ;
     private final HttpStatus status;

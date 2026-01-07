@@ -2,12 +2,16 @@ package com.example.shortudy.domain.comment.entity;
 
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.user.entity.User;
+import com.example.shortudy.global.error.BaseException;
+import com.example.shortudy.global.error.ErrorCode;
 import jakarta.persistence.*;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
 @Entity
 public class Comment {
 
@@ -19,6 +23,7 @@ public class Comment {
     @JoinColumn(name = "parent_id")
     private Comment parent; // null이면 댓글, 값 있으면 대댓글
 
+    @Getter
     @OneToMany(mappedBy = "parent")
     private List<Comment> children = new ArrayList<>(); // 댓글에 달린 대댓글 리스트
 
@@ -35,36 +40,41 @@ public class Comment {
 
     private LocalDateTime createdAt;
 
+    private static final int MAX_CONTENT_LENGTH = 1000;
+
     protected Comment(){}
 
-    public Comment(User user, Shorts shorts, Comment parent, String content) {
+    private Comment(User user, Shorts shorts, Comment parent, String content) {
         this.user = user;
         this.shorts = shorts;
         this.parent = parent;
+        validateContent(content);
         this.content = content;
     }
 
-    public Long getId() {
-        return id;
+    // 댓글
+    public static Comment create(User user, Shorts shorts, String content) {
+        return new Comment(user, shorts, null, content);
     }
 
-    public Comment getParent() {
-        return parent;
+    public void updateContent(String content) {
+
+        validateContent(content);
+            this.content = content;
     }
 
-    public List<Comment> getChildren() {
-        return children;
+
+    public boolean isWrittenBy(Long userId) {
+
+        return this.user.getId().equals(userId);
     }
 
-    public Shorts getShorts() {
-        return shorts;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    private void validateContent(String content) {
+        if (content == null || content.isBlank()) {
+            throw new BaseException(ErrorCode.INVALID_INPUT);
+        }
+        if (content.length() > MAX_CONTENT_LENGTH) {
+            throw new BaseException(ErrorCode.INVALID_INPUT);
+        }
     }
 }
