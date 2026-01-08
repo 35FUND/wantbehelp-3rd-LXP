@@ -14,11 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * 인증 컨트롤러
- * - 토큰은 ResponseCookie로 설정 (sameSite 지원)
- * - 환경별로 sameSite, secure 설정 변경 가능
- */
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
@@ -49,15 +44,15 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<LoginResponse>> refresh(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody @Valid RefreshRequest request) {
+    public ResponseEntity<ApiResponse<LoginResponse>> refresh(@RequestBody @Valid RefreshRequest request) {
 
-        return ResponseEntity.ok(ApiResponse.success(authService.refresh(userDetails.getId() , request.refreshToken())));
+        return ResponseEntity.ok(ApiResponse.success(authService.refresh(request.refreshToken())));
     }
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(@AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        authService.logout(userDetails.getUsername());
+        authService.logout(userDetails.getId());
 
         return ResponseEntity.ok(ApiResponse.success());
     }
