@@ -54,7 +54,7 @@ public class AuthController {
 
         authService.logout(userDetails.getId());
 
-        return ResponseEntity.ok(ApiResponse.success());
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
 //    @PostMapping("/login")

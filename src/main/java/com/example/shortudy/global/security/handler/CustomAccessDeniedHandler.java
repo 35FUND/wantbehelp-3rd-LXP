@@ -24,7 +24,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
         response.setContentType("application/json;charset=UTF-8");
 
-        ApiResponse<Void> apiResponse = ApiResponse.error("해당 리소스에 접근할 권한이 없습니다.");
+        ApiResponse<Void> apiResponse = ApiResponse.error("해당 리소스에 접근할 권한이 없습니다.", null, null);
 
         response.getWriter().write(objectMapper.writeValueAsString(apiResponse));
     }
