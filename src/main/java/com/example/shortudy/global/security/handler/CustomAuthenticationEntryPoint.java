@@ -38,6 +38,8 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 //                errorCode.getMessage(),
 //                errorCode.getCode
                 //TODO 수정 해야 함..
+                null,
+                null,
                 null
         );
 

@@ -3,7 +3,9 @@ package com.example.shortudy.domain.comment.controller;
 import com.example.shortudy.domain.comment.dto.request.CommentRequest;
 import com.example.shortudy.domain.comment.dto.response.CommentResponse;
 import com.example.shortudy.domain.comment.service.CommentService;
+import com.example.shortudy.global.security.principal.CustomUserDetails;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +28,7 @@ public class CommentController {
             @PathVariable Long shortsId,
             @Valid @RequestBody CommentRequest commentRequest
     ) {
-        return ResponseEntity.ok(commentService.createComment(me.getUserId(), shortsId, commentRequest));
+        return ResponseEntity.status(HttpStatus.CREATED).body((commentService.createComment(me.getId(), shortsId, commentRequest)));
     }
 
     @GetMapping("/shorts/{shortsId}/comments")
@@ -42,7 +44,7 @@ public class CommentController {
             @PathVariable Long commentId,
             @Valid @RequestBody CommentRequest request
     ) {
-        return ResponseEntity.ok(commentService.updateComment(me.getUserId(), commentId, request));
+        return ResponseEntity.ok(commentService.updateComment(me.getId(), commentId, request));
     }
 
     @DeleteMapping("/comments/{commentId}")
@@ -50,6 +52,6 @@ public class CommentController {
             @AuthenticationPrincipal CustomUserDetails me,
             @PathVariable Long commentId
     ) {
-       commentService.deleteComment(me.getUserId(), commentId);
+       commentService.deleteComment(me.getId(), commentId);
     }
 }

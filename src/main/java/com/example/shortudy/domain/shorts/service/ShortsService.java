@@ -55,16 +55,6 @@ public class ShortsService {
                 ShortsStatus.PUBLISHED
         );
 
-        // 태그 추가
-        if (shortsUploadRequest.tagNames() != null && !shortsUploadRequest.tagNames().isEmpty()) {
-            for (String tagName : shortsUploadRequest.tagNames()) {
-                Tag tag = tagService.getOrCreateTag(tagName);
-                if (tag != null) {
-                    shorts.addTag(tag);
-                }
-            }
-        }
-
         Shorts savedShorts = shortsRepository.save(shorts);
         return ShortsResponse.from(savedShorts);
     }
@@ -179,17 +169,6 @@ public class ShortsService {
                 category,
                 request.status()
         );
-
-        // 태그 업데이트 (기존 태그 삭제 후 새로 추가)
-        if (request.tagNames() != null) {
-            shorts.clearTags();
-            for (String tagName : request.tagNames()) {
-                Tag tag = tagService.getOrCreateTag(tagName);
-                if (tag != null) {
-                    shorts.addTag(tag);
-                }
-            }
-        }
 
         return ShortsResponse.from(shorts);
     }

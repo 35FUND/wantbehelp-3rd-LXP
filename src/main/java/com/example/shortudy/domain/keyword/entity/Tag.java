@@ -8,7 +8,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "tag")
-public class Tag extends BaseTimeEntity {
+public class Tag {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,9 +21,6 @@ public class Tag extends BaseTimeEntity {
     // 정규화 로직(공백 제거, 소문자로 변환 등) 거치고 실제 DB에 저장될 값 ex) java
     @Column(nullable = false, length = 50, unique = true)
     private String normalizedName;
-
-    @OneToMany(mappedBy = "tag")
-    private List<Tagging> taggings = new ArrayList<>();
 
     protected Tag() {}
 
@@ -38,14 +35,6 @@ public class Tag extends BaseTimeEntity {
 
     public String getDisplayName() {
         return displayName;
-    }
-
-    public String getNormalizedName() {
-        return normalizedName;
-    }
-
-    public List<Tagging> getTaggings() {
-        return taggings;
     }
 
     /**
