@@ -36,21 +36,24 @@ public class AuthService {
         return generateToken(user);
     }
 
-    public void logout(String email) {
-        RefreshToken refreshToken = refreshTokenRepository.findByEmail(email).orElseThrow(IllegalArgumentException::new);
-        refreshTokenRepository.delete(refreshToken);
+    public void logout(Long userId) {
+        // 토큰이 있으면 지우고, 없으면 아무것도 안 함 (멱등성 유지)
+        refreshTokenRepository.findByUserId(userId).ifPresent(refreshTokenRepository::delete);
     }
 
-
-
-
-    public LoginResponse refresh(Long userId, String refreshToken) {
+    public LoginResponse refresh(String refreshToken) {
+        // 토큰 검증 로직 TODO 토큰 만료(INVALID_TOKEN)으로 처리
         if (!jwtTokenProvider.validateToken(refreshToken)) throw new IllegalArgumentException("Invalid token");
 
+        // 토큰에서 userId 추출
+        Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
+        // TODO USER_NOT_FOUND 에러로 처리
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not founded"));
-        RefreshToken storedToken = refreshTokenRepository.findByEmail(user.getEmail()).orElseThrow(IllegalArgumentException::new);
+        // DB에 있는 refreshToken TODO LOGIN_REQUIRED 로 처리
+        RefreshToken storedToken = refreshTokenRepository.findByUserId(userId).orElseThrow(IllegalArgumentException::new);
 
-        // 토큰 탈취 의심 상황 -> DB에서 토큰 삭제 후 로그아웃 유도용 Exception
+        // RTR 검증 (토큰 탈취 의심 상황 -> DB에서 토큰 삭제 후 로그아웃 유도용 Exception)
+        // TODO TOKEN_STEAL_DETECTED 에러로 처리
         if (!storedToken.getToken().equals(refreshToken)) {
             refreshTokenRepository.delete(storedToken);
             throw new IllegalArgumentException("Invalid token");
@@ -70,8 +73,8 @@ public class AuthService {
                 user.getEmail(),
                 user.getRole()
         );
-        RefreshToken refreshTokenEntity = refreshTokenRepository.findByEmail(user.getEmail())
-                .orElse(RefreshToken.create(user.getEmail(), refreshToken));
+        RefreshToken refreshTokenEntity = refreshTokenRepository.findByUserId(user.getId())
+                .orElse(RefreshToken.create(user.getId(), refreshToken));
 
         refreshTokenEntity.updateToken(refreshToken);
         refreshTokenRepository.save(refreshTokenEntity);
