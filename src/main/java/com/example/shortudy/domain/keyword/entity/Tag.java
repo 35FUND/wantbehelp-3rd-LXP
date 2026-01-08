@@ -1,11 +1,9 @@
 package com.example.shortudy.domain.keyword.entity;
 
-import com.example.shortudy.domain.tagging.Tagging;
 import jakarta.persistence.*;
+import lombok.Getter;
 
-import java.util.ArrayList;
-import java.util.List;
-
+@Getter
 @Entity
 @Table(name = "tag")
 public class Tag {
@@ -27,14 +25,6 @@ public class Tag {
     public Tag(String displayName, String normalizedName) {
         this.displayName = displayName;
         this.normalizedName = normalizedName;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getDisplayName() {
-        return displayName;
     }
 
     /**

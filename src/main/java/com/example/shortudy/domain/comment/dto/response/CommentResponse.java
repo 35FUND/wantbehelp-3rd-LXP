@@ -4,21 +4,26 @@ import com.example.shortudy.domain.comment.entity.Comment;
 
 import java.time.LocalDateTime;
 
-public record CommentResponse (
+public record CommentResponse(
 
         Long commentId,
-        Long parentId,
         String content,
-        LocalDateTime createdAt
-){
+        LocalDateTime createdAt,
+        WriterResponse writer,
+        long replyCount,
+        boolean isMine
+) {
 
-    public static CommentResponse from(Comment comment){
-
+    public static CommentResponse from(Long myId, Comment comment, long replyCount) {
+                                                            // TODO replyCount 인트로 못받는가
         return new CommentResponse(
                 comment.getId(),
-                comment.getParent() != null ? comment.getParent().getId() : null,
                 comment.getContent(),
-                comment.getCreatedAt()
+                comment.getCreatedAt(),
+                WriterResponse.from(comment.getUser()),
+                replyCount,
+                myId != null && comment.isWrittenBy(myId)
         );
     }
 }
+

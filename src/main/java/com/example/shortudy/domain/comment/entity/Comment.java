@@ -23,10 +23,6 @@ public class Comment {
     @JoinColumn(name = "parent_id")
     private Comment parent; // null이면 댓글, 값 있으면 대댓글
 
-    @Getter
-    @OneToMany(mappedBy = "parent")
-    private List<Comment> children = new ArrayList<>(); // 댓글에 달린 대댓글 리스트
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shortsId", nullable = false)
     private Shorts shorts;
