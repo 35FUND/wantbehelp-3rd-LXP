@@ -18,20 +18,20 @@ public class RefreshToken {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String email;
+    private Long userId;
 
     @Column(nullable = false)
     private String token;
 
     protected RefreshToken() {}
 
-    private RefreshToken(String email, String token) {
-        this.email = email;
+    private RefreshToken(Long userId, String token) {
+        this.userId = userId;
         this.token = token;
     }
 
-    public static RefreshToken create(String email, String token) {
-        return new RefreshToken(email, token);
+    public static RefreshToken create(Long userId, String token) {
+        return new RefreshToken(userId, token);
     }
 
     public void updateToken(String newToken) {
