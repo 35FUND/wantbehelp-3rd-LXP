@@ -1,6 +1,8 @@
 package com.example.shortudy.global.security.filter;
 
 import com.example.shortudy.global.security.JwtTokenProvider;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,16 +31,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
-    //TODO 로그인을 안한 사용자도 접근이 가능한 API에 대한 방어 로직 작성 필요
+    // 컨트롤러에 요청이 도착하기 전에 필터가 요청을 가로챈다.
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String token = resolveToken(request); // 헤더에서 토큰 꺼내기
+        // 헤더에서 accessToken을 꺼낸다.
+        String token = resolveToken(request);
 
-        if (token != null && jwtTokenProvider.validateToken(token)) {
-            Authentication authentication = jwtTokenProvider.getAuthentication(token);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+        try {
+            // validateToken으로 검증
+            if (token != null && jwtTokenProvider.validateToken(token)) {
+                // 인증된 토큰에 주어지는 합격 목걸이, 합격한 유저 정보를 SecurityContext 바구니에 저장
+                Authentication authentication = jwtTokenProvider.getAuthentication(token);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        } catch (ExpiredJwtException e) {
+            // TODO ACCESS_TOKEN_EXPIRED 에러 처리 ("exception", ErrorCode.ACCESS_TOKEN_EXPIRED)
+            request.setAttribute("exception", e.getMessage());
+        } catch (JwtException | IllegalArgumentException e) { // TODO INVALID_TOKEN으로 처리
+            request.setAttribute("exception", e.getMessage());
         }
         filterChain.doFilter(request, response);
     }
