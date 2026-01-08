@@ -76,8 +76,6 @@ public class JwtTokenProvider {
         try {
             parseClaims(token);
             return true;
-        } catch (ExpiredJwtException e) {
-            return false;
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
@@ -89,6 +87,12 @@ public class JwtTokenProvider {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    public Long getUserIdFromToken(String token) {
+        Claims claims = parseClaims(token);
+
+        return Long.parseLong(claims.getSubject());
     }
 
     public Authentication getAuthentication(String token) {
