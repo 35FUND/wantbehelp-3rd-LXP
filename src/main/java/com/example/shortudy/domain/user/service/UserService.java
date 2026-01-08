@@ -31,6 +31,7 @@ public class UserService {
 
         String encodedPassword = passwordEncoder.encode(request.password());
 
+        // TODO 현재 ADMIN 유저는 추가할 수 없음 추후 예정
         userRepository.save(User.create(
                 request.email(),
                 encodedPassword,
@@ -42,16 +43,14 @@ public class UserService {
 
     public InfoResponse getUserInfo(Long userId) {
 
+        // TODO USER_NOT_FOUNDED 에러
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        //TODO InfoResponse의 from 메서드 작성
+        // TODO InfoResponse의 from 메서드 작성
         return new InfoResponse(user.getId(), user.getEmail(), user.getNickname(), user.getProfileUrl());
     }
 
-    @Transactional
     public void deleteUser(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-        userRepository.delete(user);
+        userRepository.findById(userId).ifPresent(userRepository::delete);
     }
 }
