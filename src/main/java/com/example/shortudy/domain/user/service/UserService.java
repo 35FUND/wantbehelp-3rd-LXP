@@ -6,6 +6,8 @@ import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.domain.user.entity.UserRole;
 import com.example.shortudy.domain.user.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import com.example.shortudy.global.error.BaseException;
+import com.example.shortudy.global.error.ErrorCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +29,7 @@ public class UserService {
 
         //TODO 정책 확정 필요(email, nickname 중복에 관해)
         if (userRepository.existsByEmail(request.email())) throw new IllegalArgumentException("Email already exists");
-        if (userRepository.existsByNickname(request.nickname())) throw new IllegalArgumentException("Nickname already exists");
+        if (userRepository.existsByNickname(request.nickname())) throw new BaseException(ErrorCode.USER_NOT_FOUND);
 
         String encodedPassword = passwordEncoder.encode(request.password());
 
