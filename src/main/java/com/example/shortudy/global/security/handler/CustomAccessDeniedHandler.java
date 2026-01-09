@@ -1,6 +1,7 @@
 package com.example.shortudy.global.security.handler;
 
 import com.example.shortudy.global.common.ApiResponse;
+import com.example.shortudy.global.error.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,12 +20,17 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
 
-        // 403 에러
-        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        // 권한 없음 에러를 default로 설정
+        ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
 
         response.setContentType("application/json;charset=UTF-8");
+        response.setStatus(errorCode.status().value());
 
-        ApiResponse<Void> apiResponse = ApiResponse.error("해당 리소스에 접근할 권한이 없습니다.", null, null);
+        ApiResponse<Void> apiResponse = ApiResponse.error(
+                errorCode.message(),
+                errorCode.code(),
+                request.getRequestURI()
+                );
 
         response.getWriter().write(objectMapper.writeValueAsString(apiResponse));
     }

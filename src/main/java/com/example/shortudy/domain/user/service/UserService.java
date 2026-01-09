@@ -11,7 +11,6 @@ import com.example.shortudy.global.error.ErrorCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-//TODO exception 전부 재정비 필요
 @Service
 @Transactional
 public class UserService {
@@ -28,7 +27,7 @@ public class UserService {
     public void signup(SignUpRequest request) {
 
         //TODO 정책 확정 필요(email, nickname 중복에 관해)
-        if (userRepository.existsByEmail(request.email())) throw new IllegalArgumentException("Email already exists");
+        if (userRepository.existsByEmail(request.email())) throw new BaseException(ErrorCode.DUPLICATE_EMAIL);
         if (userRepository.existsByNickname(request.nickname())) throw new BaseException(ErrorCode.USER_NOT_FOUND);
 
         String encodedPassword = passwordEncoder.encode(request.password());
@@ -45,11 +44,7 @@ public class UserService {
 
     public InfoResponse getUserInfo(Long userId) {
 
-        // TODO USER_NOT_FOUNDED 에러
-        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        // TODO InfoResponse의 from 메서드 작성
-        return new InfoResponse(user.getId(), user.getEmail(), user.getNickname(), user.getProfileUrl());
+        return InfoResponse.from(userRepository.findById(userId).orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND)));
     }
 
     public void deleteUser(Long userId) {

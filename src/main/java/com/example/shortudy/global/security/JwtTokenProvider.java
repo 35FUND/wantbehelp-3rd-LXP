@@ -1,6 +1,8 @@
 package com.example.shortudy.global.security;
 
 import com.example.shortudy.domain.user.entity.UserRole;
+import com.example.shortudy.global.error.BaseException;
+import com.example.shortudy.global.error.ErrorCode;
 import com.example.shortudy.global.security.principal.CustomUserDetailsService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -72,12 +74,13 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public boolean validateToken(String token) {
+    public void validateToken(String token) {
         try {
             parseClaims(token);
-            return true;
+        } catch (ExpiredJwtException e) {
+            throw new BaseException(ErrorCode.TOKEN_EXPIRED);
         } catch (JwtException | IllegalArgumentException e) {
-            return false;
+            throw new BaseException(ErrorCode.INVALID_TOKEN);
         }
     }
 

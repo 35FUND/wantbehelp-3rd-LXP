@@ -63,6 +63,7 @@ public class User {
         this.role = role;
         this.profileUrl = profileUrl;
         this.status = UserStatus.ACTIVE;
+        this.createdAt = LocalDateTime.now();
     }
 
     public static User create(String email, String password, String nickname, UserRole role, String profileUrl) {

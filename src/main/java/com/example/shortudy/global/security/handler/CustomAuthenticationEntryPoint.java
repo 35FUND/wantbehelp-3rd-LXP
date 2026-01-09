@@ -20,28 +20,22 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
 
-//         HTTP 상태 코드를 401(Unauthorized)로 설정
-//        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-
         ErrorCode errorCode = (ErrorCode) request.getAttribute("exception");
 
         if (errorCode == null) {
-//            errorCode = errorCode.valueOf(request.getParameter("error"));
+            errorCode = ErrorCode.LOGIN_REQUIRED;
         }
-//        Http 상태 코드 설정
-//        response.setStatus(errorCode.getHHttpStatus.value());
 
         // 응답 타입을 JSON으로 설정
         response.setContentType("application/json;charset=UTF-8");
+        response.setStatus(errorCode.status().value());
 
         ApiResponse<Void> apiResponse = ApiResponse.error(
-//                errorCode.getMessage(),
-//                errorCode.getCode
-                //TODO 수정 해야 함..
-                null,
-                null,
-                null
+                errorCode.message(),
+                errorCode.code(),
+                request.getRequestURI()
         );
+
 
         response.getWriter().write(objectMapper.writeValueAsString(apiResponse));
     }

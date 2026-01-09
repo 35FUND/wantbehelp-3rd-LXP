@@ -6,6 +6,8 @@ import com.example.shortudy.domain.user.entity.RefreshToken;
 import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.domain.user.repository.RefreshTokenRepository;
 import com.example.shortudy.domain.user.repository.UserRepository;
+import com.example.shortudy.global.error.BaseException;
+import com.example.shortudy.global.error.ErrorCode;
 import com.example.shortudy.global.security.JwtTokenProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -42,40 +44,44 @@ public class AuthService {
     }
 
     public LoginResponse refresh(String refreshToken) {
-        // 토큰 검증 로직 TODO 토큰 만료(INVALID_TOKEN)으로 처리
-        if (!jwtTokenProvider.validateToken(refreshToken)) throw new IllegalArgumentException("Invalid token");
+        // 토큰 검증 로직
+        jwtTokenProvider.validateToken(refreshToken);
 
         // 토큰에서 userId 추출
         Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
-        // TODO USER_NOT_FOUND 에러로 처리
-        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not founded"));
-        // DB에 있는 refreshToken TODO LOGIN_REQUIRED 로 처리
-        RefreshToken storedToken = refreshTokenRepository.findByUserId(userId).orElseThrow(IllegalArgumentException::new);
+        User user = userRepository.findById(userId).orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
+        RefreshToken storedToken = refreshTokenRepository.findByUserId(userId).orElseThrow(() -> new BaseException(ErrorCode.LOGIN_REQUIRED));
 
         // RTR 검증 (토큰 탈취 의심 상황 -> DB에서 토큰 삭제 후 로그아웃 유도용 Exception)
-        // TODO TOKEN_STEAL_DETECTED 에러로 처리
         if (!storedToken.getToken().equals(refreshToken)) {
             refreshTokenRepository.delete(storedToken);
-            throw new IllegalArgumentException("Invalid token");
+            throw new BaseException(ErrorCode.INVALID_TOKEN);
         }
 
         return generateToken(user);
     }
 
     private LoginResponse generateToken(User user) {
+
+        // 액세스 토큰 생성
         String accessToken = jwtTokenProvider.createAccessToken(
                 user.getId(),
                 user.getEmail(),
                 user.getRole()
         );
+
+        // 리프레시 토큰 생성
         String refreshToken = jwtTokenProvider.createRefreshToken(
                 user.getId(),
                 user.getEmail(),
                 user.getRole()
         );
+
+        // 리프레쉬 토큰이 없으면 생성
         RefreshToken refreshTokenEntity = refreshTokenRepository.findByUserId(user.getId())
                 .orElse(RefreshToken.create(user.getId(), refreshToken));
 
+        // 리프레쉬 토큰이 존재하면 업데이트
         refreshTokenEntity.updateToken(refreshToken);
         refreshTokenRepository.save(refreshTokenEntity);
 

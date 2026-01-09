@@ -1,8 +1,8 @@
 package com.example.shortudy.global.security.filter;
 
+import com.example.shortudy.global.error.BaseException;
+import com.example.shortudy.global.error.ErrorCode;
 import com.example.shortudy.global.security.JwtTokenProvider;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,11 +14,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-/**
- * JWT 인증 필터
- * - Authorization 헤더 또는 쿠키에서 Access Token 추출
- * - 토큰 검증 후 SecurityContext에 인증 정보 저장
- */
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 //    private static final String AUTHORIZATION_HEADER = "Authorization";
@@ -36,21 +31,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 헤더에서 accessToken을 꺼낸다.
-        String token = resolveToken(request);
-
         try {
+            // 헤더에서 accessToken을 꺼낸다.
+            String token = resolveToken(request);
+
             // validateToken으로 검증
-            if (token != null && jwtTokenProvider.validateToken(token)) {
+            if (token != null) {
+                jwtTokenProvider.validateToken(token);
                 // 인증된 토큰에 주어지는 합격 목걸이, 합격한 유저 정보를 SecurityContext 바구니에 저장
                 Authentication authentication = jwtTokenProvider.getAuthentication(token);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
-        } catch (ExpiredJwtException e) {
-            // TODO ACCESS_TOKEN_EXPIRED 에러 처리 ("exception", ErrorCode.ACCESS_TOKEN_EXPIRED)
-            request.setAttribute("exception", e.getMessage());
-        } catch (JwtException | IllegalArgumentException e) { // TODO INVALID_TOKEN으로 처리
-            request.setAttribute("exception", e.getMessage());
+        } catch (BaseException e) { // BaseException 이 발생하면 EntryPoint가 사용할 수 있게 배달
+            request.setAttribute("exception", e.errorCode());
+        } catch (Exception e) {     // 예상치 못한 에러가 발생했을 때
+            request.setAttribute("exception", ErrorCode.INTERNAL_ERROR);
         }
         filterChain.doFilter(request, response);
     }
