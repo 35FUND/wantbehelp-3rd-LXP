@@ -1,6 +1,7 @@
 package com.example.shortudy.global.common;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -9,6 +10,7 @@ import org.springframework.http.HttpStatus;
  * - message: 응답 메시지
  * - data: 실제 데이터
  */
+@Getter
 public class ApiResponse<T> {
 
     private boolean success;
@@ -18,9 +20,9 @@ public class ApiResponse<T> {
     private T data;
 
     // 생성자
-    private ApiResponse(boolean success, String name, String message, String request, T data) {
+    private ApiResponse(boolean success, String code, String message, String request, T data) {
         this.success = success;
-        this.code = name;
+        this.code = code;
         this.message = message;
         this.request = request;
         this.data = data;
@@ -47,20 +49,7 @@ public class ApiResponse<T> {
      * 에러 응답
      */
     public static <T> ApiResponse<T> error(String message, String code, String request) {
-        return new ApiResponse<>(false, message, code, request, null);
-    }
-
-    // == Getter ==
-    public boolean isSuccess() {
-        return success;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public T getData() {
-        return data;
+        return new ApiResponse<>(false, code, message, request, null);
     }
 }
 
