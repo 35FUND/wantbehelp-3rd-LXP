@@ -17,10 +17,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.web.cors.CorsConfigurationSource;
 
-/**
- * Spring Security 설정
- * 권한별 접근 제어 정의
- */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
