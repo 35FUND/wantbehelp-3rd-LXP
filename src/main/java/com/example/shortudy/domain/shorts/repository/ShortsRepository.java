@@ -18,12 +18,13 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
      * 상세 조회 - 연관 엔티티 모두 fetch join
      * N+1 문제 방지
      */
-    @Query("SELECT DISTINCT s FROM Shorts s " +
-           "LEFT JOIN FETCH s.user " +
-           "LEFT JOIN FETCH s.category " +
-           "LEFT JOIN FETCH s.taggings t " +
-           "LEFT JOIN FETCH t.tag " +
-           "WHERE s.id = :id")
+    // TODO - Tag -> Keyword 변경에 따른 수정 필요
+//    @Query("SELECT DISTINCT s FROM Shorts s " +
+//           "LEFT JOIN FETCH s.user " +
+//           "LEFT JOIN FETCH s.category " +
+//           "LEFT JOIN FETCH s.taggings t " +
+//           "LEFT JOIN FETCH t.tag " +
+//           "WHERE s.id = :id")
     Optional<Shorts> findWithDetailsById(@Param("id") Long id);
 
     /**

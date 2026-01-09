@@ -26,12 +26,20 @@ public class ApiResponse<T> {
         this.data = data;
     }
 
+    private ApiResponse(boolean success, String code, String message, T data) {
+        this.success = success;
+        this.code = code;
+        this.message = message;
+        this.data = data;
+    }
+
     // == 정적 팩토리 메서드 ==
 
     /**
      * 성공 응답 (데이터 포함)
      */
     public static <T> ApiResponse<T> success(T data) {
+
         return new ApiResponse<>(true, "Success", null, data);
     }
 
