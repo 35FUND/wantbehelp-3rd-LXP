@@ -22,6 +22,10 @@ public enum ErrorCode {
 
     // shorts
     SHORTS_NOT_FOUND(HttpStatus.NOT_FOUND, "SHORTS_404", "해당 숏츠를 찾을 수 없습니다."),
+    SHORTS_FILE_TOO_LARGE(HttpStatus.BAD_REQUEST, "SHORTS_400", "파일 크기가 허용 범위를 초과했습니다."),
+    SHORTS_UNSUPPORTED_FILE_TYPE(HttpStatus.BAD_REQUEST, "SHORTS_400", "지원하지 않는 파일 형식입니다."),
+    AWS_S3_NOT_CONFIGURED(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON_500", "S3 설정이 누락되었습니다."),
+
 
     // comment
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMENT_404", "해당 댓글을 찾을 수 없습니다."),
