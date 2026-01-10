@@ -29,6 +29,14 @@ jwt:
   access-expiration: 3600000 #1800000 30분
   refresh-expiration: 1209600000 #604800000 7일
 
+# S3 Presigned URL 발급용 설정(로컬에서는 env로 주입 권장)
+# - `aws.region`: AWS_REGION 또는 AWS_DEFAULT_REGION 사용 가능
+# - `aws.s3.bucket`: AWS_S3_BUCKET 사용 가능
+aws:
+  region:
+  s3:
+    bucket:
+
 app:
   cookie:
     same-site: Lax
@@ -36,4 +44,5 @@ app:
     # 프로덕션 환경에서는 아래와 같이 변경:
     # same-site: None
     # secure: true
+
 
