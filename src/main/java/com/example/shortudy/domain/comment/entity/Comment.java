@@ -73,4 +73,9 @@ public class Comment {
             throw new BaseException(ErrorCode.INVALID_INPUT);
         }
     }
+
+    // 대댓글
+    public static Comment reply(User user, Comment parent, String content) {
+        return new Comment(user, parent.getShorts(), parent, content);
+    }
 }
