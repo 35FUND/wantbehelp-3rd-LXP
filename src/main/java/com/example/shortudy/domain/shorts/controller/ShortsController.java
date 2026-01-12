@@ -7,7 +7,9 @@ import com.example.shortudy.domain.shorts.dto.ShortsUploadInitRequest;
 import com.example.shortudy.domain.shorts.dto.ShortsUploadInitResponse;
 import com.example.shortudy.domain.shorts.service.ShortsService;
 import com.example.shortudy.domain.shorts.upload.service.ShortsUploadCompleteService;
+import com.example.shortudy.domain.shorts.dto.ShortsUploadStatusResponse;
 import com.example.shortudy.domain.shorts.upload.service.ShortsUploadInitService;
+import com.example.shortudy.domain.shorts.upload.service.ShortsUploadStatusService;
 import com.example.shortudy.global.common.ApiResponse;
 import com.example.shortudy.global.security.principal.CustomUserDetails;
 import jakarta.validation.Valid;
@@ -25,15 +27,18 @@ public class ShortsController {
     private final ShortsService shortsService;
     private final ShortsUploadInitService shortsUploadInitService;
     private final ShortsUploadCompleteService shortsUploadCompleteService;
+    private final ShortsUploadStatusService shortsUploadStatusService;
 
     public ShortsController(
             ShortsService shortsService,
             ShortsUploadInitService shortsUploadInitService,
-            ShortsUploadCompleteService shortsUploadCompleteService
+            ShortsUploadCompleteService shortsUploadCompleteService,
+            ShortsUploadStatusService shortsUploadStatusService
     ) {
         this.shortsService = shortsService;
         this.shortsUploadInitService = shortsUploadInitService;
         this.shortsUploadCompleteService = shortsUploadCompleteService;
+        this.shortsUploadStatusService = shortsUploadStatusService;
     }
 
     /**
@@ -63,6 +68,16 @@ public class ShortsController {
     ) {
         shortsUploadCompleteService.complete(shortId, userDetails.getId(), request.uploadId());
         return ApiResponse.success("SUCCESS", "업로드가 완료되었습니다.", null);
+    }
+
+    @GetMapping("/{shortId}/upload-status")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<ShortsUploadStatusResponse> getUploadStatus(
+            @PathVariable Long shortId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        ShortsUploadStatusResponse response = shortsUploadStatusService.getStatus(shortId, userDetails.getId());
+        return ApiResponse.success("SUCCESS", "업로드 상태 조회에 성공했습니다.", response);
     }
 
     @GetMapping("/{shortId}")
