@@ -2,13 +2,17 @@ package com.example.shortudy.domain.shorts.controller;
 
 import com.example.shortudy.domain.shorts.dto.ShortsResponse;
 import com.example.shortudy.domain.shorts.dto.ShortsUpdateRequest;
+import com.example.shortudy.domain.shorts.dto.ShortsUploadCompleteRequest;
 import com.example.shortudy.domain.shorts.dto.ShortsUploadInitRequest;
 import com.example.shortudy.domain.shorts.dto.ShortsUploadInitResponse;
-import com.example.shortudy.domain.shorts.dto.ShortsUploadRequest;
 import com.example.shortudy.domain.shorts.service.ShortsService;
+import com.example.shortudy.domain.shorts.upload.service.ShortsUploadCompleteService;
 import com.example.shortudy.domain.shorts.upload.service.ShortsUploadInitService;
+import com.example.shortudy.domain.shorts.view.service.ShortsViewCountService;
 import com.example.shortudy.global.common.ApiResponse;
 import com.example.shortudy.global.security.principal.CustomUserDetails;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,20 +21,31 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-
 @RestController
 @RequestMapping("/api/v1/shorts")
 public class ShortsController {
 
     private final ShortsService shortsService;
     private final ShortsUploadInitService shortsUploadInitService;
+    private final ShortsUploadCompleteService shortsUploadCompleteService;
+    private final ShortsViewCountService shortsViewCountService;
 
-    public ShortsController(ShortsService shortsService, ShortsUploadInitService shortsUploadInitService) {
+    public ShortsController(
+            ShortsService shortsService,
+            ShortsUploadInitService shortsUploadInitService,
+            ShortsUploadCompleteService shortsUploadCompleteService,
+            ShortsViewCountService shortsViewCountService
+    ) {
         this.shortsService = shortsService;
         this.shortsUploadInitService = shortsUploadInitService;
+        this.shortsUploadCompleteService = shortsUploadCompleteService;
+        this.shortsViewCountService = shortsViewCountService;
     }
 
-
+    /**
+     * 업로드용 Pre-signed URL 발급
+     * - 실제 PUT 업로드는 클라이언트가 S3로 직접 수행한다.
+     */
     @PostMapping("/upload")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<ShortsUploadInitResponse> initUpload(
@@ -41,27 +56,39 @@ public class ShortsController {
         return ApiResponse.success("SUCCESS", "업로드 URL이 생성되었습니다.", response);
     }
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<ShortsResponse> uploadShorts(@RequestBody @Valid ShortsUploadRequest request) {
-        ShortsResponse response = shortsService.uploadShorts(request);
-        return ApiResponse.success(response);
+    /**
+     * 업로드 완료 알림
+     * - 서버 관점(A안): S3에 객체가 실제로 존재(HEAD)하는지 확인 후 완료 처리한다.
+     */
+    @PostMapping("/{shortsId}/upload-complete")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<Void> uploadComplete(
+            @PathVariable String shortsId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody @Valid ShortsUploadCompleteRequest request
+    ) {
+        shortsUploadCompleteService.complete(shortsId, userDetails.getId(), request.uploadId());
+        return ApiResponse.success("SUCCESS", "업로드가 완료되었습니다.", null);
     }
-
 
     @GetMapping("/{shortId}")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Page<ShortsResponse>> getShortsDetails(
             @PathVariable Long shortId,
-            @PageableDefault(size = 20, sort = "id", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
-        Page<ShortsResponse> response = shortsService.getShortsDetailsWithPaging(shortId, pageable);
-        return ApiResponse.success(response);
+            @PageableDefault(size = 20, sort = "id", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable,
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        Page<ShortsResponse> result = shortsService.getShortsDetailsWithPaging(shortId, pageable);
+        shortsViewCountService.recordView(shortId, request, response);
+        return ApiResponse.success(result);
     }
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Page<ShortsResponse>> getShortsList(
-            @PageableDefault(size = 8, sort = "id", direction = org.springframework.data.domain.Sort.Direction.ASC) Pageable pageable) {
+            @PageableDefault(size = 8, sort = "id", direction = org.springframework.data.domain.Sort.Direction.ASC) Pageable pageable
+    ) {
         Page<ShortsResponse> response = shortsService.getShortsList(pageable);
         return ApiResponse.success(response);
     }
@@ -70,15 +97,15 @@ public class ShortsController {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<ShortsResponse> updateShorts(
             @PathVariable Long shortId,
-            @RequestBody @Valid ShortsUpdateRequest request) {
+            @RequestBody @Valid ShortsUpdateRequest request
+    ) {
         ShortsResponse response = shortsService.updateShorts(shortId, request);
         return ApiResponse.success(response);
     }
 
     @DeleteMapping("/{shortId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public ApiResponse<Void> deleteShorts(
-            @PathVariable Long shortId) {
+    public ApiResponse<Void> deleteShorts(@PathVariable Long shortId) {
         shortsService.deleteShorts(shortId);
         return ApiResponse.success(null);
     }

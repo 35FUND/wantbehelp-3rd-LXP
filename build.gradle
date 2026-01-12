@@ -29,6 +29,7 @@ dependencies {
     // AWS SDK (S3 Presigned URL)
     implementation platform('software.amazon.awssdk:bom:2.25.67')
     implementation 'software.amazon.awssdk:s3'
+    implementation 'software.amazon.awssdk:s3-presigner'
 
     // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
