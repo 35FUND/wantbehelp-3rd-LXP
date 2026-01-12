@@ -1,15 +1,17 @@
 package com.example.shortudy.domain.shorts.entity;
 
 import com.example.shortudy.domain.category.entity.Category;
-import com.example.shortudy.domain.keyword.entity.Tag;
 import com.example.shortudy.domain.user.entity.User;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 
 @Entity
+@Getter
 @Table(name = "shorts_form")
 public class Shorts {
 
@@ -43,6 +45,9 @@ public class Shorts {
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private ShortsStatus status = ShortsStatus.PUBLISHED;
+
+    @OneToMany(mappedBy = "shorts")
+    private List<ShortsKeyword> shortsKeywords = new ArrayList<>();
 
     protected Shorts() {
     }
