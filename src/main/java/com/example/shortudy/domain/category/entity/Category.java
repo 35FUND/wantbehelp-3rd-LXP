@@ -2,7 +2,6 @@ package com.example.shortudy.domain.category.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import org.hibernate.dialect.function.NvlCoalesceEmulation;
 
 import java.time.LocalDateTime;
 @Entity
@@ -28,7 +27,7 @@ public class Category {
     private LocalDateTime updatedAt;
 
     public Category(String name) {
-        this.id = id;
+        this.name = name;
         this.status = CategoryStatus.ACTIVE;
     }
 
@@ -50,6 +49,10 @@ public class Category {
         if (this.status == null) {
             this.status = CategoryStatus.ACTIVE;
         }
+    }
+    @PreUpdate
+    private void preUpdate() {
+        this.updatedAt = LocalDateTime.now();
     }
 }
 
