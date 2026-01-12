@@ -1,5 +1,6 @@
 package com.example.shortudy.domain.user.controller;
 
+import com.example.shortudy.domain.user.dto.request.UpdateProfileRequest;
 import com.example.shortudy.global.security.principal.CustomUserDetails;
 import com.example.shortudy.domain.user.dto.request.SignUpRequest;
 import com.example.shortudy.domain.user.dto.response.InfoResponse;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,6 +32,15 @@ public class UserController {
     public ResponseEntity<ApiResponse<Void>> signup(@RequestBody @Valid SignUpRequest request) {
         userService.signup(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(null));
+    }
+
+    @PatchMapping("/profile")
+    public ResponseEntity<ApiResponse<Void>> updateProfile(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                                           @RequestBody @Valid UpdateProfileRequest request) {
+
+        userService.updateProfile(userDetails.getId(), request);
+
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @GetMapping("/me")
