@@ -2,11 +2,13 @@ package com.example.shortudy.domain.category.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 @Entity
 @Table(name = "category")
 @Getter
+@EntityListeners(AuditingEntityListener.class)
 public class Category {
 
     @Id
@@ -39,20 +41,6 @@ public class Category {
     }
     public void updateStatus(CategoryStatus status) {
         this.status = status;
-    }
-
-    @PrePersist
-    private void prePersist() {
-        LocalDateTime now = LocalDateTime.now();
-        this.createdAt = now;
-        this.updatedAt = now;
-        if (this.status == null) {
-            this.status = CategoryStatus.ACTIVE;
-        }
-    }
-    @PreUpdate
-    private void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
     }
 }
 
