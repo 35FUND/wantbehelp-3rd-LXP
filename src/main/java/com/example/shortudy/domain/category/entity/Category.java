@@ -1,9 +1,14 @@
 package com.example.shortudy.domain.category.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDateTime;
 @Entity
 @Table(name = "category")
+@Getter
+@EntityListeners(AuditingEntityListener.class)
 public class Category {
 
     @Id
@@ -13,29 +18,29 @@ public class Category {
     @Column(unique = true, nullable = false)
     private String name;
 
-    @Column
-    private Long parentId = null;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CategoryStatus status;
 
-    protected Category() {}
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 
     public Category(String name) {
         this.name = name;
+        this.status = CategoryStatus.ACTIVE;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Long getParentId() {
-        return parentId;
-    }
+    protected Category() {}
 
     public void updateName(String name) {
+
         this.name = name;
+    }
+    public void updateStatus(CategoryStatus status) {
+        this.status = status;
     }
 }
 
