@@ -1,10 +1,10 @@
 package com.example.shortudy.domain.recommendation.controller;
 
-import com.example.shortudy.domain.recommendation.dto.request.RecommendationRequest; // import 확인!
+import com.example.shortudy.domain.recommendation.dto.request.RecommendationRequest;
 import com.example.shortudy.domain.recommendation.dto.response.RecommendationResponse;
 import com.example.shortudy.domain.recommendation.service.ShortsRecommendationService;
 import com.example.shortudy.global.common.ApiResponse;
-import jakarta.validation.Valid; // 필수
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;

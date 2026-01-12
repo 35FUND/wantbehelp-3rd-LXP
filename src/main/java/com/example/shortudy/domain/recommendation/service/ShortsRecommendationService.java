@@ -26,7 +26,6 @@ public class ShortsRecommendationService {
                 .orElseThrow(() -> new IllegalArgumentException("쇼츠를 찾을 수 없습니다."));
         Set<String> baseKeywords = extractKeywords(baseShorts);
 
-        // 주의: ShortsRepository 인터페이스에 findByIdNot 메소드가 선언되어 있어야 합니다.
         List<Shorts> candidates = shortsRepository.findByIdNot(shortsIdLong);
 
         Map<String, Shorts> candidateMap = candidates.stream()
