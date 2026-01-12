@@ -56,3 +56,13 @@ public class ReplyController {
         return ResponseEntity.ok(ApiResponse.success(commentService.updateReply(me.getId(), replyId, request))
         );
     }
+
+    @DeleteMapping("/replies/{replyId}")
+    public ResponseEntity<ApiResponse<Void>> deleteReply(
+            @AuthenticationPrincipal CustomUserDetails me,
+            @PathVariable Long replyId
+    ) {
+        commentService.deleteComment(me.getId(), replyId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResponse.success(null));
+    }
+}

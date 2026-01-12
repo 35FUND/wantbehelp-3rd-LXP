@@ -135,4 +135,19 @@ public class CommentService {
 
         return ReplyResponse.from(reply, userId);
     }
+
+    private Map<Long, Long> getReplyCountMap(List<Long> parentIds) {
+        if (parentIds == null || parentIds.isEmpty()) return Map.of();
+
+        return commentRepository.countRepliesByParentIds(parentIds).stream()
+                .collect(Collectors.toMap(
+                        ReplyCountProjection::getParentId,
+                        ReplyCountProjection::getCnt
+                ));
+    }
+
+    private CommentResponse toCommentResponse(Comment comment, Long meIdOrNull, Map<Long, Long> replyCountMap) {
+        long replyCount = replyCountMap.getOrDefault(comment.getId(), 0L);
+        return CommentResponse.from( replyCount, comment, meIdOrNull);
+    }
 }
