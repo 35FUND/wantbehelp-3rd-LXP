@@ -1,7 +1,6 @@
 package com.example.shortudy.domain.comment.controller;
 
 import com.example.shortudy.domain.comment.dto.request.CommentRequest;
-import com.example.shortudy.domain.comment.dto.response.CommentResponse;
 import com.example.shortudy.domain.comment.dto.response.ReplyResponse;
 import com.example.shortudy.domain.comment.service.CommentService;
 import com.example.shortudy.global.common.ApiResponse;
@@ -16,54 +15,54 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
-public class CommentController {
+public class ReplyController {
 
     private final CommentService commentService;
 
-    public CommentController(CommentService commentService) {
+    public ReplyController(CommentService commentService) {
         this.commentService = commentService;
     }
 
-    // 댓글 생성
-    @PostMapping("/shorts/{shortsId}/comments")
-    public ResponseEntity<ApiResponse<CommentResponse>> createComments(
+    @PostMapping("/comments/{parentId}/replies")
+    public ResponseEntity<ApiResponse<ReplyResponse>> createReply(
             @AuthenticationPrincipal CustomUserDetails me,
-            @PathVariable Long shortsId,
-            @Valid @RequestBody CommentRequest request
-    ) {
+            @PathVariable Long parentId,
+            @RequestBody CommentRequest request
+            ) {
+
         return ResponseEntity.status(HttpStatus.CREATED).body(
-                ApiResponse.success(commentService.createComment(me.getId(), shortsId, request))
-                );
+                ApiResponse.success(commentService.createReply(me.getId(), parentId, request))
+        );
     }
 
-    @GetMapping("/shorts/{shortsId}/comments")
-    public ResponseEntity<ApiResponse<List<CommentResponse>>> getComments(
-            @PathVariable Long shortsId,
+    @GetMapping("/comments/{parentId}/replies")
+    public ResponseEntity<ApiResponse<List<ReplyResponse>>> getReplies(
+            @PathVariable Long parentId,
             @AuthenticationPrincipal CustomUserDetails me
     ) {
         Long myId = (me != null) ? me.getId() : null;
 
-        // List<CommentResponse> foundComments = commentService.findComments(shortsId, myId);
-        return ResponseEntity.ok(ApiResponse.success(commentService.findComments(shortsId, myId)));
+        // List<ReplyResponse> foundReplies = commentService.findReplies(parentId, myId);
+
+        return ResponseEntity.ok(ApiResponse.success(commentService.findReplies(parentId, myId)));
     }
 
-    @PatchMapping("/comments/{commentId}")
-    public ResponseEntity<ApiResponse<CommentResponse>> updateComment(
+    @PatchMapping("/replies/{replyId}")
+    public ResponseEntity<ApiResponse<ReplyResponse>> updateReply(
             @AuthenticationPrincipal CustomUserDetails me,
-            @PathVariable Long commentId,
+            @PathVariable Long replyId,
             @Valid @RequestBody CommentRequest request
     ) {
-        return ResponseEntity.ok(
-                ApiResponse.success(commentService.updateComment(me.getId(), commentId, request))
+        return ResponseEntity.ok(ApiResponse.success(commentService.updateReply(me.getId(), replyId, request))
         );
     }
 
-    @DeleteMapping("/comments/{commentId}")
-    public ResponseEntity<ApiResponse<Void>> deleteComment(
+    @DeleteMapping("/replies/{replyId}")
+    public ResponseEntity<ApiResponse<Void>> deleteReply(
             @AuthenticationPrincipal CustomUserDetails me,
-            @PathVariable Long commentId
+            @PathVariable Long replyId
     ) {
-       commentService.deleteComment(me.getId(), commentId);
+        commentService.deleteComment(me.getId(), replyId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResponse.success(null));
     }
 }

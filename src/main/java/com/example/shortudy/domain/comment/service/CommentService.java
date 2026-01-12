@@ -4,8 +4,8 @@ import com.example.shortudy.domain.comment.dto.request.CommentRequest;
 import com.example.shortudy.domain.comment.dto.response.CommentResponse;
 import com.example.shortudy.domain.comment.dto.response.ReplyResponse;
 import com.example.shortudy.domain.comment.entity.Comment;
+import com.example.shortudy.domain.comment.query.CommentCountProvider;
 import com.example.shortudy.domain.comment.repository.CommentRepository;
-import com.example.shortudy.domain.comment.repository.ReplyCountProjection;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
 import com.example.shortudy.domain.user.entity.User;
@@ -25,11 +25,13 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final ShortsRepository shortsRepository;
     private final UserRepository userRepository;
+    private final CommentCountProvider commentCountProvider;
 
-    public CommentService(CommentRepository commentRepository, ShortsRepository shortsRepository, UserRepository userRepository) {
+    public CommentService(CommentRepository commentRepository, ShortsRepository shortsRepository, UserRepository userRepository, CommentCountProvider commentCountProvider) {
         this.commentRepository = commentRepository;
         this.shortsRepository = shortsRepository;
         this.userRepository = userRepository;
+        this.commentCountProvider = commentCountProvider;
     }
 
     // 댓글 생성
@@ -44,7 +46,7 @@ public class CommentService {
 
         Comment saved = commentRepository.save(Comment.create(user, shorts, request.content()));
 
-        Map<Long, Long> replyCountMap = getReplyCountMap(List.of(saved.getId()));
+        Map<Long, Long> replyCountMap = commentCountProvider.replyCountMap(List.of(saved.getId()));
 
         return toCommentResponse(saved, user.getId(), replyCountMap);
     }
@@ -56,7 +58,7 @@ public class CommentService {
         List<Comment> comments = commentRepository.findCommentsWithUser(shortsId);
         List<Long> parentIds = comments.stream().map(Comment::getId).toList();
 
-        Map<Long, Long> replyCountMap = getReplyCountMap(parentIds);
+        Map<Long, Long> replyCountMap = commentCountProvider.replyCountMap(parentIds);
 
         return comments.stream()
                 .map(c -> CommentResponse.from(
@@ -80,7 +82,7 @@ public class CommentService {
         }
         comment.updateContent(request.content());
 
-        Map<Long, Long> replyCountMap = getReplyCountMap(List.of(comment.getId()));
+        Map<Long, Long> replyCountMap = commentCountProvider.replyCountMap(List.of(comment.getId()));
         return toCommentResponse(comment, userId, replyCountMap);
     }
 
@@ -99,4 +101,45 @@ public class CommentService {
 
     // 대댓글 생성
     @Transactional
+    public ReplyResponse createReply(Long userId, Long parentId, CommentRequest request) {
+
+        User user = userRepository.findById(userId).orElseThrow(() ->
+                new BaseException(ErrorCode.USER_NOT_FOUND));
+
+        Comment parent = commentRepository.findById(parentId).orElseThrow(() ->
+                new BaseException(ErrorCode.COMMENT_NOT_FOUND));
+
+        Comment reply = commentRepository.save(Comment.reply(user, parent, request.content()));
+
+        return ReplyResponse.from(reply, user.getId());
+    }
+
+    // 대댓글 조회
+    @Transactional(readOnly = true)
+    public List<ReplyResponse> findReplies(Long parentId, Long myIdOrNull) {
+        List<Comment> replies = commentRepository.findRepliesWithUser(parentId);
+
+        return replies.stream()
+                .map(r -> ReplyResponse.from(r, myIdOrNull))
+                .toList();
+    }
+
+    // 대댓글 수정
+    @Transactional
+    public ReplyResponse updateReply(Long userId, Long replyId, CommentRequest request) {
+        Comment reply = commentRepository.findById(replyId).orElseThrow(()
+                -> new  BaseException(ErrorCode.COMMENT_NOT_FOUND));
+
+        if (!reply.isWrittenBy(userId)) {
+            throw new BaseException(ErrorCode.COMMENT_FORBIDDEN);
+        }
+        reply.updateContent(request.content());
+
+        return ReplyResponse.from(reply, userId);
+    }
+
+    private CommentResponse toCommentResponse(Comment comment, Long meIdOrNull, Map<Long, Long> replyCountMap) {
+        long replyCount = replyCountMap.getOrDefault(comment.getId(), 0L);
+        return CommentResponse.from(replyCount, comment, meIdOrNull);
+    }
 }

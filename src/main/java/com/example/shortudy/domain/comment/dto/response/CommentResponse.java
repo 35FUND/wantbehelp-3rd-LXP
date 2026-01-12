@@ -15,7 +15,7 @@ public record CommentResponse(
 ) {
 
     public static CommentResponse from(Long myId, Comment comment, long replyCount) {
-                                                            // TODO replyCount 인트로 못받는가
+
         return new CommentResponse(
                 comment.getId(),
                 comment.getContent(),

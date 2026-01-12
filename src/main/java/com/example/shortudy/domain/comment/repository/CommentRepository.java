@@ -62,3 +62,5 @@ public interface CommentRepository extends JpaRepository<Comment,Long> {
         long getCnt();
     }
 }
+
+
