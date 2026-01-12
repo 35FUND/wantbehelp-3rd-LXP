@@ -1,6 +1,7 @@
 package com.example.shortudy.domain.user.service;
 
 import com.example.shortudy.domain.user.dto.request.SignUpRequest;
+import com.example.shortudy.domain.user.dto.request.UpdateProfileRequest;
 import com.example.shortudy.domain.user.dto.response.InfoResponse;
 import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.domain.user.entity.UserRole;
@@ -40,6 +41,31 @@ public class UserService {
                 UserRole.USER,
                 request.profileUrl()
         ));
+    }
+
+    public void updateProfile(Long userId, UpdateProfileRequest request) {
+
+        User user = userRepository.findById(userId).orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
+
+        boolean changed = false;
+
+        if (request.email() != null) {
+            if (userRepository.existsByEmail(request.email())) throw new BaseException(ErrorCode.DUPLICATE_EMAIL);
+            user.changeEmail(request.email());
+            changed = true;
+        }
+
+        if (request.userProfileUrl() != null) {
+            user.changeProfileUrl(request.userProfileUrl());
+            changed = true;
+        }
+
+        if (request.nickName() != null) {
+            user.changeNickname(request.nickName());
+            changed = true;
+        }
+
+        if (!changed) throw new BaseException(ErrorCode.INVALID_INPUT);
     }
 
     public InfoResponse getUserInfo(Long userId) {
