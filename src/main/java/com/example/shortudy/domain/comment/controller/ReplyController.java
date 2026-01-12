@@ -46,3 +46,13 @@ public class ReplyController {
 
         return ResponseEntity.ok(ApiResponse.success(commentService.findReplies(parentId, myId)));
     }
+
+    @PatchMapping("/replies/{replyId}")
+    public ResponseEntity<ApiResponse<ReplyResponse>> updateReply(
+            @AuthenticationPrincipal CustomUserDetails me,
+            @PathVariable Long replyId,
+            @Valid @RequestBody CommentRequest request
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(commentService.updateReply(me.getId(), replyId, request))
+        );
+    }

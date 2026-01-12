@@ -121,4 +121,18 @@ public class CommentService {
                 .map(r -> ReplyResponse.from(r, myIdOrNull))
                 .toList();
     }
+
+    // 대댓글 수정
+    @Transactional
+    public ReplyResponse updateReply(Long userId, Long replyId, CommentRequest request) {
+        Comment reply = commentRepository.findById(replyId).orElseThrow(()
+                -> new  BaseException(ErrorCode.COMMENT_NOT_FOUND));
+
+        if (!reply.isWrittenBy(userId)) {
+            throw new BaseException(ErrorCode.COMMENT_FORBIDDEN);
+        }
+        reply.updateContent(request.content());
+
+        return ReplyResponse.from(reply, userId);
+    }
 }
