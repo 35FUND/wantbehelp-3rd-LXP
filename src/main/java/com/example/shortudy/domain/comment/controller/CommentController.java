@@ -31,11 +31,8 @@ public class CommentController {
             @PathVariable Long shortsId,
             @Valid @RequestBody CommentRequest request
     ) {
-        Long myId = me.getId();
-        CommentResponse createdComment = commentService.createComment(myId, shortsId, request);
-
         return ResponseEntity.status(HttpStatus.CREATED).body(
-                ApiResponse.success(createdComment)
+                ApiResponse.success(commentService.createComment(me.getId(), shortsId, request))
                 );
     }
 
@@ -46,8 +43,8 @@ public class CommentController {
     ) {
         Long myId = (me != null) ? me.getId() : null;
 
-        List<CommentResponse> foundComments = commentService.findComments(shortsId, myId);
-        return ResponseEntity.ok(ApiResponse.success(foundComments));
+        // List<CommentResponse> foundComments = commentService.findComments(shortsId, myId);
+        return ResponseEntity.ok(ApiResponse.success(commentService.findComments(shortsId, myId)));
     }
 
     @PatchMapping("/comments/{commentId}")

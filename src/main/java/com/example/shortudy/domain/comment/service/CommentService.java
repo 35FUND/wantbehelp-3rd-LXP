@@ -99,4 +99,16 @@ public class CommentService {
 
     // 대댓글 생성
     @Transactional
+    public ReplyResponse createReply(Long userId, Long parentId, CommentRequest request) {
+
+        User user = userRepository.findById(userId).orElseThrow(() ->
+                new BaseException(ErrorCode.USER_NOT_FOUND));
+
+        Comment parent = commentRepository.findById(parentId).orElseThrow(() ->
+                new BaseException(ErrorCode.COMMENT_NOT_FOUND));
+
+        Comment reply = commentRepository.save(Comment.reply(user, parent, request.content()));
+
+        return ReplyResponse.from(reply, user.getId());
+    }
 }
