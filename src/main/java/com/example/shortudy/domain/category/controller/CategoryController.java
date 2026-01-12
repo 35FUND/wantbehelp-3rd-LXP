@@ -3,10 +3,12 @@ package com.example.shortudy.domain.category.controller;
 import com.example.shortudy.domain.category.dto.request.CategoryRequest;
 import com.example.shortudy.domain.category.dto.response.CategoryResponse;
 import com.example.shortudy.domain.category.service.CategoryService;
-import org.springframework.http.HttpStatus;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -20,10 +22,13 @@ public class CategoryController {
     }
 
     @PostMapping
-    public ResponseEntity<CategoryResponse> create(@RequestBody CategoryRequest request) {
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(categoryService.createCategory(request));
+    public ResponseEntity<CategoryResponse> create(@RequestBody @Valid CategoryRequest request) {
+        CategoryResponse created = categoryService.createCategory(request);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{categoryId}")
+                .buildAndExpand(created.getId())
+                .toUri();
+        return ResponseEntity.created(location).body(created);
     }
 
     @GetMapping
@@ -38,9 +43,8 @@ public class CategoryController {
     }
 
     @PutMapping("/{categoryId}")
-    public ResponseEntity<CategoryResponse> updateCategory(
-            @PathVariable Long categoryId,
-            @RequestBody CategoryRequest request) {
+    public ResponseEntity<CategoryResponse> update(@PathVariable Long categoryId,
+            @RequestBody @Valid CategoryRequest request) {
         return ResponseEntity.ok(categoryService.updateCategory(categoryId, request));
     }
 
