@@ -9,42 +9,28 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface ShortsRepository extends JpaRepository<Shorts, Long> {
 
-    /**
-     * 상세 조회 - 연관 엔티티 모두 fetch join
-     * N+1 문제 방지
-     */
-    // TODO - Tag -> Keyword 변경에 따른 수정 필요
-//    @Query("SELECT DISTINCT s FROM Shorts s " +
-//           "LEFT JOIN FETCH s.user " +
-//           "LEFT JOIN FETCH s.category " +
-//           "LEFT JOIN FETCH s.taggings t " +
-//           "LEFT JOIN FETCH t.tag " +
-//           "WHERE s.id = :id")
     Optional<Shorts> findWithDetailsById(@Param("id") Long id);
 
-    /**
-     * 목록 조회 - 기본 정보만 (페이징)
-     * taggings는 별도 쿼리로 조회 (batch size 설정 권장)
-     */
     @EntityGraph(attributePaths = {"user", "category"})
     Page<Shorts> findAll(Pageable pageable);
 
-    /**
-     * 특정 사용자의 숏폼 목록 조회
-     */
     @EntityGraph(attributePaths = {"user", "category"})
     Page<Shorts> findByUserId(Long userId, Pageable pageable);
 
-    /**
-     * 랜덤 정렬 목록 조회 (숏폼 피드용)
-     */
     @Query(value = "SELECT s.* FROM shorts_form s ORDER BY RAND()",
            countQuery = "SELECT COUNT(*) FROM shorts_form",
            nativeQuery = true)
     Page<Shorts> findAllRandom(Pageable pageable);
+
+    @Query("SELECT DISTINCT s FROM Shorts s LEFT JOIN FETCH s.shortsKeywords sk LEFT JOIN FETCH sk.keyword")
+    List<Shorts> findAllWithKeywords();
+
+    @EntityGraph(attributePaths = {"user", "category"})
+    List<Shorts> findByIdNot(Long id);
 }

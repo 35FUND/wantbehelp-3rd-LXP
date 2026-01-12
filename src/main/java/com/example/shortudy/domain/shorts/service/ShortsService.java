@@ -4,14 +4,8 @@ import com.example.shortudy.domain.category.entity.Category;
 import com.example.shortudy.domain.category.repository.CategoryRepository;
 import com.example.shortudy.domain.shorts.dto.ShortsResponse;
 import com.example.shortudy.domain.shorts.dto.ShortsUpdateRequest;
-import com.example.shortudy.domain.shorts.dto.ShortsUploadRequest;
 import com.example.shortudy.domain.shorts.entity.Shorts;
-import com.example.shortudy.domain.shorts.entity.ShortsStatus;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
-import com.example.shortudy.domain.keyword.entity.Tag;
-import com.example.shortudy.domain.keyword.service.TagService;
-import com.example.shortudy.domain.user.entity.User;
-import com.example.shortudy.domain.user.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -23,40 +17,11 @@ import java.util.NoSuchElementException;
 public class ShortsService {
 
     private final ShortsRepository shortsRepository;
-    private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
-    private final TagService tagService;
 
-    public ShortsService(ShortsRepository shortsRepository, UserRepository userRepository,
-                         CategoryRepository categoryRepository, TagService tagService) {
+    public ShortsService(ShortsRepository shortsRepository, CategoryRepository categoryRepository) {
         this.shortsRepository = shortsRepository;
-        this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
-        this.tagService = tagService;
-    }
-
-    @Transactional
-    public ShortsResponse uploadShorts(ShortsUploadRequest shortsUploadRequest) {
-
-        User user = userRepository.findById(shortsUploadRequest.userId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
-
-        Category category = categoryRepository.findById(shortsUploadRequest.categoryId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
-
-        Shorts shorts = new Shorts(
-                user,
-                category,
-                shortsUploadRequest.title(),
-                shortsUploadRequest.description(),
-                shortsUploadRequest.videoUrl(),
-                shortsUploadRequest.thumbnailUrl(),
-                shortsUploadRequest.durationSec(),
-                ShortsStatus.PUBLISHED
-        );
-
-        Shorts savedShorts = shortsRepository.save(shorts);
-        return ShortsResponse.from(savedShorts);
     }
 
     @Transactional(readOnly = true)
@@ -96,12 +61,12 @@ public class ShortsService {
 
         // 유효한 정렬 속성 목록
         java.util.Set<String> validProperties = java.util.Set.of(
-            "id", "title", "durationSec", "createdAt", "updatedAt"
+                "id", "title", "durationSec", "createdAt", "updatedAt"
         );
 
         // 정렬 속성 검증
         boolean hasInvalidProperty = pageable.getSort().stream()
-            .anyMatch(order -> !validProperties.contains(order.getProperty()));
+                .anyMatch(order -> !validProperties.contains(order.getProperty()));
 
         if (hasInvalidProperty) {
             // 잘못된 정렬 속성 → 랜덤 조회
@@ -119,28 +84,28 @@ public class ShortsService {
         // 정렬이 없으면 기본 정렬 적용
         if (!pageable.getSort().isSorted()) {
             return org.springframework.data.domain.PageRequest.of(
-                pageable.getPageNumber(),
-                pageable.getPageSize(),
-                org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "id")
+                    pageable.getPageNumber(),
+                    pageable.getPageSize(),
+                    org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "id")
             );
         }
 
         // 유효한 정렬 속성 목록
         java.util.Set<String> validProperties = java.util.Set.of(
-            "id", "title", "durationSec", "createdAt", "updatedAt",
-            "videoUrl", "thumbnailUrl", "description"
+                "id", "title", "durationSec", "createdAt", "updatedAt",
+                "videoUrl", "thumbnailUrl", "description"
         );
 
         // 정렬 속성 검증
         boolean hasInvalidProperty = pageable.getSort().stream()
-            .anyMatch(order -> !validProperties.contains(order.getProperty()));
+                .anyMatch(order -> !validProperties.contains(order.getProperty()));
 
         if (hasInvalidProperty) {
             // 잘못된 정렬 속성이 있으면 기본 정렬 사용
             return org.springframework.data.domain.PageRequest.of(
-                pageable.getPageNumber(),
-                pageable.getPageSize(),
-                org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "id")
+                    pageable.getPageNumber(),
+                    pageable.getPageSize(),
+                    org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "id")
             );
         }
 

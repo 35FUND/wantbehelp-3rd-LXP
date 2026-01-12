@@ -1,116 +1,67 @@
 package com.example.shortudy.domain.shorts.entity;
 
 import com.example.shortudy.domain.category.entity.Category;
-import com.example.shortudy.domain.keyword.entity.Tag;
-import com.example.shortudy.domain.user.entity.User;
+import com.example.shortudy.domain.keyword.entity.Keyword;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Entity
-@Table(name = "shorts_form")
+@Getter
 public class Shorts {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
-    private Category category;
-
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false)
     private String title;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
+    @Column(nullable = false, length = 1000)
+    private String content;
 
-    @Column(name = "video_url", nullable = false, length = 500)
-    private String videoUrl;
+    @OneToMany(mappedBy = "shorts", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ShortsKeyword> shortsKeywords = new ArrayList<>();
 
-    @Column(name = "thumbnail_url", length = 500)
-    private String thumbnailUrl;
+    // ... 다른 필드들
 
-    @Column(name = "duration_sec")
-    private Integer durationSec;
+    protected Shorts() {}
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private ShortsStatus status = ShortsStatus.PUBLISHED;
-
-    protected Shorts() {
-    }
-
-    public Shorts(User user, Category category, String title, String description, String videoUrl, String thumbnailUrl, Integer durationSec, ShortsStatus status) {
-        this.user = user;
-        this.category = category;
+    private Shorts(String title, String content) {
         this.title = title;
-        this.description = description;
-        this.videoUrl = videoUrl;
-        this.thumbnailUrl = thumbnailUrl;
-        this.durationSec = durationSec;
-        this.status = status;
+        this.content = content;
     }
 
-    public Long getId() {
-        return id;
+    public static Shorts of(String title, String content) {
+        return new Shorts(title, content);
     }
 
-    public User getUser() {
-        return user;
+    // 비즈니스 로직
+    public void addKeyword(Keyword keyword) {
+        ShortsKeyword shortsKeyword = ShortsKeyword.of(this, keyword);
+        shortsKeyword.setShorts(this);
+        this.shortsKeywords.add(shortsKeyword);
     }
 
-    public Category getCategory() {
-        return category;
+    public void removeKeyword(Keyword keyword) {
+        this.shortsKeywords.removeIf(
+                sk -> sk.getKeyword().getId().equals(keyword.getId())
+        );
     }
 
-    public String getTitle() {
-        return title;
+    public void updateContent(String title, String content) {
+        this.title = title;
+        this.content = content;
     }
 
-    public String getDescription() {
-        return description;
+    public void updateShorts(@Size(max = 100, message = "제목은 100자 이하여야 합니다.") String title, String description, String s, Category category, ShortsStatus status) {
     }
 
-    public String getVideoUrl() {
-        return videoUrl;
-    }
 
     public String getThumbnailUrl() {
-        return thumbnailUrl;
-    }
-
-    public Integer getDurationSec() {
-        return durationSec;
-    }
-
-    public ShortsStatus getStatus() {
-        return status;
-    }
-
-    public void updateShorts(String title, String description, String thumbnailUrl, Category category, ShortsStatus status) {
-        if (title != null && !title.isBlank()) {
-            this.title = title;
-        }
-        if (description != null) {
-            this.description = description;
-        }
-        if (thumbnailUrl != null && !thumbnailUrl.isBlank()) {
-            this.thumbnailUrl = thumbnailUrl;
-        }
-        if (category != null) {
-            this.category = category;
-        }
-        if (status != null) {
-            this.status = status;
-        }
+        return null;
     }
 }
-
-
