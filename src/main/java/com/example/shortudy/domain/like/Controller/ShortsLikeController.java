@@ -27,3 +27,13 @@ public class ShortsLikeController {
         shortsLikeService.like(me.getId(), shortsId);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(null));
     }
+
+    @DeleteMapping("/shorts/{shortsId}/unlikes")
+    public ResponseEntity<ApiResponse<Void>> unlike(
+            @AuthenticationPrincipal CustomUserDetails me,
+            @PathVariable Long shortsId
+    ) {
+        shortsLikeService.unlike(me.getId(), shortsId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResponse.success(null));
+    }
+}
