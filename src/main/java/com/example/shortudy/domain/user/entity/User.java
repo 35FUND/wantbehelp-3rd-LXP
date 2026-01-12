@@ -69,5 +69,21 @@ public class User {
     public static User create(String email, String password, String nickname, UserRole role, String profileUrl) {
         return new User(email, password, nickname, role, profileUrl);
     }
+
+    public void changeEmail(String email) {
+        this.email = email;
+    }
+
+    public void changePassword(String password) {
+        this.password = password;
+    }
+
+    public void changeNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void changeProfileUrl(String profileUrl) {
+        this.profileUrl = profileUrl;
+    }
 }
 
