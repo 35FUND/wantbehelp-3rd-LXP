@@ -9,6 +9,6 @@ import jakarta.validation.constraints.NotBlank;
  */
 public record ShortsUploadCompleteRequest(
         @NotBlank(message = "uploadId는 필수입니다.")
-        String uploadId
+        String uploadId // 프론트에서 주는 메타데이터 반영하여 수정 예정
 ) {
 }
