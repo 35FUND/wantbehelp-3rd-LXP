@@ -19,3 +19,15 @@ public interface ShortsLikeRepository extends JpaRepository<ShortsLike,Long> {
         Long getShortsId();
         long getCnt();
     }
+
+    // 좋아요 개수 조회
+    @Query("""
+  select sl.shorts.id as shortsId, count(sl.id) as cnt
+  from ShortsLike sl
+  where sl.shorts.id in :shortsIds
+  group by sl.shorts.id
+""")
+    List<ShortsLikeCountProjection> countLikesByShortsIds(@Param("shortsIds") List<Long> shortsIds);
+}
+
+
