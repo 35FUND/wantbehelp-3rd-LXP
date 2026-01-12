@@ -189,11 +189,11 @@ CREATE TABLE taggings (
 
 ### 6. shorts_upload_session (숏폼 업로드 세션)
 
-> 업로드 세션 식별자(=uploadSessionId)는 UUID 문자열이며, 쇼츠 엔티티 ID(`shortId`)와 별개입니다.
+> 업로드 세션은 쇼츠 엔티티 ID(`shortId`)를 PK로 재사용합니다.
 
 | 컬럼명 | 타입 | 제약조건 | 설명 |
 |--------|------|----------|------|
-| id | VARCHAR(36) | PK | 업로드 세션 ID(=uploadSessionId) |
+| id | BIGINT | PK, FK | 업로드 대상 쇼츠 ID(=shortId) |
 | upload_id | VARCHAR(64) | NOT NULL | 완료 알림 검증용 토큰 |
 | user_id | BIGINT | NOT NULL | 요청 사용자 ID |
 | category_id | BIGINT | NOT NULL | 카테고리 ID |
@@ -211,7 +211,7 @@ CREATE TABLE taggings (
 
 ```sql
 CREATE TABLE shorts_upload_session (
-    id              VARCHAR(36) PRIMARY KEY,
+    id              BIGINT PRIMARY KEY,
     upload_id        VARCHAR(64) NOT NULL,
     user_id          BIGINT NOT NULL,
     category_id      BIGINT NOT NULL,
@@ -225,7 +225,9 @@ CREATE TABLE shorts_upload_session (
     expires_in       INT NOT NULL,
     status           VARCHAR(20) NOT NULL,
     uploaded_at      DATETIME,
-    created_at       DATETIME
+    created_at       DATETIME,
+
+    FOREIGN KEY (id) REFERENCES shorts_form(id)
 );
 ```
 
@@ -283,4 +285,5 @@ CREATE INDEX idx_upload_session_category ON shorts_upload_session(category_id);
 ## 변경 이력
 - 2026-01-12: JPA 매핑 기준으로 `shorts_form` 테이블 및 조회수(view_count) 컬럼 반영
 - 2026-01-12: Pre-signed 업로드 플로우 반영을 위해 `shorts_upload_session` 테이블 명세 추가
+- 2026-01-12: 쇼츠 식별자 `shortId(Long)` 통일 정책에 맞춰 업로드 세션 PK/FK 관계 수정
 
