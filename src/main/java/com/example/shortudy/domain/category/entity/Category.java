@@ -1,9 +1,14 @@
 package com.example.shortudy.domain.category.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "category")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Category {
 
     @Id
@@ -13,26 +18,7 @@ public class Category {
     @Column(unique = true, nullable = false)
     private String name;
 
-    @Column
-    private Long parentId = null;
-
-    protected Category() {}
-
-    public Category(String name) {
-        this.name = name;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Long getParentId() {
-        return parentId;
-    }
+    public Category(String name) {this.name = name;}
 
     public void updateName(String name) {
         this.name = name;
