@@ -1,10 +1,16 @@
 package com.example.shortudy.domain.shorts.upload.service;
 
+import com.example.shortudy.domain.category.entity.Category;
 import com.example.shortudy.domain.category.repository.CategoryRepository;
 import com.example.shortudy.domain.shorts.dto.ShortsUploadInitRequest;
 import com.example.shortudy.domain.shorts.dto.ShortsUploadInitResponse;
+import com.example.shortudy.domain.shorts.entity.Shorts;
+import com.example.shortudy.domain.shorts.entity.ShortsStatus;
+import com.example.shortudy.domain.shorts.repository.ShortsRepository;
 import com.example.shortudy.domain.shorts.upload.entity.ShortsUploadSession;
 import com.example.shortudy.domain.shorts.upload.repository.ShortsUploadSessionRepository;
+import com.example.shortudy.domain.user.entity.User;
+import com.example.shortudy.domain.user.repository.UserRepository;
 import com.example.shortudy.global.config.AwsProperties;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
@@ -33,28 +39,52 @@ public class ShortsUploadInitService {
     private static final String ALLOWED_CONTENT_TYPE = "video/mp4";
 
     private final AwsProperties awsProperties;
+    private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final ShortsRepository shortsRepository;
     private final ShortsUploadSessionRepository uploadSessionRepository;
 
     public ShortsUploadInitService(
             AwsProperties awsProperties,
+            UserRepository userRepository,
             CategoryRepository categoryRepository,
+            ShortsRepository shortsRepository,
             ShortsUploadSessionRepository uploadSessionRepository
     ) {
         this.awsProperties = awsProperties;
+        this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
+        this.shortsRepository = shortsRepository;
         this.uploadSessionRepository = uploadSessionRepository;
     }
 
     @Transactional
     public ShortsUploadInitResponse init(Long userId, ShortsUploadInitRequest.Body body) {
         validateFile(body.fileName(), body.fileSize(), body.contentType());
-        validateCategory(body.categoryId());
 
-        String shortsId = UUID.randomUUID().toString();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
+
+        Category category = categoryRepository.findById(body.categoryId())
+                .orElseThrow(() -> new BaseException(ErrorCode.CATEGORY_NOT_FOUND));
+
+        // 프론트가 추출한 메타데이터(durationSec 등)를 그대로 저장한다.
+        Shorts shorts = new Shorts(
+                user,
+                category,
+                body.title(),
+                body.description(),
+                null,
+                null,
+                body.durationSec(),
+                ShortsStatus.DRAFT
+        );
+        Shorts savedShorts = shortsRepository.save(shorts);
+
+        Long shortId = savedShorts.getId();
         String uploadId = "upload-" + UUID.randomUUID();
 
-        String objectKey = "videos/" + shortsId + ".mp4";
+        String objectKey = "videos/" + shortId + ".mp4";
 
         String bucket = resolveBucket();
         Region region = resolveRegion();
@@ -63,7 +93,7 @@ public class ShortsUploadInitService {
 
         String keywords = joinKeywords(body.keywords());
         ShortsUploadSession session = ShortsUploadSession.create(
-                shortsId,
+                shortId,
                 uploadId,
                 userId,
                 body.categoryId(),
@@ -74,23 +104,18 @@ public class ShortsUploadInitService {
                 body.fileSize(),
                 body.contentType(),
                 objectKey,
-                EXPIRES_IN_SECONDS
+                EXPIRES_IN_SECONDS,
+                body.durationSec()
         );
         uploadSessionRepository.save(session);
 
         return new ShortsUploadInitResponse(
-                session.getId(),
+                shortId,
                 presigned.url().toString(),
-                session.getUploadId(),
+                uploadId,
                 EXPIRES_IN_SECONDS,
                 MAX_FILE_SIZE_BYTES
         );
-    }
-
-    private void validateCategory(Long categoryId) {
-        if (categoryId == null || !categoryRepository.existsById(categoryId)) {
-            throw new BaseException(ErrorCode.INVALID_INPUT, "categoryId: 존재하지 않는 카테고리입니다.");
-        }
     }
 
     private void validateFile(String fileName, Long fileSize, String contentType) {

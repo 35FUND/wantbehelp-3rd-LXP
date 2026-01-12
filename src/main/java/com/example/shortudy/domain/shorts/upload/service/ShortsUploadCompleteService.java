@@ -1,5 +1,8 @@
 package com.example.shortudy.domain.shorts.upload.service;
 
+import com.example.shortudy.domain.shorts.entity.Shorts;
+import com.example.shortudy.domain.shorts.entity.ShortsStatus;
+import com.example.shortudy.domain.shorts.repository.ShortsRepository;
 import com.example.shortudy.domain.shorts.upload.entity.ShortsUploadSession;
 import com.example.shortudy.domain.shorts.upload.repository.ShortsUploadSessionRepository;
 import com.example.shortudy.global.config.AwsProperties;
@@ -14,25 +17,30 @@ import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Service
 @Transactional(readOnly = true)
 public class ShortsUploadCompleteService {
 
     private final AwsProperties awsProperties;
+    private final ShortsRepository shortsRepository;
     private final ShortsUploadSessionRepository uploadSessionRepository;
 
-    public ShortsUploadCompleteService(AwsProperties awsProperties, ShortsUploadSessionRepository uploadSessionRepository) {
+    public ShortsUploadCompleteService(
+            AwsProperties awsProperties,
+            ShortsRepository shortsRepository,
+            ShortsUploadSessionRepository uploadSessionRepository
+    ) {
         this.awsProperties = awsProperties;
+        this.shortsRepository = shortsRepository;
         this.uploadSessionRepository = uploadSessionRepository;
     }
 
     @Transactional
-    public void complete(String shortsId, Long userId, String uploadId) {
-        validateShortsId(shortsId);
+    public void complete(Long shortId, Long userId, String uploadId) {
+        validateShortId(shortId);
 
-        ShortsUploadSession session = uploadSessionRepository.findById(shortsId)
+        ShortsUploadSession session = uploadSessionRepository.findById(shortId)
                 .orElseThrow(() -> new BaseException(ErrorCode.SHORTS_UPLOAD_SESSION_NOT_FOUND));
 
         if (uploadId == null || uploadId.isBlank() || session.getUploadId() == null || !session.getUploadId().equals(uploadId)) {
@@ -49,14 +57,24 @@ public class ShortsUploadCompleteService {
 
         validateNotExpired(session);
         validateUploadedObjectExists(session);
+
+        // S3에 실제 객체가 존재하는 것이 확인되면, 최종 URL을 확정한다.
+        Shorts shorts = shortsRepository.findById(shortId)
+                .orElseThrow(() -> new BaseException(ErrorCode.SHORTS_NOT_FOUND));
+
+        String bucket = resolveBucket();
+        Region region = resolveRegion();
+        String finalVideoUrl = buildS3ObjectUrl(bucket, region, session.getObjectKey());
+
+        shorts.updateVideoUrl(finalVideoUrl);
+        shorts.updateShorts(null, null, null, null, ShortsStatus.PUBLISHED);
+
         session.markUploaded();
     }
 
-    private void validateShortsId(String shortsId) {
-        try {
-            UUID.fromString(shortsId);
-        } catch (Exception e) {
-            throw new BaseException(ErrorCode.INVALID_INPUT, "shortsId: 형식이 올바르지 않습니다.");
+    private void validateShortId(Long shortId) {
+        if (shortId == null || shortId <= 0) {
+            throw new BaseException(ErrorCode.INVALID_INPUT, "shortId: 값이 올바르지 않습니다.");
         }
     }
 
@@ -90,7 +108,15 @@ public class ShortsUploadCompleteService {
                 .region(region)
                 .credentialsProvider(DefaultCredentialsProvider.create())
                 .build()) {
-            s3Client.headObject(headObjectRequest);
+            var headObject = s3Client.headObject(headObjectRequest);
+
+            if (session.getFileSize() != null && headObject.contentLength() != null && headObject.contentLength() != session.getFileSize()) {
+                throw new BaseException(ErrorCode.INVALID_INPUT, "fileSize: 업로드된 파일 크기가 요청과 일치하지 않습니다.");
+            }
+
+            if (session.getContentType() != null && headObject.contentType() != null && !headObject.contentType().equalsIgnoreCase(session.getContentType())) {
+                throw new BaseException(ErrorCode.INVALID_INPUT, "contentType: 업로드된 파일 타입이 요청과 일치하지 않습니다.");
+            }
         } catch (S3Exception e) {
             if (e.statusCode() == 404) {
                 throw new BaseException(ErrorCode.SHORTS_UPLOAD_OBJECT_NOT_FOUND);
@@ -122,5 +148,9 @@ public class ShortsUploadCompleteService {
             throw new BaseException(ErrorCode.AWS_S3_NOT_CONFIGURED, "AWS region 설정이 필요합니다.(aws.region 또는 AWS_REGION/AWS_DEFAULT_REGION)");
         }
         return Region.of(region.trim());
+    }
+
+    private String buildS3ObjectUrl(String bucket, Region region, String objectKey) {
+        return "https://" + bucket + ".s3." + region.id() + ".amazonaws.com/" + objectKey;
     }
 }

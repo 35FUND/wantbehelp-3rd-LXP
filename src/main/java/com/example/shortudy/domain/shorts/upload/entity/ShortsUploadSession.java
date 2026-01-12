@@ -16,8 +16,7 @@ import java.time.LocalDateTime;
 public class ShortsUploadSession {
 
     @Id
-    @Column(length = 36)
-    private String id; // shortsId
+    private Long id; // shortId
 
     @Column(nullable = false, length = 64)
     private String uploadId;
@@ -52,6 +51,15 @@ public class ShortsUploadSession {
     @Column(nullable = false)
     private Integer expiresIn;
 
+    @Column(nullable = false)
+    private Integer durationSec;
+
+    @Column(nullable = false, length = 20)
+    private String status;
+
+    @Column
+    private LocalDateTime uploadedAt;
+
     @CreatedDate
     @Column
     private LocalDateTime createdAt;
@@ -60,7 +68,7 @@ public class ShortsUploadSession {
     }
 
     private ShortsUploadSession(
-            String id,
+            Long id,
             String uploadId,
             Long userId,
             Long categoryId,
@@ -71,7 +79,10 @@ public class ShortsUploadSession {
             Long fileSize,
             String contentType,
             String objectKey,
-            Integer expiresIn
+            Integer expiresIn,
+            Integer durationSec,
+            String status,
+            LocalDateTime uploadedAt
     ) {
         this.id = id;
         this.uploadId = uploadId;
@@ -85,10 +96,13 @@ public class ShortsUploadSession {
         this.contentType = contentType;
         this.objectKey = objectKey;
         this.expiresIn = expiresIn;
+        this.durationSec = durationSec;
+        this.status = status;
+        this.uploadedAt = uploadedAt;
     }
 
     public static ShortsUploadSession create(
-            String shortsId,
+            Long shortId,
             String uploadId,
             Long userId,
             Long categoryId,
@@ -99,10 +113,11 @@ public class ShortsUploadSession {
             Long fileSize,
             String contentType,
             String objectKey,
-            Integer expiresIn
+            Integer expiresIn,
+            Integer durationSec
     ) {
         return new ShortsUploadSession(
-                shortsId,
+                shortId,
                 uploadId,
                 userId,
                 categoryId,
@@ -113,11 +128,24 @@ public class ShortsUploadSession {
                 fileSize,
                 contentType,
                 objectKey,
-                expiresIn
+                expiresIn,
+                durationSec,
+                UploadStatus.INITIATED.name(),
+                null
         );
     }
 
-    public String getId() {
+    public void markUploaded() {
+        this.status = UploadStatus.COMPLETED.name();
+        this.uploadedAt = LocalDateTime.now();
+    }
+
+    public enum UploadStatus {
+        INITIATED,
+        COMPLETED
+    }
+
+    public Long getId() {
         return id;
     }
 
@@ -163,6 +191,18 @@ public class ShortsUploadSession {
 
     public Integer getExpiresIn() {
         return expiresIn;
+    }
+
+    public Integer getDurationSec() {
+        return durationSec;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public LocalDateTime getUploadedAt() {
+        return uploadedAt;
     }
 
     public LocalDateTime getCreatedAt() {

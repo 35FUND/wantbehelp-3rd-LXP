@@ -33,7 +33,10 @@ public record ShortsUploadInitRequest(
             Long fileSize,
 
             @NotBlank(message = "contentType은 필수입니다.")
-            String contentType
+            String contentType,
+
+            @Positive(message = "durationSec는 0보다 커야 합니다.")
+            Integer durationSec
     ) {
     }
 }

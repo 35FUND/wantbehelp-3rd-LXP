@@ -8,11 +8,8 @@ import com.example.shortudy.domain.shorts.dto.ShortsUploadInitResponse;
 import com.example.shortudy.domain.shorts.service.ShortsService;
 import com.example.shortudy.domain.shorts.upload.service.ShortsUploadCompleteService;
 import com.example.shortudy.domain.shorts.upload.service.ShortsUploadInitService;
-import com.example.shortudy.domain.shorts.view.service.ShortsViewCountService;
 import com.example.shortudy.global.common.ApiResponse;
 import com.example.shortudy.global.security.principal.CustomUserDetails;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,18 +25,15 @@ public class ShortsController {
     private final ShortsService shortsService;
     private final ShortsUploadInitService shortsUploadInitService;
     private final ShortsUploadCompleteService shortsUploadCompleteService;
-    private final ShortsViewCountService shortsViewCountService;
 
     public ShortsController(
             ShortsService shortsService,
             ShortsUploadInitService shortsUploadInitService,
-            ShortsUploadCompleteService shortsUploadCompleteService,
-            ShortsViewCountService shortsViewCountService
+            ShortsUploadCompleteService shortsUploadCompleteService
     ) {
         this.shortsService = shortsService;
         this.shortsUploadInitService = shortsUploadInitService;
         this.shortsUploadCompleteService = shortsUploadCompleteService;
-        this.shortsViewCountService = shortsViewCountService;
     }
 
     /**
@@ -60,14 +54,14 @@ public class ShortsController {
      * 업로드 완료 알림
      * - 서버 관점(A안): S3에 객체가 실제로 존재(HEAD)하는지 확인 후 완료 처리한다.
      */
-    @PostMapping("/{shortsId}/upload-complete")
+    @PostMapping("/{shortId}/upload-complete")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Void> uploadComplete(
-            @PathVariable String shortsId,
+            @PathVariable Long shortId,
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody @Valid ShortsUploadCompleteRequest request
     ) {
-        shortsUploadCompleteService.complete(shortsId, userDetails.getId(), request.uploadId());
+        shortsUploadCompleteService.complete(shortId, userDetails.getId(), request.uploadId());
         return ApiResponse.success("SUCCESS", "업로드가 완료되었습니다.", null);
     }
 
@@ -75,12 +69,9 @@ public class ShortsController {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Page<ShortsResponse>> getShortsDetails(
             @PathVariable Long shortId,
-            @PageableDefault(size = 20, sort = "id", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable,
-            HttpServletRequest request,
-            HttpServletResponse response
+            @PageableDefault(size = 20, sort = "id", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable
     ) {
         Page<ShortsResponse> result = shortsService.getShortsDetailsWithPaging(shortId, pageable);
-        shortsViewCountService.recordView(shortId, request, response);
         return ApiResponse.success(result);
     }
 
