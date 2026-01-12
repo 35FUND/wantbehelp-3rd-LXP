@@ -205,6 +205,7 @@ CREATE TABLE taggings (
 | content_type | VARCHAR(100) | NOT NULL | Content-Type |
 | object_key | VARCHAR(500) | NOT NULL | S3 Object Key |
 | expires_in | INT | NOT NULL | 만료(초) |
+| duration_sec | INT | NOT NULL | 영상 길이(초, 프론트 제공) |
 | status | VARCHAR(20) | NOT NULL | INITIATED/COMPLETED |
 | uploaded_at | DATETIME | NULLABLE | 업로드 완료 처리 시각 |
 | created_at | DATETIME | NULLABLE | 세션 생성 시각(Auditing) |
@@ -223,6 +224,7 @@ CREATE TABLE shorts_upload_session (
     content_type     VARCHAR(100) NOT NULL,
     object_key       VARCHAR(500) NOT NULL,
     expires_in       INT NOT NULL,
+    duration_sec     INT NOT NULL,
     status           VARCHAR(20) NOT NULL,
     uploaded_at      DATETIME,
     created_at       DATETIME,
