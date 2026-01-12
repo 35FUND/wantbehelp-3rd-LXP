@@ -1,5 +1,6 @@
 package com.example.shortudy.domain.user.service;
 
+import com.example.shortudy.domain.user.dto.request.PasswordChangeRequest;
 import com.example.shortudy.domain.user.dto.request.SignUpRequest;
 import com.example.shortudy.domain.user.dto.request.UpdateProfileRequest;
 import com.example.shortudy.domain.user.dto.response.InfoResponse;
@@ -66,6 +67,19 @@ public class UserService {
         }
 
         if (!changed) throw new BaseException(ErrorCode.INVALID_INPUT);
+    }
+
+    public void changePassword(Long userId, PasswordChangeRequest request) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
+
+        // 현재 비밀번호 확인
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) throw new BaseException(ErrorCode.INVALID_PASSWORD);
+
+        // 새 비밀번호 검증 (이전 비밀번호와 동일하지 않은지 검즘)
+        if (!passwordEncoder.matches(request.newPassword(), user.getPassword())) throw new BaseException(ErrorCode.SAME_PASSWORD);
+
+        // 더티체크로 저장
+        user.changePassword(request.newPassword());
     }
 
     public InfoResponse getUserInfo(Long userId) {
