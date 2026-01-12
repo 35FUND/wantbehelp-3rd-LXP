@@ -1,5 +1,6 @@
 package com.example.shortudy.domain.user.controller;
 
+import com.example.shortudy.domain.user.dto.request.PasswordChangeRequest;
 import com.example.shortudy.domain.user.dto.request.UpdateProfileRequest;
 import com.example.shortudy.global.security.principal.CustomUserDetails;
 import com.example.shortudy.domain.user.dto.request.SignUpRequest;
@@ -47,6 +48,14 @@ public class UserController {
     public ResponseEntity<ApiResponse<InfoResponse>> getMyInfo(@AuthenticationPrincipal CustomUserDetails userDetails) {
         InfoResponse response = userService.getUserInfo(userDetails.getId());
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                                            @Valid @RequestBody PasswordChangeRequest request) {
+        userService.changePassword(userDetails.getId(), request);
+
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     // TODO 회원 탈퇴용, 관리자(회원 강퇴?)는 협의
