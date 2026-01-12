@@ -3,6 +3,7 @@ package com.example.shortudy.domain.category.controller;
 import com.example.shortudy.domain.category.dto.request.CategoryRequest;
 import com.example.shortudy.domain.category.dto.response.CategoryResponse;
 import com.example.shortudy.domain.category.service.CategoryService;
+import com.example.shortudy.global.common.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,35 +23,38 @@ public class CategoryController {
     }
 
     @PostMapping
-    public ResponseEntity<CategoryResponse> create(@RequestBody @Valid CategoryRequest request) {
+    public ResponseEntity<ApiResponse<CategoryResponse>> create(@RequestBody @Valid CategoryRequest request) {
         CategoryResponse created = categoryService.createCategory(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{categoryId}")
                 .buildAndExpand(created.getId())
                 .toUri();
-        return ResponseEntity.created(location).body(created);
+        return ResponseEntity.created(location).body(ApiResponse.success(created));
     }
 
     @GetMapping
-    public ResponseEntity<List<CategoryResponse>> readAllCategories() {
-        return ResponseEntity.ok(categoryService.readAllCategories());
+    public ResponseEntity<ApiResponse<List<CategoryResponse>>> readAllCategories() {
+        List<CategoryResponse> list = categoryService.readAllCategories();
+        return ResponseEntity.ok(ApiResponse.success(list));
     }
 
     @GetMapping("/{categoryId}")
-    public ResponseEntity<CategoryResponse> readCategory(
+
+    public ResponseEntity<ApiResponse<CategoryResponse>> readCategory(
             @PathVariable Long categoryId) {
-        return ResponseEntity.ok(categoryService.readCategory(categoryId));
+        CategoryResponse resp = categoryService.readCategory(categoryId);
+        return ResponseEntity.ok(ApiResponse.success(resp));
     }
 
     @PutMapping("/{categoryId}")
-    public ResponseEntity<CategoryResponse> update(@PathVariable Long categoryId,
-            @RequestBody @Valid CategoryRequest request) {
-        return ResponseEntity.ok(categoryService.updateCategory(categoryId, request));
+    public ResponseEntity<ApiResponse<CategoryResponse>> update(@PathVariable Long categoryId,
+                                                                @RequestBody @Valid CategoryRequest request) {
+        CategoryResponse updated = categoryService.updateCategory(categoryId, request);
+        return ResponseEntity.ok(ApiResponse.success(updated));
     }
 
     @DeleteMapping("/{categoryId}")
-    public ResponseEntity<Void> deleteCategory(
-            @PathVariable Long categoryId) {
+    public ResponseEntity<Void> deleteCategory(@PathVariable Long categoryId) {
         categoryService.delete(categoryId);
         return ResponseEntity.noContent().build();
     }
