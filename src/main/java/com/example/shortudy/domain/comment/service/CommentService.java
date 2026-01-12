@@ -111,4 +111,14 @@ public class CommentService {
 
         return ReplyResponse.from(reply, user.getId());
     }
+
+    // 대댓글 조회
+    @Transactional(readOnly = true)
+    public List<ReplyResponse> findReplies(Long parentId, Long myIdOrNull) {
+        List<Comment> replies = commentRepository.findRepliesWithUser(parentId);
+
+        return replies.stream()
+                .map(r -> ReplyResponse.from(r, myIdOrNull))
+                .toList();
+    }
 }

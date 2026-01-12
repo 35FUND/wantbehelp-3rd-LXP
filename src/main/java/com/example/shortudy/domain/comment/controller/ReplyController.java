@@ -34,3 +34,15 @@ public class ReplyController {
                 ApiResponse.success(commentService.createReply(me.getId(), parentId, request))
         );
     }
+
+    @GetMapping("/comments/{parentId}/replies")
+    public ResponseEntity<ApiResponse<List<ReplyResponse>>> getReplies(
+            @PathVariable Long parentId,
+            @AuthenticationPrincipal CustomUserDetails me
+    ) {
+        Long myId = (me != null) ? me.getId() : null;
+
+        // List<ReplyResponse> foundReplies = commentService.findReplies(parentId, myId);
+
+        return ResponseEntity.ok(ApiResponse.success(commentService.findReplies(parentId, myId)));
+    }
