@@ -4,6 +4,7 @@ import com.example.shortudy.domain.comment.dto.request.CommentRequest;
 import com.example.shortudy.domain.comment.dto.response.CommentResponse;
 import com.example.shortudy.domain.comment.dto.response.ReplyResponse;
 import com.example.shortudy.domain.comment.entity.Comment;
+import com.example.shortudy.domain.comment.query.CommentCountProvider;
 import com.example.shortudy.domain.comment.repository.CommentRepository;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
@@ -24,11 +25,13 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final ShortsRepository shortsRepository;
     private final UserRepository userRepository;
+    private final CommentCountProvider commentCountProvider;
 
-    public CommentService(CommentRepository commentRepository, ShortsRepository shortsRepository, UserRepository userRepository) {
+    public CommentService(CommentRepository commentRepository, ShortsRepository shortsRepository, UserRepository userRepository, CommentCountProvider commentCountProvider) {
         this.commentRepository = commentRepository;
         this.shortsRepository = shortsRepository;
         this.userRepository = userRepository;
+        this.commentCountProvider = commentCountProvider;
     }
 
     // 댓글 생성
@@ -43,7 +46,7 @@ public class CommentService {
 
         Comment saved = commentRepository.save(Comment.create(user, shorts, request.content()));
 
-        Map<Long, Long> replyCountMap = getReplyCountMap(List.of(saved.getId()));
+        Map<Long, Long> replyCountMap = commentCountProvider.replyCountMap(List.of(saved.getId()));
 
         return toCommentResponse(saved, user.getId(), replyCountMap);
     }
@@ -55,7 +58,7 @@ public class CommentService {
         List<Comment> comments = commentRepository.findCommentsWithUser(shortsId);
         List<Long> parentIds = comments.stream().map(Comment::getId).toList();
 
-        Map<Long, Long> replyCountMap = getReplyCountMap(parentIds);
+        Map<Long, Long> replyCountMap = commentCountProvider.replyCountMap(parentIds);
 
         return comments.stream()
                 .map(c -> CommentResponse.from(
@@ -79,7 +82,7 @@ public class CommentService {
         }
         comment.updateContent(request.content());
 
-        Map<Long, Long> replyCountMap = getReplyCountMap(List.of(comment.getId()));
+        Map<Long, Long> replyCountMap = commentCountProvider.replyCountMap(List.of(comment.getId()));
         return toCommentResponse(comment, userId, replyCountMap);
     }
 
@@ -135,18 +138,8 @@ public class CommentService {
         return ReplyResponse.from(reply, userId);
     }
 
-    private Map<Long, Long> getReplyCountMap(List<Long> parentIds) {
-        if (parentIds == null || parentIds.isEmpty()) return Map.of();
-
-        return commentRepository.countRepliesByParentIds(parentIds).stream()
-                .collect(Collectors.toMap(
-                        CommentRepository.ReplyCountProjection::getParentId,
-                        CommentRepository.ReplyCountProjection::getCnt
-                ));
-    }
-
     private CommentResponse toCommentResponse(Comment comment, Long meIdOrNull, Map<Long, Long> replyCountMap) {
         long replyCount = replyCountMap.getOrDefault(comment.getId(), 0L);
-        return CommentResponse.from( replyCount, comment, meIdOrNull);
+        return CommentResponse.from(replyCount, comment, meIdOrNull);
     }
 }
