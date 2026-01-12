@@ -14,19 +14,19 @@
 │ created_at  │       │ video_url   │       └─────────────┘
 │ updated_at  │       │ thumbnail_url│
 └─────────────┘       │ duration_sec │      ┌─────────────┐
-                      │ status       │      │    tags     │
+                      │ status       │      │   kewords   │
                       │ created_at   │      ├─────────────┤
                       │ updated_at   │      │ id (PK)     │
-                      └─────────────┘      │ name        │
-                            │              │ created_at  │
-                            │              │ updated_at  │
-                            ▼              └─────────────┘
+                      └─────────────┘       │ name        │
+                            │               │ created_at  │
+                            │               │ updated_at  │
+                            ▼               └─────────────┘
                       ┌─────────────┐            │
-                      │  taggings   │            │
+                      │ keywordings │            │
                       ├─────────────┤            │
                       │ id (PK)     │            │
                       │ shorts_id   │◄───────────┘
-                      │ tag_id      │
+                      │ keyword_id  │
                       └─────────────┘
 ```
 
