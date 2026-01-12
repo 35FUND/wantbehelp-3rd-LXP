@@ -17,6 +17,7 @@ public class CommentCountProvider {
         this.commentRepository = commentRepository;
     }
 
+    // 전체 댓글의 대댓글 개수 조회
     public Map<Long, Long> replyCountMap(List<Long> parentIds) {
         if (parentIds.isEmpty()) return Map.of();
 
@@ -26,4 +27,21 @@ public class CommentCountProvider {
                         CommentRepository.ReplyCountProjection::getCnt
                 ));
     }
+
+    // 전체 숏츠의 댓글 개수 조회
+    public Map<Long, Long> commentCountByShortsIds(List<Long> shortsIds) {
+        if (shortsIds.isEmpty()) return Map.of();
+
+        return commentRepository.countAllCommentsByShortsIds(shortsIds).stream()
+                .collect(Collectors.toMap(
+                        CommentRepository.ShortsCommentCountProjection::getShortsId,
+                        CommentRepository.ShortsCommentCountProjection::getCnt
+                ));
+    }
+
+    // 단일 숏츠의 댓글 개수 조회
+    public long commentCount(Long shortsId) {
+        return commentRepository.countByShortsId(shortsId);
+    }
+
 }
