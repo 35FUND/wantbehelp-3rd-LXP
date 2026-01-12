@@ -5,7 +5,6 @@ import com.example.shortudy.domain.comment.dto.response.CommentResponse;
 import com.example.shortudy.domain.comment.dto.response.ReplyResponse;
 import com.example.shortudy.domain.comment.entity.Comment;
 import com.example.shortudy.domain.comment.repository.CommentRepository;
-import com.example.shortudy.domain.comment.repository.ReplyCountProjection;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
 import com.example.shortudy.domain.user.entity.User;
@@ -141,8 +140,8 @@ public class CommentService {
 
         return commentRepository.countRepliesByParentIds(parentIds).stream()
                 .collect(Collectors.toMap(
-                        ReplyCountProjection::getParentId,
-                        ReplyCountProjection::getCnt
+                        CommentRepository.ReplyCountProjection::getParentId,
+                        CommentRepository.ReplyCountProjection::getCnt
                 ));
     }
 

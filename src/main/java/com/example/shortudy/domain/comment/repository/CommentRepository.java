@@ -39,7 +39,14 @@ public interface CommentRepository extends JpaRepository<Comment,Long> {
     WHERE c.parent.id = :parentId
     ORDER BY c.createdAt ASC
 """)
+    
     List<Comment> findRepliesWithUser(@Param("parentCommentId") Long parentId);
+
+    public interface ReplyCountProjection {
+
+        Long getParentId();
+        long getCnt();
+    }
 }
 
 
