@@ -5,8 +5,8 @@ import lombok.Getter;
 
 @Getter
 @Entity
-@Table(name = "tag")
-public class Tag {
+@Table(name = "keyword")
+public class Keyword {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,13 +16,13 @@ public class Tag {
     @Column(nullable = false, length = 50)
     private String displayName;
 
-    // 정규화 로직(공백 제거, 소문자로 변환 등) 거치고 실제 DB에 저장될 값 ex) java
+    // 정규화된 값 ex) java (unique)
     @Column(nullable = false, length = 50, unique = true)
     private String normalizedName;
 
-    protected Tag() {}
+    protected Keyword() {}
 
-    public Tag(String displayName, String normalizedName) {
+    public Keyword(String displayName, String normalizedName) {
         this.displayName = displayName;
         this.normalizedName = normalizedName;
     }
