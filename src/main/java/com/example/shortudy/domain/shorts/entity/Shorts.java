@@ -33,7 +33,7 @@ public class Shorts {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "video_url", nullable = false, length = 500)
+    @Column(name = "video_url", length = 500)
     private String videoUrl;
 
     @Column(name = "thumbnail_url", length = 500)
@@ -97,6 +97,12 @@ public class Shorts {
 
     public ShortsStatus getStatus() {
         return status;
+    }
+
+    public void updateVideoUrl(String videoUrl) {
+        if (videoUrl != null && !videoUrl.isBlank()) {
+            this.videoUrl = videoUrl;
+        }
     }
 
     public void updateShorts(String title, String description, String thumbnailUrl, Category category, ShortsStatus status) {
