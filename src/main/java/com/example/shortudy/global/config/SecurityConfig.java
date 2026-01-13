@@ -51,7 +51,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // .permitAll() -> 누구나 접근할 수 있는 권한 제어
                         .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/api/v1/users/signup").permitAll()
+                        .requestMatchers("/api/v1/users").permitAll()
                         // GET 요청의 특정 데이터 조회는 누구나 가능하다.
                         .requestMatchers(HttpMethod.GET, "/api/v1/shorts/**", "/api/v1/categories/**").permitAll()
 
