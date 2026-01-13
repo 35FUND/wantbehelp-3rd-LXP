@@ -56,8 +56,8 @@ public class UserService {
             changed = true;
         }
 
-        if (request.userProfileUrl() != null) {
-            user.changeProfileUrl(request.userProfileUrl());
+        if (request.profileUrl() != null) {
+            user.changeProfileUrl(request.profileUrl());
             changed = true;
         }
 
@@ -76,10 +76,10 @@ public class UserService {
         if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) throw new BaseException(ErrorCode.INVALID_PASSWORD);
 
         // 새 비밀번호 검증 (이전 비밀번호와 동일하지 않은지 검즘)
-        if (!passwordEncoder.matches(request.newPassword(), user.getPassword())) throw new BaseException(ErrorCode.SAME_PASSWORD);
+        if (passwordEncoder.matches(request.newPassword(), user.getPassword())) throw new BaseException(ErrorCode.SAME_PASSWORD);
 
         // 더티체크로 저장
-        user.changePassword(request.newPassword());
+        user.changePassword(passwordEncoder.encode(request.newPassword()));
     }
 
     public InfoResponse getUserInfo(Long userId) {
