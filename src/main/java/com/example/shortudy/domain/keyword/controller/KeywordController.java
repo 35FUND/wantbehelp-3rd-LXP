@@ -4,11 +4,12 @@ import com.example.shortudy.global.common.ApiResponse;
 import com.example.shortudy.domain.keyword.dto.request.KeywordRequest;
 import com.example.shortudy.domain.keyword.dto.response.KeywordResponse;
 import com.example.shortudy.domain.keyword.service.KeywordService;
+import com.example.shortudy.global.error.BaseException;
+import com.example.shortudy.global.error.ErrorCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -45,12 +46,12 @@ public class KeywordController {
     public ResponseEntity<ApiResponse<KeywordResponse>> updateKeyword(
             @PathVariable ("keywordId")Long keywordId,
             @RequestBody @Valid KeywordRequest request) {
-        throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "updateKeyword 메서드는 아직 구현되지 않았습니다.");
+        throw new BaseException(ErrorCode.NOT_IMPLEMENTED, "updateKeyword 메서드는 아직 구현되지 않았습니다.");
     }
 
     @DeleteMapping("/{keywordId}")
     public ResponseEntity<Void> deleteKeyword(
             @PathVariable ("keywordId") Long keywordId) {
-            throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "deleteKeyword 메서드는 아직 구현되지 않았습니다.");
+            throw new BaseException(ErrorCode.NOT_IMPLEMENTED, "deleteKeyword 메서드는 아직 구현되지 않았습니다.");
     }
 }
