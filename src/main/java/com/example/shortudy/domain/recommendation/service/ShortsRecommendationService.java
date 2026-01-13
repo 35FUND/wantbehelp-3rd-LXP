@@ -3,6 +3,7 @@ package com.example.shortudy.domain.recommendation.service;
 import com.example.shortudy.domain.recommendation.dto.response.RecommendationResponse;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
+import com.example.shortudy.global.error.BaseException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,9 +13,10 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.example.shortudy.global.error.ErrorCode.*;
+
 @Service
 @Transactional(readOnly = true)
-
 public class ShortsRecommendationService {
 
     private final ShortsRepository shortsRepository;
@@ -23,38 +25,68 @@ public class ShortsRecommendationService {
         this.shortsRepository = shortsRepository;
     }
 
-    public List<RecommendationResponse> getRecommendations(Long shortsId, int limit) {
-
+    public RecommendationResponse getRecommendations(Long shortsId, int offset, int limit) {
+        // 1. 기준 Shorts 조회
         Shorts baseShorts = shortsRepository.findById(shortsId)
-                .orElseThrow(() -> new IllegalArgumentException("쇼츠를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BaseException(SHORTS_NOT_FOUND, "해당 숏츠를 찾을 수 없습니다."));
+
         Set<String> baseKeywords = extractKeywords(baseShorts);
 
+        // 2. 후보 Shorts 조회 (기준 제외)
         List<Shorts> candidates = shortsRepository.findByIdNot(shortsId);
 
-        Map<Long, Shorts> candidateMap = candidates.stream()
-                .collect(Collectors.toMap(
-                        Shorts::getId,
-                        Function.identity()
-                ));
+        // 3. 모든 유사도 계산 (한 번만!)
+        List<JaccardSimilarityCalculator.SimilarityResult> allResults =
+                calculateAllSimilarities(baseKeywords, candidates);
 
-        List<JaccardSimilarityCalculator.SimilarityInput> similarityInputs = candidates.stream()
+        // 4. 유사도 > 0인 것만 필터링
+        List<JaccardSimilarityCalculator.SimilarityResult> filteredResults = allResults.stream()
+                .filter(result -> result.similarity() > 0)
+                .toList();
+
+        int totalCount = filteredResults.size();
+
+        // 5. 페이징 적용
+        List<JaccardSimilarityCalculator.SimilarityResult> pagedResults = filteredResults.stream()
+                .skip(offset)
+                .limit(limit)
+                .toList();
+
+        // 6. Shorts Map 생성 (조회 최적화)
+        Set<Long> pagedShortsIds = pagedResults.stream()
+                .map(JaccardSimilarityCalculator.SimilarityResult::shortsId)
+                .collect(Collectors.toSet());
+
+        Map<Long, Shorts> shortsMap = candidates.stream()
+                .filter(shorts -> pagedShortsIds.contains(shorts.getId()))
+                .collect(Collectors.toMap(Shorts::getId, Function.identity()));
+
+        // 7. Response 생성
+        List<RecommendationResponse.ShortsRecommendation> recommendations = pagedResults.stream()
+                .map(result -> {
+                    Shorts recommended = shortsMap.get(result.shortsId());
+                    return RecommendationResponse.ShortsRecommendation.from(
+                            recommended,
+                            result.similarity()
+                    );
+                })
+                .toList();
+
+        return RecommendationResponse.of(recommendations, offset, limit, totalCount);
+    }
+
+    private List<JaccardSimilarityCalculator.SimilarityResult> calculateAllSimilarities(
+            Set<String> baseKeywords,
+            List<Shorts> candidates
+    ) {
+        List<JaccardSimilarityCalculator.SimilarityInput> inputs = candidates.stream()
                 .map(shorts -> new JaccardSimilarityCalculator.SimilarityInput(
                         shorts.getId(),
                         extractKeywords(shorts)
                 ))
-                .collect(Collectors.toList());
+                .toList();
 
-        List<JaccardSimilarityCalculator.SimilarityResult> results =
-                JaccardSimilarityCalculator.calculateMultiple(baseKeywords, similarityInputs);
-
-        return results.stream()
-                .filter(result -> result.similarity() > 0)
-                .limit(limit)
-                .map(result -> {
-                    Shorts recommended = candidateMap.get(result.shortsId());
-                    return RecommendationResponse.from(recommended, result.similarity());
-                })
-                .collect(Collectors.toList());
+        return JaccardSimilarityCalculator.calculateMultiple(baseKeywords, inputs);
     }
 
     private Set<String> extractKeywords(Shorts shorts) {

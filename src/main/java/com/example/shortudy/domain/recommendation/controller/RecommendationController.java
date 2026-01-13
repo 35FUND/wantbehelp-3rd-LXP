@@ -8,8 +8,6 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/v1/recommendations")
 public class RecommendationController {
@@ -22,13 +20,16 @@ public class RecommendationController {
 
     @GetMapping("/shorts/{shortsId}")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<List<RecommendationResponse>> getRecommendations(
+    public ApiResponse<RecommendationResponse> getRecommendations(
             @PathVariable Long shortsId,
-            @Valid RecommendationRequest request
+            @Valid @ModelAttribute RecommendationRequest request
     ) {
-        List<RecommendationResponse> recommendations =
-                recommendationService.getRecommendations(shortsId, request.limit());
+        RecommendationResponse response = recommendationService.getRecommendations(
+                shortsId,
+                request.offset(),
+                request.limit()
+        );
 
-        return ApiResponse.success(recommendations);
+        return ApiResponse.success(response);
     }
 }
