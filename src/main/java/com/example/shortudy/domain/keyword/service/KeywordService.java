@@ -22,7 +22,7 @@ public class KeywordService {
     }
 
     @Transactional
-    public Keyword getOrCreateTag(String rawName) {
+    public Keyword getOrCreateKeyword(String rawName) {
         String normalized = KeywordNormalizer.normalize(rawName);
 
         return keywordRepository.findByNormalizedName(normalized)
