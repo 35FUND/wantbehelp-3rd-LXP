@@ -22,7 +22,7 @@ public class RecommendationController {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<RecommendationResponse> getRecommendations(
             @PathVariable Long shortsId,
-            @Valid @ModelAttribute RecommendationRequest request
+            @Valid RecommendationRequest request
     ) {
         RecommendationResponse response = recommendationService.getRecommendations(
                 shortsId,
