@@ -3,11 +3,8 @@ package com.example.shortudy.domain.recommendation.service;
 import com.example.shortudy.domain.recommendation.dto.response.RecommendationResponse;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
 import com.example.shortudy.domain.shorts.entity.*;
-
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
