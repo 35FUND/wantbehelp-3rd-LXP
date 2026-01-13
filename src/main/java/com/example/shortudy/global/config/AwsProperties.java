@@ -15,6 +15,7 @@ public class AwsProperties {
         this.region = region;
     }
 
+    @Getter
     public static class S3 {
         private String bucket;
         public void setBucket(String bucket) {

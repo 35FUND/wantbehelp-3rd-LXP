@@ -1,22 +1,26 @@
 package com.example.shortudy.domain.shorts.upload.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.example.shortudy.domain.shorts.entity.Shorts;
+import jakarta.persistence.*;
+import lombok.Getter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
+@Getter
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "shorts_upload_session")
 public class ShortsUploadSession {
 
+
     @Id
-    private Long id; // shortId
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column
+    private Long shortId;
 
     @Column(nullable = false, length = 64)
     private String uploadId;
@@ -63,6 +67,11 @@ public class ShortsUploadSession {
     @CreatedDate
     @Column
     private LocalDateTime createdAt;
+
+
+    public void setShortId(Long shortId) {
+        this.shortId = shortId;
+    }
 
     protected ShortsUploadSession() {
     }
@@ -143,69 +152,5 @@ public class ShortsUploadSession {
     public enum UploadStatus {
         INITIATED,
         COMPLETED
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getUploadId() {
-        return uploadId;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public Long getCategoryId() {
-        return categoryId;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public String getKeywords() {
-        return keywords;
-    }
-
-    public String getFileName() {
-        return fileName;
-    }
-
-    public Long getFileSize() {
-        return fileSize;
-    }
-
-    public String getContentType() {
-        return contentType;
-    }
-
-    public String getObjectKey() {
-        return objectKey;
-    }
-
-    public Integer getExpiresIn() {
-        return expiresIn;
-    }
-
-    public Integer getDurationSec() {
-        return durationSec;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public LocalDateTime getUploadedAt() {
-        return uploadedAt;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
     }
 }

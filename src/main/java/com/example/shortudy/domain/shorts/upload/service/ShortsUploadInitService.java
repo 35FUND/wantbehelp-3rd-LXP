@@ -14,12 +14,16 @@ import com.example.shortudy.domain.user.repository.UserRepository;
 import com.example.shortudy.global.config.AwsProperties;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
+import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Configuration;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
@@ -58,6 +62,23 @@ public class ShortsUploadInitService {
         this.uploadSessionRepository = uploadSessionRepository;
     }
 
+    @PostConstruct
+    public void validateAwsConfiguration() {
+        // 서버 기동 시 S3 설정을 가볍게 검증한다.
+        String bucket = resolveBucket();
+        Region region = resolveRegion();
+
+        try (S3Client s3Client = S3Client.builder()
+                .region(region)
+                .credentialsProvider(DefaultCredentialsProvider.create())
+                .serviceConfiguration(S3Configuration.builder().checksumValidationEnabled(false).build())
+                .build()) {
+            s3Client.headBucket(HeadBucketRequest.builder().bucket(bucket).build());
+        } catch (RuntimeException e) {
+            throw new BaseException(ErrorCode.AWS_S3_NOT_CONFIGURED, "S3 설정 검증에 실패했습니다. 버킷/리전/자격증명을 확인해주세요.");
+        }
+    }
+
     @Transactional
     public ShortsUploadInitResponse init(Long userId, ShortsUploadInitRequest.Body body) {
         validateFile(body.fileName(), body.fileSize(), body.contentType());
@@ -79,6 +100,7 @@ public class ShortsUploadInitService {
                 body.durationSec(),
                 ShortsStatus.DRAFT
         );
+
         Shorts savedShorts = shortsRepository.save(shorts);
 
         Long shortId = savedShorts.getId();
@@ -136,7 +158,7 @@ public class ShortsUploadInitService {
 
     private String joinKeywords(List<String> keywords) {
         if (keywords == null || keywords.isEmpty()) {
-            return null;
+            throw new BaseException(ErrorCode.INVALID_INPUT, "키워드는 필수입니다.");
         }
         return keywords.stream()
                 .filter(Objects::nonNull)
@@ -145,7 +167,7 @@ public class ShortsUploadInitService {
                 .distinct()
                 .limit(30)
                 .reduce((a, b) -> a + "," + b)
-                .orElse(null);
+                .orElseThrow(() -> new BaseException(ErrorCode.INVALID_INPUT, "키워드는 필수입니다."));
     }
 
     private PresignedPutObjectRequest presignPut(String bucket, String key, String contentType, Region region) {
@@ -172,10 +194,7 @@ public class ShortsUploadInitService {
     private String resolveBucket() {
         String bucket = trimToNull(awsProperties.getS3().getBucket());
         if (bucket == null) {
-            bucket = trimToNull(System.getenv("AWS_S3_BUCKET"));
-        }
-        if (bucket == null) {
-            throw new BaseException(ErrorCode.AWS_S3_NOT_CONFIGURED, "S3 bucket 설정이 필요합니다.(aws.s3.bucket 또는 AWS_S3_BUCKET)");
+            throw new BaseException(ErrorCode.AWS_S3_NOT_CONFIGURED, "S3 bucket 설정이 필요합니다.(aws.s3.bucket)");
         }
         return bucket;
     }
@@ -183,13 +202,7 @@ public class ShortsUploadInitService {
     private Region resolveRegion() {
         String region = trimToNull(awsProperties.getRegion());
         if (region == null) {
-            region = trimToNull(System.getenv("AWS_REGION"));
-        }
-        if (region == null) {
-            region = trimToNull(System.getenv("AWS_DEFAULT_REGION"));
-        }
-        if (region == null) {
-            throw new BaseException(ErrorCode.AWS_S3_NOT_CONFIGURED, "AWS region 설정이 필요합니다.(aws.region 또는 AWS_REGION/AWS_DEFAULT_REGION)");
+            throw new BaseException(ErrorCode.AWS_S3_NOT_CONFIGURED, "AWS region 설정이 필요합니다.(aws.region)");
         }
         return Region.of(region);
     }
