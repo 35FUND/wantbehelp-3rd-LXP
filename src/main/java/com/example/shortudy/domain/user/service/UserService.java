@@ -30,7 +30,7 @@ public class UserService {
 
         //TODO 정책 확정 필요(email, nickname 중복에 관해)
         if (userRepository.existsByEmail(request.email())) throw new BaseException(ErrorCode.DUPLICATE_EMAIL);
-        if (userRepository.existsByNickname(request.nickname())) throw new BaseException(ErrorCode.USER_NOT_FOUND);
+        if (userRepository.existsByNickname(request.nickname())) throw new BaseException(ErrorCode.DUPLICATE_NICKNAME);
 
         String encodedPassword = passwordEncoder.encode(request.password());
 
