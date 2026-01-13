@@ -36,11 +36,11 @@ public class KeywordService {
     public KeywordResponse createKeyword(KeywordRequest request) {
         String normalized = KeywordNormalizer.normalize(request.name());
 
+        String displayName = request.name().trim();
         if (keywordRepository.existsByNormalizedName(normalized)) {
             throw new IllegalArgumentException("이미 존재하는 키워드입니다.");
         }
-
-        Keyword keyword = new Keyword(request.name(), normalized);
+        Keyword keyword = new Keyword(displayName, normalized);
         Keyword saved = keywordRepository.save(keyword);
         return new KeywordResponse(saved.getId(), saved.getDisplayName());
     }
