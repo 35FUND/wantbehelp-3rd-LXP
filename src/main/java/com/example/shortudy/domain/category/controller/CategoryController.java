@@ -27,7 +27,7 @@ public class CategoryController {
         CategoryResponse created = categoryService.createCategory(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{categoryId}")
-                .buildAndExpand(created.getId())
+                .buildAndExpand(created.id())
                 .toUri();
         return ResponseEntity.created(location).body(ApiResponse.success(created));
     }
