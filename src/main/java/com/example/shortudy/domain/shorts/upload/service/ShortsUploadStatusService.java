@@ -2,6 +2,7 @@ package com.example.shortudy.domain.shorts.upload.service;
 
 import com.example.shortudy.domain.shorts.dto.ShortsUploadStatusResponse;
 import com.example.shortudy.domain.shorts.upload.entity.ShortsUploadSession;
+import com.example.shortudy.domain.shorts.upload.entity.ShortsUploadSession.UploadStatus;
 import com.example.shortudy.domain.shorts.upload.repository.ShortsUploadSessionRepository;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
@@ -38,10 +39,10 @@ public class ShortsUploadStatusService {
             throw new BaseException(ErrorCode.UNAUTHORIZED);
         }
 
-        LocalDateTime expiresAt = null;
-        if (session.getCreatedAt() != null && session.getExpiresIn() != null) {
-            expiresAt = session.getCreatedAt().plusSeconds(session.getExpiresIn());
+        if (session.getCreatedAt() == null || session.getExpiresIn() == null) {
+            throw new BaseException(ErrorCode.INTERNAL_ERROR, "업로드 세션의 시간 정보가 누락되었습니다.");
         }
+        LocalDateTime expiresAt = session.getCreatedAt().plusSeconds(session.getExpiresIn());
 
         String status = mapStatus(session.getStatus());
         int progress = "COMPLETED".equals(status) ? 100 : 0;
@@ -50,17 +51,16 @@ public class ShortsUploadStatusService {
                 shortId,
                 status,
                 progress,
-                expiresAt,
-                session.getUploadedAt()
+                expiresAt
         );
     }
 
-    private String mapStatus(String rawStatus) {
+    private String mapStatus(UploadStatus rawStatus) {
         if (rawStatus == null) {
             return "PENDING";
         }
 
-        if (ShortsUploadSession.UploadStatus.COMPLETED.name().equals(rawStatus)) {
+        if (UploadStatus.COMPLETED == rawStatus) {
             return "COMPLETED";
         }
 

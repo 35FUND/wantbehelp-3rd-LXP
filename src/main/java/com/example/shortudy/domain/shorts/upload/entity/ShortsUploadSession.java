@@ -1,6 +1,7 @@
 package com.example.shortudy.domain.shorts.upload.entity;
 
 import com.example.shortudy.domain.shorts.entity.Shorts;
+import com.example.shortudy.domain.shorts.entity.ShortsStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import org.springframework.data.annotation.CreatedDate;
@@ -59,10 +60,8 @@ public class ShortsUploadSession {
     private Integer durationSec;
 
     @Column(nullable = false, length = 20)
-    private String status;
-
-    @Column
-    private LocalDateTime uploadedAt;
+    @Enumerated(EnumType.STRING)
+    private UploadStatus status;
 
     @CreatedDate
     @Column
@@ -90,8 +89,8 @@ public class ShortsUploadSession {
             String objectKey,
             Integer expiresIn,
             Integer durationSec,
-            String status,
-            LocalDateTime uploadedAt
+            UploadStatus status,
+            LocalDateTime createdAt
     ) {
         this.id = id;
         this.uploadId = uploadId;
@@ -107,7 +106,7 @@ public class ShortsUploadSession {
         this.expiresIn = expiresIn;
         this.durationSec = durationSec;
         this.status = status;
-        this.uploadedAt = uploadedAt;
+        this.createdAt = createdAt;
     }
 
     public static ShortsUploadSession create(
@@ -139,14 +138,13 @@ public class ShortsUploadSession {
                 objectKey,
                 expiresIn,
                 durationSec,
-                UploadStatus.INITIATED.name(),
+                UploadStatus.INITIATED,
                 null
         );
     }
 
     public void markUploaded() {
-        this.status = UploadStatus.COMPLETED.name();
-        this.uploadedAt = LocalDateTime.now();
+        this.status = UploadStatus.COMPLETED;
     }
 
     public enum UploadStatus {

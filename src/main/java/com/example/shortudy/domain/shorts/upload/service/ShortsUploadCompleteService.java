@@ -4,6 +4,7 @@ import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
 import com.example.shortudy.domain.shorts.upload.entity.ShortsUploadSession;
+import com.example.shortudy.domain.shorts.upload.entity.ShortsUploadSession.UploadStatus;
 import com.example.shortudy.domain.shorts.upload.repository.ShortsUploadSessionRepository;
 import com.example.shortudy.global.config.AwsProperties;
 import com.example.shortudy.global.error.BaseException;
@@ -51,7 +52,7 @@ public class ShortsUploadCompleteService {
             throw new BaseException(ErrorCode.UNAUTHORIZED);
         }
 
-        if (ShortsUploadSession.UploadStatus.COMPLETED.name().equals(session.getStatus())) {
+        if (UploadStatus.COMPLETED == session.getStatus()) {
             return;
         }
 
@@ -80,7 +81,7 @@ public class ShortsUploadCompleteService {
 
     private void validateNotExpired(ShortsUploadSession session) {
         if (session.getCreatedAt() == null || session.getExpiresIn() == null) {
-            return;
+            throw new BaseException(ErrorCode.INTERNAL_ERROR, "업로드 세션의 시간 정보가 누락되었습니다.");
         }
 
         LocalDateTime expiresAt = session.getCreatedAt().plusSeconds(session.getExpiresIn());
@@ -126,28 +127,27 @@ public class ShortsUploadCompleteService {
     }
 
     private String resolveBucket() {
-        String bucket = awsProperties.getS3() == null ? null : awsProperties.getS3().getBucket();
-        if (bucket == null || bucket.trim().isBlank()) {
-            bucket = System.getenv("AWS_S3_BUCKET");
+        String bucket = trimToNull(awsProperties.getS3().getBucket());
+        if (bucket == null) {
+            throw new BaseException(ErrorCode.AWS_S3_NOT_CONFIGURED, "S3 bucket 설정이 필요합니다.(aws.s3.bucket)");
         }
-        if (bucket == null || bucket.trim().isBlank()) {
-            throw new BaseException(ErrorCode.AWS_S3_NOT_CONFIGURED, "S3 bucket 설정이 필요합니다.(aws.s3.bucket 또는 AWS_S3_BUCKET)");
-        }
-        return bucket.trim();
+        return bucket;
     }
 
     private Region resolveRegion() {
-        String region = awsProperties.getRegion();
-        if (region == null || region.trim().isBlank()) {
-            region = System.getenv("AWS_REGION");
+        String region = trimToNull(awsProperties.getRegion());
+        if (region == null) {
+            throw new BaseException(ErrorCode.AWS_S3_NOT_CONFIGURED, "AWS region 설정이 필요합니다.(aws.region)");
         }
-        if (region == null || region.trim().isBlank()) {
-            region = System.getenv("AWS_DEFAULT_REGION");
+        return Region.of(region);
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
         }
-        if (region == null || region.trim().isBlank()) {
-            throw new BaseException(ErrorCode.AWS_S3_NOT_CONFIGURED, "AWS region 설정이 필요합니다.(aws.region 또는 AWS_REGION/AWS_DEFAULT_REGION)");
-        }
-        return Region.of(region.trim());
+        String trimmed = value.trim();
+        return trimmed.isBlank() ? null : trimmed;
     }
 
     private String buildS3ObjectUrl(String bucket, Region region, String objectKey) {

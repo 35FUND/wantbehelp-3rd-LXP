@@ -12,7 +12,6 @@ public record ShortsUploadStatusResponse(
         Long shortId,
         String status,
         int progress,
-        LocalDateTime expiresAt,
-        LocalDateTime uploadedAt
+        LocalDateTime expiresAt
 ) {
 }

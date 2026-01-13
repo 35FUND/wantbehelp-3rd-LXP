@@ -19,6 +19,10 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Sort.Direction.*;
+
+import static org.springframework.data.domain.Sort.Direction.ASC;
+import static org.springframework.data.domain.Sort.Direction.DESC;
 
 @RestController
 @RequestMapping("/api/v1/shorts")
@@ -84,7 +88,7 @@ public class ShortsController {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Page<ShortsResponse>> getShortsDetails(
             @PathVariable Long shortId,
-            @PageableDefault(size = 20, sort = "id", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable
+            @PageableDefault(size = 20, sort = "id", direction = DESC) Pageable pageable
     ) {
         Page<ShortsResponse> result = shortsService.getShortsDetailsWithPaging(shortId, pageable);
         return ApiResponse.success(result);
@@ -93,7 +97,7 @@ public class ShortsController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Page<ShortsResponse>> getShortsList(
-            @PageableDefault(size = 8, sort = "id", direction = org.springframework.data.domain.Sort.Direction.ASC) Pageable pageable
+            @PageableDefault(size = 8, sort = "id", direction = ASC) Pageable pageable
     ) {
         Page<ShortsResponse> response = shortsService.getShortsList(pageable);
         return ApiResponse.success(response);
