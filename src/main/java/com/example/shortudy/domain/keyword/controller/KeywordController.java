@@ -38,18 +38,18 @@ public class KeywordController {
     public ResponseEntity<ApiResponse<KeywordResponse>> getKeyword(
             @PathVariable("keywordId") Long keywordId) {
         KeywordResponse response = keywordService.getKeyword(keywordId);
-        throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "getKeyword 메서드는 아직 구현되지 않았습니다.");
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @PutMapping("/{keywordId}")
-    public ResponseEntity<KeywordResponse> updateKeyword(
+    public ResponseEntity<ApiResponse<KeywordResponse>> updateKeyword(
             @PathVariable ("keywordId")Long keywordId,
             @RequestBody @Valid KeywordRequest request) {
         throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "updateKeyword 메서드는 아직 구현되지 않았습니다.");
     }
 
     @DeleteMapping("/{keywordId}")
-    public ResponseEntity<Void> deleteTag(
+    public ResponseEntity<Void> deleteKeyword(
             @PathVariable ("keywordId") Long keywordId) {
             throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "deleteKeyword 메서드는 아직 구현되지 않았습니다.");
     }
