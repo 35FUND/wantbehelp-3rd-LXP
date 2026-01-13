@@ -11,6 +11,19 @@ public interface CommentRepository extends JpaRepository<Comment,Long> {
 
     List<Comment> findAllByShortsId(Long shortsId);
 
+    // 단일 숏츠의 댓글 개수 조회
+    long countByShortsId(Long shortsId);
+
+    // 전체 숏츠의 댓글 개수 조회
+    @Query("""
+  select c.shorts.id as shortsId, count(c.id) as cnt
+  from Comment c
+  where c.shorts.id in :shortsIds
+  group by c.shorts.id
+""")
+    List<ShortsCommentCountProjection> countAllCommentsByShortsIds(@Param("shortsIds") List<Long> shortsIds);
+
+
     // 댓글 조회
     @Query("""
         SELECT c
@@ -39,7 +52,6 @@ public interface CommentRepository extends JpaRepository<Comment,Long> {
     WHERE c.parent.id = :parentId
     ORDER BY c.createdAt ASC
 """)
-    
     List<Comment> findRepliesWithUser(@Param("parentCommentId") Long parentId);
 
     public interface ReplyCountProjection {
@@ -47,6 +59,9 @@ public interface CommentRepository extends JpaRepository<Comment,Long> {
         Long getParentId();
         long getCnt();
     }
+
+    public interface ShortsCommentCountProjection {
+        Long getShortsId();
+        long getCnt();
+    }
 }
-
-
