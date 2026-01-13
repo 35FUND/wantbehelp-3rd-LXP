@@ -27,7 +27,7 @@ public class CategoryController {
         CategoryResponse created = categoryService.createCategory(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{categoryId}")
-                .buildAndExpand(created.id())
+                .buildAndExpand(created.id()) //생성된 객체의 ID를 사용
                 .toUri();
         return ResponseEntity.created(location).body(ApiResponse.success(created));
     }
