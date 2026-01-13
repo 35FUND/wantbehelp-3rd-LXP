@@ -29,13 +29,19 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/signup")
+    @PostMapping
     public ResponseEntity<ApiResponse<Void>> signup(@RequestBody @Valid SignUpRequest request) {
         userService.signup(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(null));
     }
 
-    @PatchMapping("/profile")
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<InfoResponse>> me(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        InfoResponse response = userService.getUserInfo(userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PatchMapping("/me")
     public ResponseEntity<ApiResponse<Void>> updateProfile(@AuthenticationPrincipal CustomUserDetails userDetails,
                                                            @RequestBody @Valid UpdateProfileRequest request) {
 
@@ -44,13 +50,7 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
-    @GetMapping("/me")
-    public ResponseEntity<ApiResponse<InfoResponse>> getMyInfo(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        InfoResponse response = userService.getUserInfo(userDetails.getId());
-        return ResponseEntity.ok(ApiResponse.success(response));
-    }
-
-    @PostMapping("/password")
+    @PatchMapping("/me/password")
     public ResponseEntity<ApiResponse<Void>> changePassword(@AuthenticationPrincipal CustomUserDetails userDetails,
                                                             @Valid @RequestBody PasswordChangeRequest request) {
         userService.changePassword(userDetails.getId(), request);
@@ -60,17 +60,9 @@ public class UserController {
 
     // TODO 회원 탈퇴용, 관리자(회원 강퇴?)는 협의
     @DeleteMapping("/me")
-    public ResponseEntity<ApiResponse<Void>> deleteUser(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<ApiResponse<Void>> withdraw(@AuthenticationPrincipal CustomUserDetails userDetails) {
         userService.deleteUser(userDetails.getId());
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResponse.success(null));
     }
-
-//    실제 프론트 분들이 어떻게 쓰시는지 논의 필요
-//    @GetMapping("/{userId}")
-//    public ResponseEntity<UserResponse> getUser(
-//            @PathVariable Long userId) {
-//        UserResponse response = userService.getUser(userId);
-//        return ResponseEntity.ok(response);
-//    }
 }
 

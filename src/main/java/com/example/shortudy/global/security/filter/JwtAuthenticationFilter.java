@@ -3,6 +3,7 @@ package com.example.shortudy.global.security.filter;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
 import com.example.shortudy.global.security.JwtTokenProvider;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -44,8 +45,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         } catch (BaseException e) { // BaseException 이 발생하면 EntryPoint가 사용할 수 있게 배달
             request.setAttribute("exception", e.errorCode());
-        } catch (Exception e) {     // 예상치 못한 에러가 발생했을 때
-            request.setAttribute("exception", ErrorCode.INTERNAL_ERROR);
+        } catch (JwtException e) {     // 예상치 못한 에러가 발생했을 때
+            request.setAttribute("exception", ErrorCode.INVALID_TOKEN);
         }
         filterChain.doFilter(request, response);
     }
