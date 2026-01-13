@@ -2,7 +2,6 @@ package com.example.shortudy.domain.comment.controller;
 
 import com.example.shortudy.domain.comment.dto.request.CommentRequest;
 import com.example.shortudy.domain.comment.dto.response.CommentResponse;
-import com.example.shortudy.domain.comment.dto.response.ReplyResponse;
 import com.example.shortudy.domain.comment.service.CommentService;
 import com.example.shortudy.global.common.ApiResponse;
 import com.example.shortudy.global.security.principal.CustomUserDetails;
@@ -26,13 +25,15 @@ public class CommentController {
 
     // 댓글 생성
     @PostMapping("/shorts/{shortsId}/comments")
-    public ResponseEntity<ApiResponse<CommentResponse>> createComments(
+    public ResponseEntity<ApiResponse<Void>> createComments(
             @AuthenticationPrincipal CustomUserDetails me,
             @PathVariable Long shortsId,
             @Valid @RequestBody CommentRequest request
     ) {
+        commentService.createComment(me.getId(), shortsId, request);
+
         return ResponseEntity.status(HttpStatus.CREATED).body(
-                ApiResponse.success(commentService.createComment(me.getId(), shortsId, request))
+                ApiResponse.success(null)
                 );
     }
 
@@ -43,18 +44,19 @@ public class CommentController {
     ) {
         Long myId = (me != null) ? me.getId() : null;
 
-        // List<CommentResponse> foundComments = commentService.findComments(shortsId, myId);
         return ResponseEntity.ok(ApiResponse.success(commentService.findComments(shortsId, myId)));
     }
 
     @PatchMapping("/comments/{commentId}")
-    public ResponseEntity<ApiResponse<CommentResponse>> updateComment(
+    public ResponseEntity<ApiResponse<Void>> updateComment(
             @AuthenticationPrincipal CustomUserDetails me,
             @PathVariable Long commentId,
             @Valid @RequestBody CommentRequest request
     ) {
+        commentService.updateComment(me.getId(), commentId, request);
+
         return ResponseEntity.ok(
-                ApiResponse.success(commentService.updateComment(me.getId(), commentId, request))
+                ApiResponse.success(null)
         );
     }
 
