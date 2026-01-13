@@ -31,9 +31,9 @@ public class AuthService {
     }
 
     public LoginResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.email()).orElseThrow(IllegalArgumentException::new);
+        User user = userRepository.findByEmail(request.email()).orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
 
-        if (!passwordEncoder.matches(request.password(), user.getPassword())) throw new IllegalArgumentException("Wrong password");
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) throw new BaseException(ErrorCode.INVALID_PASSWORD);
 
         return generateToken(user);
     }
