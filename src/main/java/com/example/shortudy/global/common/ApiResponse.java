@@ -46,7 +46,16 @@ public class ApiResponse<T> {
     }
 
     /**
+     * 성공 응답 (코드/메시지 포함)
+     * - 명세가 있는 API에서 사용
+     */
+    public static <T> ApiResponse<T> success(String code, String message, T data) {
+        return new ApiResponse<>(true, code, message, data);
+    }
+
+    /**
      * 에러 응답
+     * - 기존 시그니처 유지: (message, code, request)
      */
     public static <T> ApiResponse<T> error(String message, String code, String request) {
         return new ApiResponse<>(false, code, message, request, null);
