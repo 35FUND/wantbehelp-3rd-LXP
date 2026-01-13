@@ -50,7 +50,7 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
-    @PostMapping("/me/password")
+    @PatchMapping("/me/password")
     public ResponseEntity<ApiResponse<Void>> changePassword(@AuthenticationPrincipal CustomUserDetails userDetails,
                                                             @Valid @RequestBody PasswordChangeRequest request) {
         userService.changePassword(userDetails.getId(), request);
