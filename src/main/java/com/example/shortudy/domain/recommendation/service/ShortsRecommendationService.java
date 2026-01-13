@@ -3,7 +3,6 @@ package com.example.shortudy.domain.recommendation.service;
 import com.example.shortudy.domain.recommendation.dto.response.RecommendationResponse;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,29 +14,32 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
-@RequiredArgsConstructor
+
 public class ShortsRecommendationService {
 
     private final ShortsRepository shortsRepository;
 
-    public List<RecommendationResponse> getRecommendations(String shortsId, int limit) {
-        Long shortsIdLong = Long.parseLong(shortsId);
+    public ShortsRecommendationService(ShortsRepository shortsRepository) {
+        this.shortsRepository = shortsRepository;
+    }
 
-        Shorts baseShorts = shortsRepository.findById(shortsIdLong)
+    public List<RecommendationResponse> getRecommendations(Long shortsId, int limit) {
+
+        Shorts baseShorts = shortsRepository.findById(shortsId)
                 .orElseThrow(() -> new IllegalArgumentException("쇼츠를 찾을 수 없습니다."));
         Set<String> baseKeywords = extractKeywords(baseShorts);
 
-        List<Shorts> candidates = shortsRepository.findByIdNot(shortsIdLong);
+        List<Shorts> candidates = shortsRepository.findByIdNot(shortsId);
 
-        Map<String, Shorts> candidateMap = candidates.stream()
+        Map<Long, Shorts> candidateMap = candidates.stream()
                 .collect(Collectors.toMap(
-                        s -> s.getId().toString(),
+                        Shorts::getId,
                         Function.identity()
                 ));
 
         List<JaccardSimilarityCalculator.SimilarityInput> similarityInputs = candidates.stream()
                 .map(shorts -> new JaccardSimilarityCalculator.SimilarityInput(
-                        shorts.getId().toString(),
+                        shorts.getId(),
                         extractKeywords(shorts)
                 ))
                 .collect(Collectors.toList());

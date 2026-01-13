@@ -32,6 +32,6 @@ public final class JaccardSimilarityCalculator {
                 .toList();
     }
 
-    public record SimilarityInput(String shortsId, Set<String> keywords) {}
-    public record SimilarityResult(String shortsId, double similarity) {}
+    public record SimilarityInput(Long shortsId, Set<String> keywords) {}
+    public record SimilarityResult(Long shortsId, double similarity) {}
 }

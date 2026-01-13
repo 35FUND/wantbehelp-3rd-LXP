@@ -9,8 +9,9 @@ public record RecommendationRequest(
         @Max(value = 20, message = "최대 20개까지 요청 가능합니다.")
         int limit
 ) {
-
-    public RecommendationRequest(int limit) {
-        this.limit = (limit == 0) ? 20 : limit;
+    public RecommendationRequest {
+        if (limit == 0) {
+            limit = 20;
+        }
     }
 }
