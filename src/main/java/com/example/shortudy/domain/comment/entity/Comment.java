@@ -6,13 +6,15 @@ import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
 import jakarta.persistence.*;
 import lombok.Getter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 public class Comment {
 
     @Id
@@ -34,7 +36,13 @@ public class Comment {
     @Column(length = 1000, nullable = false)
     private String content;
 
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
 
     private static final int MAX_CONTENT_LENGTH = 1000;
 
@@ -46,6 +54,7 @@ public class Comment {
         this.parent = parent;
         validateContent(content);
         this.content = content;
+        this.createdAt = LocalDateTime.now();
     }
 
     // 댓글
