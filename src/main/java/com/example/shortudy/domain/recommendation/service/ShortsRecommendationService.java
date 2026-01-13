@@ -14,10 +14,13 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
-@RequiredArgsConstructor
 public class ShortsRecommendationService {
 
     private final ShortsRepository shortsRepository;
+
+    public ShortsRecommendationService(ShortsRepository shortsRepository) {
+        this.shortsRepository = shortsRepository;
+    }
 
     public List<RecommendationResponse> getRecommendations(String shortsId, int limit) {
         Long shortsIdLong = Long.parseLong(shortsId);
@@ -28,9 +31,9 @@ public class ShortsRecommendationService {
 
         List<Shorts> candidates = shortsRepository.findByIdNot(shortsIdLong);
 
-        Map<String, Shorts> candidateMap = candidates.stream()
+        Map<Long, Shorts> candidateMap = candidates.stream()
                 .collect(Collectors.toMap(
-                        s -> s.getId().toString(),
+                        Shorts::getId,
                         Function.identity()
                 ));
 
