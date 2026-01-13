@@ -29,6 +29,10 @@ public enum ErrorCode {
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMENT_404", "해당 댓글을 찾을 수 없습니다."),
     COMMENT_FORBIDDEN(HttpStatus.FORBIDDEN, "COMMENT_403", "해당 댓글에 대한 접근 권한이 없습니다."),
 
+    // Keyword
+    KEYWORD_NOT_FOUND(HttpStatus.NOT_FOUND, "KEYWORD_404", "해당 키워드를 찾을 수 없습니다."),
+    DUPLICATE_KEYWORD(HttpStatus.CONFLICT, "KEYWORD_409", "이미 등록된 키워드입니다."),
+
 
 
 
