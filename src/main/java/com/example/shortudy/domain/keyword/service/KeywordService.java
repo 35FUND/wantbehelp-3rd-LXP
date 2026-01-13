@@ -5,6 +5,8 @@ import com.example.shortudy.domain.keyword.dto.response.KeywordResponse;
 import com.example.shortudy.domain.keyword.entity.Keyword;
 import com.example.shortudy.domain.keyword.repository.KeywordRepository;
 import com.example.shortudy.domain.keyword.util.KeywordNormalizer;
+import com.example.shortudy.global.error.BaseException;
+import com.example.shortudy.global.error.ErrorCode;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,7 +40,7 @@ public class KeywordService {
 
         String displayName = request.name().trim();
         if (keywordRepository.existsByNormalizedName(normalized)) {
-            throw new IllegalArgumentException("이미 존재하는 키워드입니다.");
+            throw new BaseException(ErrorCode.DUPLICATE_KEYWORD);
         }
         Keyword keyword = new Keyword(displayName, normalized);
         Keyword saved = keywordRepository.save(keyword);
@@ -54,22 +56,23 @@ public class KeywordService {
 
     @Transactional(readOnly = true)
     public KeywordResponse getKeyword(Long keywordId) {
-        Keyword keyword = keywordRepository.findById(keywordId)
-                .orElseThrow(() -> new EntityNotFoundException("키워드를 찾을 수 없습니다: " + keywordId));
-        return new KeywordResponse(keyword.getId(), keyword.getDisplayName());
+        return keywordRepository.findById(keywordId)
+                .map(k -> new KeywordResponse(k.getId(), k.getDisplayName()))
+                .orElseThrow(() -> new BaseException(ErrorCode.KEYWORD_NOT_FOUND));
+
     }
 
     @Transactional
     public KeywordResponse updateKeyword(Long keywordId, KeywordRequest request) {
         Keyword keyword = keywordRepository.findById(keywordId)
-                .orElseThrow(() -> new EntityNotFoundException("키워드를 찾을 수 없습니다: " + keywordId));
+                .orElseThrow(() -> new BaseException(ErrorCode.KEYWORD_NOT_FOUND));
 
         String normalized = KeywordNormalizer.normalize(request.name());
 
         keywordRepository.findByNormalizedName(normalized)
                 .ifPresent(existing -> {
                     if (!existing.getId().equals(keywordId)) {
-                        throw new IllegalArgumentException("이미 존재하는 키워드입니다.");
+                        throw new BaseException(ErrorCode.DUPLICATE_KEYWORD);
                     }
                 });
 
