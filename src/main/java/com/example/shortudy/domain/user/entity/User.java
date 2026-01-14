@@ -85,5 +85,9 @@ public class User {
     public void changeProfileUrl(String profileUrl) {
         this.profileUrl = profileUrl;
     }
+
+    public void changeRole() {
+        this.role = UserRole.ADMIN;
+    }
 }
 
