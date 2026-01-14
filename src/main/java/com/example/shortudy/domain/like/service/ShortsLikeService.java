@@ -25,26 +25,34 @@ public class ShortsLikeService {
     }
 
     @Transactional
-    public void like(Long userId, Long shortId) {
+    public void like(Long userId, Long shortsId) {
 
-        Shorts shorts = shortsRepository.findById(shortId).orElseThrow(()
+        Shorts shorts = shortsRepository.findById(shortsId).orElseThrow(()
                 -> new BaseException(ErrorCode.SHORTS_NOT_FOUND));
 
         User user = userRepository.findById(userId).orElseThrow(()
                 -> new BaseException(ErrorCode.USER_NOT_FOUND));
+
+        if (shortsLikeRepository.existsByUserIdAndShortsId(userId, shortsId)) {
+            throw new BaseException(ErrorCode.ALREADY_LIKE);
+        }
 
         shortsLikeRepository.save(ShortsLike.of(user, shorts));
     }
 
     @Transactional
-    public void unlike(Long userId, Long shortId) {
+    public void unlike(Long userId, Long shortsId) {
 
-        Shorts shorts = shortsRepository.findById(shortId).orElseThrow(()
+        Shorts shorts = shortsRepository.findById(shortsId).orElseThrow(()
                 -> new BaseException(ErrorCode.SHORTS_NOT_FOUND));
 
         User user = userRepository.findById(userId).orElseThrow(()
                 -> new BaseException(ErrorCode.USER_NOT_FOUND));
 
-        shortsLikeRepository.delete(ShortsLike.of(user, shorts));
+        ShortsLike like = shortsLikeRepository.
+                findByUserIdAndShortsId(user.getId(), shorts.getId())
+                .orElseThrow(() -> new BaseException(ErrorCode.ALREADY_UNLIKE));
+
+        shortsLikeRepository.delete(like);
     }
 }
