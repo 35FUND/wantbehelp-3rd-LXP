@@ -17,14 +17,14 @@ import com.example.shortudy.global.error.ErrorCode;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
@@ -67,18 +67,19 @@ public class ShortsUploadInitService {
 
     @PostConstruct
     public void validateAwsConfiguration() {
-        // 서버 기동 시 S3 설정을 가볍게 검증한다.
+        // 서버 기동 시 S3 설정을 검증한다.
         String bucket = resolveBucket();
         Region region = resolveRegion();
+        StaticCredentialsProvider credentialsProvider = resolveCredentials();
 
         try (S3Client s3Client = S3Client.builder()
                 .region(region)
-                .credentialsProvider(DefaultCredentialsProvider.create())
+                .credentialsProvider(credentialsProvider)
                 .serviceConfiguration(S3Configuration.builder().checksumValidationEnabled(false).build())
                 .build()) {
             s3Client.headBucket(HeadBucketRequest.builder().bucket(bucket).build());
         } catch (RuntimeException e) {
-            throw new BaseException(ErrorCode.AWS_S3_NOT_CONFIGURED, "S3 설정 검증에 실패했습니다. 버킷/리전/자격증명을 확인해주세요.");
+            throw new BaseException(ErrorCode.AWS_S3_NOT_CONFIGURED, "S3 설정 검증에 실패했습니다. 버킷/리전/자격증명을 확인해주세요. " + e.getMessage());
         }
     }
 
@@ -229,10 +230,12 @@ public class ShortsUploadInitService {
                 .signatureDuration(Duration.ofSeconds(EXPIRES_IN_SECONDS))
                 .putObjectRequest(putObjectRequest)
                 .build();
+        
+        StaticCredentialsProvider credentialsProvider = resolveCredentials();
 
         try (S3Presigner presigner = S3Presigner.builder()
                 .region(region)
-                .credentialsProvider(DefaultCredentialsProvider.create())
+                .credentialsProvider(credentialsProvider)
                 .serviceConfiguration(S3Configuration.builder().checksumValidationEnabled(false).build())
                 .build()) {
             return presigner.presignPutObject(presignRequest);
@@ -256,6 +259,18 @@ public class ShortsUploadInitService {
             throw new BaseException(ErrorCode.AWS_S3_NOT_CONFIGURED, "AWS region 설정이 필요합니다.(aws.region)");
         }
         return Region.of(region);
+    }
+    
+    // AWS 자격 증명 생성
+    private StaticCredentialsProvider resolveCredentials() {
+        String accessKey = trimToNull(awsProperties.getCredentials().getAccessKey());
+        String secretKey = trimToNull(awsProperties.getCredentials().getSecretKey());
+
+        if (accessKey == null || secretKey == null) {
+            throw new BaseException(ErrorCode.AWS_S3_NOT_CONFIGURED, "AWS 자격 증명(accessKey, secretKey) 설정이 필요합니다.");
+        }
+
+        return StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey));
     }
 
 

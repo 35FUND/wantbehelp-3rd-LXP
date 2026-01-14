@@ -91,6 +91,7 @@ public class ShortsUploadSession {
 
     private ShortsUploadSession(
             Long id,
+            Long shortId, // shortId 파라미터 추가
             String uploadId,
             Long userId,
             Long categoryId,
@@ -113,6 +114,7 @@ public class ShortsUploadSession {
             LocalDateTime completedAt
     ) {
         this.id = id;
+        this.shortId = shortId; // shortId 할당
         this.uploadId = uploadId;
         this.userId = userId;
         this.categoryId = categoryId;
@@ -153,7 +155,8 @@ public class ShortsUploadSession {
             Integer durationSec
     ) {
         return new ShortsUploadSession(
-                shortId,
+                null, // id (PK)는 null로 설정하여 자동 생성되게 함
+                shortId, // shortId 전달
                 uploadId,
                 userId,
                 categoryId,
