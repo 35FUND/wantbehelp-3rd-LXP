@@ -82,6 +82,14 @@ public class UserService {
         user.changePassword(passwordEncoder.encode(request.newPassword()));
     }
 
+    public void changeAdmin(Long userId) {
+
+        //TODO 자신은 ADMIN으로 변경이 불가능?, ADMIN -> USER로 권한 변경도 추가?, ADMIN만 ADMIN 설정 가능?
+        User user = userRepository.findById(userId).orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
+
+        user.changeRole();
+    }
+
     public InfoResponse getUserInfo(Long userId) {
 
         return InfoResponse.from(userRepository.findById(userId).orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND)));

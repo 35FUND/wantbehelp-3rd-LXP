@@ -14,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -54,6 +55,14 @@ public class UserController {
     public ResponseEntity<ApiResponse<Void>> changePassword(@AuthenticationPrincipal CustomUserDetails userDetails,
                                                             @Valid @RequestBody PasswordChangeRequest request) {
         userService.changePassword(userDetails.getId(), request);
+
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    @PostMapping("/{userId}/role")
+    public ResponseEntity<ApiResponse<Void>> changeRole(@PathVariable("userId") Long userId) {
+
+        userService.changeAdmin(userId);
 
         return ResponseEntity.ok(ApiResponse.success(null));
     }
