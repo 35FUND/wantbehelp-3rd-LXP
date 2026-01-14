@@ -12,7 +12,7 @@ public class ShortsLikeCountProvider {
 
     private final ShortsLikeRepository shortsLikeRepository;
 
-    public  ShortsLikeCountProvider(ShortsLikeRepository shortsLikeRepository) {
+    public ShortsLikeCountProvider(ShortsLikeRepository shortsLikeRepository) {
         this.shortsLikeRepository = shortsLikeRepository;
     }
 

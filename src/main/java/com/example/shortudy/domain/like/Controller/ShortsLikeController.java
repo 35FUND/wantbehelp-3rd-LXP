@@ -1,13 +1,16 @@
 package com.example.shortudy.domain.like.Controller;
 
-import com.example.shortudy.domain.like.entity.ShortsLike;
 import com.example.shortudy.domain.like.service.ShortsLikeService;
 import com.example.shortudy.global.common.ApiResponse;
 import com.example.shortudy.global.security.principal.CustomUserDetails;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1")
