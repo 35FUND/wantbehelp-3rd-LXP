@@ -50,10 +50,15 @@ public class ShortsUploadStatusService {
         return new ShortsUploadStatusResponse(
                 shortId,
                 status,
-                progress,
-                expiresAt
+                session.getVideoUrl(),
+                session.getThumbnailUrl(),
+                session.getDurationSec(),
+                session.getUploadedAt(),
+                session.getCompletedAt(),
+                null
         );
     }
+
 
     private String mapStatus(UploadStatus rawStatus) {
         if (rawStatus == null) {

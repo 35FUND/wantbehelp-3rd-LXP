@@ -1,7 +1,5 @@
 package com.example.shortudy.domain.shorts.upload.entity;
 
-import com.example.shortudy.domain.shorts.entity.Shorts;
-import com.example.shortudy.domain.shorts.entity.ShortsStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import org.springframework.data.annotation.CreatedDate;
@@ -14,7 +12,6 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "shorts_upload_session")
 public class ShortsUploadSession {
-
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -50,8 +47,20 @@ public class ShortsUploadSession {
     @Column(nullable = false, length = 100)
     private String contentType;
 
-    @Column(nullable = false, length = 500)
-    private String objectKey;
+    @Column(length = 500)
+    private String videoUrl;
+
+    @Column(length = 255)
+    private String thumbnailFileName;
+
+    @Column
+    private Long thumbnailFileSize;
+
+    @Column(length = 100)
+    private String thumbnailContentType;
+
+    @Column(length = 500)
+    private String thumbnailUrl;
 
     @Column(nullable = false)
     private Integer expiresIn;
@@ -67,6 +76,11 @@ public class ShortsUploadSession {
     @Column
     private LocalDateTime createdAt;
 
+    @Column
+    private LocalDateTime uploadedAt;
+
+    @Column
+    private LocalDateTime completedAt;
 
     public void setShortId(Long shortId) {
         this.shortId = shortId;
@@ -86,11 +100,17 @@ public class ShortsUploadSession {
             String fileName,
             Long fileSize,
             String contentType,
-            String objectKey,
+            String videoUrl,
+            String thumbnailFileName,
+            Long thumbnailFileSize,
+            String thumbnailContentType,
+            String thumbnailUrl,
             Integer expiresIn,
             Integer durationSec,
             UploadStatus status,
-            LocalDateTime createdAt
+            LocalDateTime createdAt,
+            LocalDateTime uploadedAt,
+            LocalDateTime completedAt
     ) {
         this.id = id;
         this.uploadId = uploadId;
@@ -102,11 +122,17 @@ public class ShortsUploadSession {
         this.fileName = fileName;
         this.fileSize = fileSize;
         this.contentType = contentType;
-        this.objectKey = objectKey;
+        this.videoUrl = videoUrl;
+        this.thumbnailFileName = thumbnailFileName;
+        this.thumbnailFileSize = thumbnailFileSize;
+        this.thumbnailContentType = thumbnailContentType;
+        this.thumbnailUrl = thumbnailUrl;
         this.expiresIn = expiresIn;
         this.durationSec = durationSec;
         this.status = status;
         this.createdAt = createdAt;
+        this.uploadedAt = uploadedAt;
+        this.completedAt = completedAt;
     }
 
     public static ShortsUploadSession create(
@@ -120,7 +146,9 @@ public class ShortsUploadSession {
             String fileName,
             Long fileSize,
             String contentType,
-            String objectKey,
+            String thumbnailFileName,
+            Long thumbnailFileSize,
+            String thumbnailContentType,
             Integer expiresIn,
             Integer durationSec
     ) {
@@ -135,16 +163,34 @@ public class ShortsUploadSession {
                 fileName,
                 fileSize,
                 contentType,
-                objectKey,
+                null,
+                thumbnailFileName,
+                thumbnailFileSize,
+                thumbnailContentType,
+                null,
                 expiresIn,
                 durationSec,
                 UploadStatus.INITIATED,
+                LocalDateTime.now(),
+                LocalDateTime.now(),
                 null
         );
     }
 
+    // 업로드 완료 상태 전환
     public void markUploaded() {
         this.status = UploadStatus.COMPLETED;
+        this.completedAt = LocalDateTime.now();
+    }
+
+    // 업로드 완료 URL 저장
+    public void updateUploadedUrls(String videoUrl, String thumbnailUrl) {
+        if (videoUrl != null && !videoUrl.isBlank()) {
+            this.videoUrl = videoUrl;
+        }
+        if (thumbnailUrl != null && !thumbnailUrl.isBlank()) {
+            this.thumbnailUrl = thumbnailUrl;
+        }
     }
 
     public enum UploadStatus {

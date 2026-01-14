@@ -11,7 +11,13 @@ import java.time.LocalDateTime;
 public record ShortsUploadStatusResponse(
         Long shortId,
         String status,
-        int progress,
-        LocalDateTime expiresAt
+        String videoUrl,
+        String thumbnailUrl,
+        Integer durationSec,
+        LocalDateTime uploadedAt,
+        LocalDateTime completedAt,
+        String errorMessage
 ) {
 }
+
+
