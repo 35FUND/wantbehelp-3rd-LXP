@@ -45,9 +45,15 @@ public enum ErrorCode {
     // Keyword
     KEYWORD_NOT_FOUND(HttpStatus.NOT_FOUND, "KEYWORD_404", "해당 키워드를 찾을 수 없습니다."),
     DUPLICATE_KEYWORD(HttpStatus.CONFLICT, "KEYWORD_409", "이미 등록된 키워드입니다."),
-    SPACE_ONLY_KEYWORD(HttpStatus.BAD_REQUEST, "KEYWORD_400", "공백만으로 이루어진 키워드는 허용되지 않습니다.");
+    SPACE_ONLY_KEYWORD(HttpStatus.BAD_REQUEST, "KEYWORD_400", "공백만으로 이루어진 키워드는 허용되지 않습니다."),
 
 
+
+    // playlist
+    PLAYLIST_NOT_FOUND(HttpStatus.NOT_FOUND, "PLAYLIST_404", "해당 플레이리스트를 찾을 수 없습니다."),
+    PLAYLIST_FORBIDDEN(HttpStatus.FORBIDDEN, "PLAYLIST_403", "해당 플레이리스트에 대한 접근 권한이 없습니다."),
+    ALREADY_ADDED_SHORTS(HttpStatus.BAD_REQUEST, "PLAYLIST_409", "이미 플레이리스트에 추가된 숏츠입니다."),
+    PLAYLIST_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "PLAYLIST_404", "이미 플레이리스트에서 삭제된 숏츠입니다."),
 
     // shortsLike
     ALREADY_UNLIKE(HttpStatus.BAD_REQUEST, "LIKE_400", "좋아요하지 않았습니다."),

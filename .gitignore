@@ -36,3 +36,4 @@ out/
 ### VS Code ###
 .vscode/
 /md파일/백엔드용
+.DS_Store
