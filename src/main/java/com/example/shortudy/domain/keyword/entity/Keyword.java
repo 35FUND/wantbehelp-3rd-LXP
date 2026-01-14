@@ -26,11 +26,6 @@ public class Keyword {
         this.displayName = displayName;
         this.normalizedName = normalizedName;
     }
-
-    /**
-     * 태그 이름 업데이트
-     * - ID를 유지하면서 이름만 변경
-     */
     public void updateName(String displayName, String normalizedName) {
         this.displayName = displayName;
         this.normalizedName = normalizedName;
