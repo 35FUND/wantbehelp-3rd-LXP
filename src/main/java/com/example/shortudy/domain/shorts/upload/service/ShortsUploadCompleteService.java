@@ -7,6 +7,7 @@ import com.example.shortudy.domain.shorts.repository.ShortsRepository;
 import com.example.shortudy.domain.shorts.upload.entity.ShortsUploadSession;
 import com.example.shortudy.domain.shorts.upload.entity.ShortsUploadSession.UploadStatus;
 import com.example.shortudy.domain.shorts.upload.repository.ShortsUploadSessionRepository;
+import com.example.shortudy.global.config.AwsProperties;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
 import org.springframework.stereotype.Service;
@@ -20,13 +21,16 @@ public class ShortsUploadCompleteService {
 
     private final ShortsRepository shortsRepository;
     private final ShortsUploadSessionRepository uploadSessionRepository;
+    private final AwsProperties awsProperties;
 
     public ShortsUploadCompleteService(
             ShortsRepository shortsRepository,
-            ShortsUploadSessionRepository uploadSessionRepository
+            ShortsUploadSessionRepository uploadSessionRepository,
+            AwsProperties awsProperties
     ) {
         this.shortsRepository = shortsRepository;
         this.uploadSessionRepository = uploadSessionRepository;
+        this.awsProperties = awsProperties;
     }
 
     @Transactional
@@ -55,12 +59,24 @@ public class ShortsUploadCompleteService {
         Shorts shorts = shortsRepository.findById(shortId)
                 .orElseThrow(() -> new BaseException(ErrorCode.SHORTS_NOT_FOUND));
 
-        // MVP 단계: 프론트에서 전달한 URL을 완료 기준으로 저장한다.
-        shorts.updateVideoUrl(request.videoUrl());
-        shorts.updateShorts(null, null, request.thumbnailUrl(), null, ShortsStatus.PUBLISHED);
+        // 썸네일 URL 결정 (클라이언트가 안 보냈으면 Lambda 생성 경로 예측)
+        String finalThumbnailUrl = resolveThumbnailUrl(shortId, request.thumbnailUrl());
 
-        session.updateUploadedUrls(request.videoUrl(), request.thumbnailUrl());
+        shorts.updateVideoUrl(request.videoUrl());
+        shorts.updateShorts(null, null, finalThumbnailUrl, null, ShortsStatus.PUBLISHED);
+
+        session.updateUploadedUrls(request.videoUrl(), finalThumbnailUrl);
         session.markUploaded();
+    }
+
+    private String resolveThumbnailUrl(Long shortId, String requestedUrl) {
+        if (requestedUrl != null && !requestedUrl.isBlank()) {
+            return requestedUrl;
+        }
+        // 썸네일이 없으면 AWS Lambda가 생성할 경로를 미리 저장
+        String bucket = awsProperties.getS3().getBucket();
+        String region = awsProperties.getRegion();
+        return String.format("https://%s.s3.%s.amazonaws.com/thumbnails/%d.jpg", bucket, region, shortId);
     }
 
     private void validateShortId(Long shortId) {
