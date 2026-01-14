@@ -50,15 +50,16 @@ public class SecurityConfig {
                 // 요청 권한 제어 -> 누구에게 열어줄 것인가.
                 .authorizeHttpRequests(auth -> auth
                         // .permitAll() -> 누구나 접근할 수 있는 권한 제어
-                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/auth/login").permitAll()
                         .requestMatchers("/api/v1/users").permitAll()
                         // GET 요청의 특정 데이터 조회는 누구나 가능하다.
-                        .requestMatchers(HttpMethod.GET, "/api/v1/shorts/**", "/api/v1/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/shorts/**", "/api/v1/categories").permitAll()
 
-                        // 아래 요청의 POST, PUT, DELETE는 ADMIN이라는 역할이 필요하다.
-                        .requestMatchers(HttpMethod.POST, "/api/v1/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/categories/**").hasRole("ADMIN")
+                        // 아래 요청에는 ADMIN이라는 역할이 필요하다.
+                        .requestMatchers(HttpMethod.POST, "/api/v1/categories/**", "/api/v1/keywords/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/categories/**", "/api/v1/keywords/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/categories/**", "/api/v1/keywords/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/keywords/**").hasRole("ADMIN")
 
                         // 의외에 모든 요청에는 반드시 토큰 검증이 필요하다.
                         .anyRequest().authenticated()
@@ -75,6 +76,7 @@ public class SecurityConfig {
         return http.build();
     }
 
+//    TODO CORS설정이 필요할 때 주석 해제
 //    @Bean
 //    public CorsConfigurationSource corsConfigurationSource() {
 //        CorsConfiguration configuration = new CorsConfiguration();
@@ -95,64 +97,5 @@ public class SecurityConfig {
 //        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 //        source.registerCorsConfiguration("/**", configuration);
 //        return source;
-//    }
-
-//    @Bean
-//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//        http
-//                .csrf(AbstractHttpConfigurer::disable)
-//                .formLogin(AbstractHttpConfigurer::disable)
-//                .httpBasic(AbstractHttpConfigurer::disable)
-//                .authorizeHttpRequests(authorize -> authorize
-//                        // 공개 API (인증 불필요)
-//                        .requestMatchers(
-//                                "/",
-//                                "/*.html",
-//                                "/swagger-ui/**",
-//                                "/v3/api-docs/**",
-//                                "/api/v1/auth/signup",
-//                                "/api/v1/auth/login",
-//                                "/api/v1/auth/refresh",
-//                                "/api/v1/shorts",
-//                                "/api/v1/shorts/{id}",
-//                                "/api/v1/categories",
-//                                "/api/v1/categories/{id}",
-//                                "/api/v1/tags",
-//                                "/api/v1/tags/{id}",
-//                                "/api/v1/auth/logout"
-//                        ).permitAll()
-//
-//                        // 사용자 인증 필요
-//                        .requestMatchers(
-//
-//                                "/api/v1/auth/stat",
-//                                "/api/v1/users/me",
-//                                "/api/v1/users/me/shorts",
-//                                "/api/v1/shorts",
-//                                "/api/v1/shorts/**",
-//                                "/api/v1/files/**"
-//                        ).authenticated()
-//
-//                        // 관리자 전용 (ROLE_ADMIN 필요)
-//                        .requestMatchers(
-//                                "POST",
-//                                "/api/v1/categories",
-//                                "/api/v1/categories/**"
-//                        ).hasRole("ADMIN")
-//                        .requestMatchers(
-//                                "PUT",
-//                                "/api/v1/categories/**"
-//                        ).hasRole("ADMIN")
-//                        .requestMatchers(
-//                                "DELETE",
-//                                "/api/v1/categories/**"
-//                        ).hasRole("ADMIN")
-//
-//                        // 나머지 모든 요청 인증 필요
-//                        .anyRequest().authenticated()
-//                )
-//                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
-//
-//        return http.build();
 //    }
 }
