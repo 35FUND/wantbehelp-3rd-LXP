@@ -4,7 +4,15 @@ import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import lombok.Getter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -46,7 +54,8 @@ public class Comment {
 
     private static final int MAX_CONTENT_LENGTH = 1000;
 
-    protected Comment(){}
+    protected Comment() {
+    }
 
     private Comment(User user, Shorts shorts, Comment parent, String content) {
         this.user = user;
@@ -54,7 +63,6 @@ public class Comment {
         this.parent = parent;
         validateContent(content);
         this.content = content;
-        this.createdAt = LocalDateTime.now();
     }
 
     // 댓글
@@ -65,7 +73,7 @@ public class Comment {
     public void updateContent(String content) {
 
         validateContent(content);
-            this.content = content;
+        this.content = content;
     }
 
 

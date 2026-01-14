@@ -1,7 +1,6 @@
 package com.example.shortudy.domain.comment.query;
 
 import com.example.shortudy.domain.comment.repository.CommentRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
