@@ -6,7 +6,6 @@ import com.example.shortudy.domain.keyword.dto.response.KeywordResponse;
 import com.example.shortudy.domain.keyword.service.KeywordService;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
@@ -21,12 +20,6 @@ public class KeywordController {
 
     public KeywordController(KeywordService keywordService) {
         this.keywordService = keywordService;
-    }
-
-    @PostMapping
-    public ResponseEntity<ApiResponse<KeywordResponse>> createKeyword(@RequestBody @Valid KeywordRequest request) {
-        KeywordResponse response = keywordService.createKeyword(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
     }
 
     @GetMapping
