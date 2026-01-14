@@ -30,7 +30,7 @@ public class UserService {
 
         //TODO 정책 확정 필요(email, nickname 중복에 관해)
         if (userRepository.existsByEmail(request.email())) throw new BaseException(ErrorCode.DUPLICATE_EMAIL);
-        if (userRepository.existsByNickname(request.nickname())) throw new BaseException(ErrorCode.USER_NOT_FOUND);
+        if (userRepository.existsByNickname(request.nickname())) throw new BaseException(ErrorCode.DUPLICATE_NICKNAME);
 
         String encodedPassword = passwordEncoder.encode(request.password());
 
@@ -56,8 +56,8 @@ public class UserService {
             changed = true;
         }
 
-        if (request.userProfileUrl() != null) {
-            user.changeProfileUrl(request.userProfileUrl());
+        if (request.profileUrl() != null) {
+            user.changeProfileUrl(request.profileUrl());
             changed = true;
         }
 
@@ -76,10 +76,18 @@ public class UserService {
         if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) throw new BaseException(ErrorCode.INVALID_PASSWORD);
 
         // 새 비밀번호 검증 (이전 비밀번호와 동일하지 않은지 검즘)
-        if (!passwordEncoder.matches(request.newPassword(), user.getPassword())) throw new BaseException(ErrorCode.SAME_PASSWORD);
+        if (passwordEncoder.matches(request.newPassword(), user.getPassword())) throw new BaseException(ErrorCode.SAME_PASSWORD);
 
         // 더티체크로 저장
-        user.changePassword(request.newPassword());
+        user.changePassword(passwordEncoder.encode(request.newPassword()));
+    }
+
+    public void changeAdmin(Long userId) {
+
+        //TODO 자신은 ADMIN으로 변경이 불가능?, ADMIN -> USER로 권한 변경도 추가?, ADMIN만 ADMIN 설정 가능?
+        User user = userRepository.findById(userId).orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
+
+        user.changeRole();
     }
 
     public InfoResponse getUserInfo(Long userId) {

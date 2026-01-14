@@ -33,9 +33,12 @@ jwt:
 # - `aws.region`: AWS_REGION 또는 AWS_DEFAULT_REGION 사용 가능
 # - `aws.s3.bucket`: AWS_S3_BUCKET 사용 가능
 aws:
-  region:
+  region: ${AWS_REGION:ap-northeast-2}
   s3:
-    bucket:
+    bucket: ${AWS_S3_BUCKET}
+  credentials:
+    access-key: ${AWS_ACCESS_KEY_ID}
+    secret-key: ${AWS_SECRET_ACCESS_KEY}
 
 app:
   cookie:
@@ -44,5 +47,3 @@ app:
     # 프로덕션 환경에서는 아래와 같이 변경:
     # same-site: None
     # secure: true
-
-

@@ -61,7 +61,7 @@ public class ShortsController {
 
     /**
      * 업로드 완료 알림
-     * - 서버 관점(A안): S3에 객체가 실제로 존재(HEAD)하는지 확인 후 완료 처리한다.
+     * - MVP 단계에서는 프론트에서 전달한 URL을 완료 기준으로 저장한다.
      */
     @PostMapping("/{shortId}/upload-complete")
     @ResponseStatus(HttpStatus.OK)
@@ -70,7 +70,7 @@ public class ShortsController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody @Valid ShortsUploadCompleteRequest request
     ) {
-        shortsUploadCompleteService.complete(shortId, userDetails.getId(), request.uploadId());
+        shortsUploadCompleteService.complete(shortId, userDetails.getId(), request);
         return ApiResponse.success("SUCCESS", "업로드가 완료되었습니다.", null);
     }
 

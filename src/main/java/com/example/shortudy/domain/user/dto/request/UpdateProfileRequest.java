@@ -8,6 +8,6 @@ public record UpdateProfileRequest(
         String email,
 
         String nickName,
-        String userProfileUrl
+        String profileUrl
 ) {
 }

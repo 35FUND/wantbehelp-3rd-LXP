@@ -21,6 +21,7 @@ public enum ErrorCode {
     INVALID_TOKEN(HttpStatus.BAD_REQUEST, "USER_400", "유효하지 않은 토큰정보입니다."),
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "USER_401", "토큰이 만료되었습니다."),
     SAME_PASSWORD(HttpStatus.BAD_REQUEST, "USER_401", "변경할 비밀번호가 현재 비밀번호와 같습니다."),
+    DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "USER_409", "이미 사용중인 별명입니다."),
 
 
     // category
@@ -48,6 +49,9 @@ public enum ErrorCode {
 
 
 
+    // shortsLike
+    ALREADY_UNLIKE(HttpStatus.BAD_REQUEST, "LIKE_400", "좋아요하지 않았습니다."),
+    ALREADY_LIKE(HttpStatus.BAD_REQUEST, "LIKE_400", "이미 좋아요했습니다."),
 
 
     ;

@@ -2,7 +2,6 @@ package com.example.shortudy.domain.comment.controller;
 
 import com.example.shortudy.domain.comment.dto.request.CommentRequest;
 import com.example.shortudy.domain.comment.dto.response.CommentResponse;
-import com.example.shortudy.domain.comment.dto.response.ReplyResponse;
 import com.example.shortudy.domain.comment.service.CommentService;
 import com.example.shortudy.global.common.ApiResponse;
 import com.example.shortudy.global.security.principal.CustomUserDetails;
@@ -10,7 +9,14 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -26,14 +32,16 @@ public class CommentController {
 
     // 댓글 생성
     @PostMapping("/shorts/{shortsId}/comments")
-    public ResponseEntity<ApiResponse<CommentResponse>> createComments(
+    public ResponseEntity<ApiResponse<Void>> createComments(
             @AuthenticationPrincipal CustomUserDetails me,
             @PathVariable Long shortsId,
             @Valid @RequestBody CommentRequest request
     ) {
+        commentService.createComment(me.getId(), shortsId, request);
+
         return ResponseEntity.status(HttpStatus.CREATED).body(
-                ApiResponse.success(commentService.createComment(me.getId(), shortsId, request))
-                );
+                ApiResponse.success(null)
+        );
     }
 
     @GetMapping("/shorts/{shortsId}/comments")
@@ -43,18 +51,19 @@ public class CommentController {
     ) {
         Long myId = (me != null) ? me.getId() : null;
 
-        // List<CommentResponse> foundComments = commentService.findComments(shortsId, myId);
         return ResponseEntity.ok(ApiResponse.success(commentService.findComments(shortsId, myId)));
     }
 
     @PatchMapping("/comments/{commentId}")
-    public ResponseEntity<ApiResponse<CommentResponse>> updateComment(
+    public ResponseEntity<ApiResponse<Void>> updateComment(
             @AuthenticationPrincipal CustomUserDetails me,
             @PathVariable Long commentId,
             @Valid @RequestBody CommentRequest request
     ) {
+        commentService.updateComment(me.getId(), commentId, request);
+
         return ResponseEntity.ok(
-                ApiResponse.success(commentService.updateComment(me.getId(), commentId, request))
+                ApiResponse.success(null)
         );
     }
 
@@ -63,7 +72,7 @@ public class CommentController {
             @AuthenticationPrincipal CustomUserDetails me,
             @PathVariable Long commentId
     ) {
-       commentService.deleteComment(me.getId(), commentId);
+        commentService.deleteComment(me.getId(), commentId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResponse.success(null));
     }
 }

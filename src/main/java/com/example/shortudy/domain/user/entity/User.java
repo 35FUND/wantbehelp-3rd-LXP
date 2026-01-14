@@ -43,6 +43,7 @@ public class User {
     @Column
     private String profileUrl;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserStatus status;
 
@@ -84,6 +85,10 @@ public class User {
 
     public void changeProfileUrl(String profileUrl) {
         this.profileUrl = profileUrl;
+    }
+
+    public void changeRole() {
+        this.role = UserRole.ADMIN;
     }
 }
 

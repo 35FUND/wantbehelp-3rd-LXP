@@ -17,7 +17,6 @@ java {
 repositories {
     mavenCentral()
 }
-
 dependencies {
     // Spring Boot Starters
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -26,27 +25,26 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
-    // AWS SDK (S3 Presigned URL)
-    implementation platform('software.amazon.awssdk:bom:2.25.67')
+    // [수정] AWS SDK (BOM 방식을 명확하게 선언)
+    implementation platform('software.amazon.awssdk:bom:2.20.160') // 조금 더 안정된 최신 버전으로 상향
     implementation 'software.amazon.awssdk:s3'
-    implementation 'software.amazon.awssdk:s3-presigner'
 
     // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
-    implementation 'io.jsonwebtoken:jjwt-impl:0.12.3' // runtimeOnly 대신 implementation
-    implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
-    implementation 'org.projectlombok:lombok'// runtimeOnly 대신 implementation
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
     // Database
     runtimeOnly 'com.mysql:mysql-connector-j:8.0.33'
-
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testRuntimeOnly 'com.h2database:h2'
 }
-
 tasks.named('test') {
     useJUnitPlatform()
 }
