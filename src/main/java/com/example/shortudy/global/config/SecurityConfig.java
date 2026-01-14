@@ -53,7 +53,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/login").permitAll()
                         .requestMatchers("/api/v1/users").permitAll()
                         // GET 요청의 특정 데이터 조회는 누구나 가능하다.
-                        .requestMatchers(HttpMethod.GET, "/api/v1/shorts/**", "/api/v1/categories").permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/shorts/**",
+                                "/api/v1/categories/**",
+                                "/api/v1/comments/**").permitAll()
 
                         // 아래 요청에는 ADMIN이라는 역할이 필요하다.
                         .requestMatchers(HttpMethod.POST, "/api/v1/categories/**", "/api/v1/keywords/**").hasRole("ADMIN")
