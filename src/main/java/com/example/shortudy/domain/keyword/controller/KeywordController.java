@@ -19,9 +19,10 @@ public class KeywordController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<List<KeywordResponse >>> search(
+    public ResponseEntity<ApiResponse<List<KeywordResponse>>> search(
             @RequestParam(value ="q", required = false) String q) {
-        List<KeywordResponse> response = keywordService.searchKeywords(q);
+        String trimmed = q == null ? "" : q.trim();
+        List<KeywordResponse> response = keywordService.searchKeywords(trimmed);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
