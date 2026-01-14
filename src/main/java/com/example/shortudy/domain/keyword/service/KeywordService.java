@@ -46,25 +46,22 @@ public class KeywordService {
     @Transactional(readOnly = true)
     public List<KeywordResponse> searchKeywords(String q) {
         if (q == null || q.isBlank()) return List.of();
+
         String trimmed = q.trim();
         String normalizedQuery = trimmed.toLowerCase();
         boolean hasLatin = trimmed.chars()
                 .anyMatch(ch -> (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'));
 
-        return keywordRepository.findAll().stream()
-                .filter(k -> hasLatin ? containsNormalized(k, normalizedQuery) : containsDisplay(k, trimmed))
+        List<Keyword> keywords;
+        if (hasLatin) {
+            keywords = keywordRepository.findByDisplayNameContainingIgnoreCaseOrNormalizedNameContainingIgnoreCase(trimmed, normalizedQuery);
+        } else {
+            keywords = keywordRepository.findByDisplayNameContainingIgnoreCaseOrNormalizedNameContainingIgnoreCase(trimmed, trimmed);
+        }
+
+        return keywords.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
-    }
-
-    private boolean containsNormalized(Keyword k, String normalizedQuery) {
-        String norm = k.getNormalizedName();
-        return norm != null && norm.toLowerCase().contains(normalizedQuery);
-    }
-
-    private boolean containsDisplay(Keyword k, String query) {
-        String disp = k.getDisplayName();
-        return disp != null && disp.contains(query);
     }
     private KeywordResponse toResponse(Keyword k) {
         return new KeywordResponse(k.getId(), k.getDisplayName(), k.getNormalizedName());
