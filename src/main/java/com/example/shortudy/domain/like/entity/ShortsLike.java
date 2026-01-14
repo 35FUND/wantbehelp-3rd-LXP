@@ -51,7 +51,6 @@ public class ShortsLike {
         ShortsLike like = new ShortsLike();
         like.user = user;
         like.shorts = shorts;
-        like.createdAt = LocalDateTime.now();
         return like;
     }
 }
