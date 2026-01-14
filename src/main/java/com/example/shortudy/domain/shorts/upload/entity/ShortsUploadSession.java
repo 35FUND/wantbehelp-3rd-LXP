@@ -82,9 +82,6 @@ public class ShortsUploadSession {
     @Column
     private LocalDateTime completedAt;
 
-    public void setShortId(Long shortId) {
-        this.shortId = shortId;
-    }
 
     protected ShortsUploadSession() {
     }
