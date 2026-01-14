@@ -2,7 +2,8 @@ package com.example.shortudy.domain.shorts.dto;
 
 public record ShortsUploadInitResponse(
         Long shortId,
-        String uploadUrl,
+        String videoPresignedUrl,
+        String thumbnailPresignedUrl,
         String uploadId,
         int expiresIn,
         long maxFileSize

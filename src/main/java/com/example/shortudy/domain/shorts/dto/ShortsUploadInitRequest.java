@@ -35,6 +35,12 @@ public record ShortsUploadInitRequest(
             @NotBlank(message = "contentType은 필수입니다.")
             String contentType,
 
+            String thumbnailFileName,
+
+            Long thumbnailFileSize,
+
+            String thumbnailContentType,
+
             @Positive(message = "durationSec는 0보다 커야 합니다.")
             Integer durationSec
     ) {
