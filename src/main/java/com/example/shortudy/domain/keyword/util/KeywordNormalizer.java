@@ -1,5 +1,8 @@
 package com.example.shortudy.domain.keyword.util;
 
+import com.example.shortudy.global.error.BaseException;
+import com.example.shortudy.global.error.ErrorCode;
+
 import java.text.Normalizer;
 import java.util.regex.Pattern;
 
@@ -20,20 +23,19 @@ public class KeywordNormalizer {
      * */
 
     public static String normalize(String raw) {
-        if (raw == null) throw new IllegalArgumentException("값은 null일 수 없습니다.");
+        if (raw == null) throw new BaseException(ErrorCode.INVALID_INPUT);
         String s = raw.trim();
         if (s.isBlank()) throw new IllegalArgumentException("값은 빈값(공백)일 수 없습니다.");
 
         s = Normalizer.normalize(s, Normalizer.Form.NFD);
-        s = NON_PRINTABLE.matcher(s).replaceAll(" "); // 제어문자 제거
+        s = NON_PRINTABLE.matcher(s).replaceAll(""); // 제어문자 제거
 
         // 내부 공백(스페이스 , 탭 , 개행 등)허용하지 않음
         if (ANY_WHITESPACE.matcher(s).find()) {
-            throw new IllegalArgumentException("값은 내부 공백(스페이스, 탭, 개행 등)을 포함할 수 없습니다.");
+            throw new BaseException(ErrorCode.INVALID_INPUT);
         }
 
         s = s.toLowerCase();
-        s = s.trim();
 
         if (s.isBlank()) throw new IllegalArgumentException("유효한 문자열이 아닙니다.");
         return s;
