@@ -84,6 +84,10 @@ public class ShortsController {
         return ApiResponse.success("SUCCESS", "업로드 상태 조회에 성공했습니다.", response);
     }
 
+    public ShortsController(ShortsService shortsService) {
+        this.shortsService = shortsService;
+    }
+
     @GetMapping("/{shortId}")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Page<ShortsResponse>> getShortsDetails(

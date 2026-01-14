@@ -2,6 +2,8 @@ package com.example.shortudy.domain.shorts.dto;
 
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
+import com.example.shortudy.global.error.BaseException;
+import com.example.shortudy.global.error.ErrorCode;
 
 /**
  * 숏폼 응답 DTO
@@ -47,17 +49,16 @@ public record ShortsResponse(
      * 
      * @param shorts 변환할 Shorts 엔티티
      * @return 변환된 ShortsResponse DTO
-     * @throws IllegalArgumentException shorts나 관련 엔티티가 null인 경우
      */
     public static ShortsResponse from(Shorts shorts) {
         if (shorts == null) {
-            throw new IllegalArgumentException("Shorts entity cannot be null");
+            throw new BaseException(ErrorCode.SHORTS_NOT_FOUND);
         }
         if (shorts.getUser() == null) {
-            throw new IllegalArgumentException("Shorts user cannot be null");
+            throw new BaseException(ErrorCode.SHORTS_UPLOADER_NOT_FOUND);
         }
         if (shorts.getCategory() == null) {
-            throw new IllegalArgumentException("Shorts category cannot be null");
+            throw new BaseException(ErrorCode.SHORTS_CATEGORY_NOT_FOUND);
         }
 
         return new ShortsResponse(

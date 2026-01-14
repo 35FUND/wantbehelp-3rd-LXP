@@ -29,6 +29,12 @@ public enum ErrorCode {
 
     // shorts
     SHORTS_NOT_FOUND(HttpStatus.NOT_FOUND, "SHORTS_404", "해당 숏츠를 찾을 수 없습니다."),
+    SHORTS_UPLOADER_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "SHORTS_500", "숏츠의 작성자 정보를 찾을 수 없습니다."),
+    SHORTS_CATEGORY_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "SHORTS_500", "숏츠의 카테고리 정보를 찾을 수 없습니다."),
+    SHORTS_TITLE_INVALID(HttpStatus.BAD_REQUEST, "SHORTS_400", "숏츠 제목은 필수이며 100자를 초과할 수 없습니다."),
+    SHORTS_URL_INVALID(HttpStatus.BAD_REQUEST, "SHORTS_400", "URL 형식이 올바르지 않거나 길이 제한을 초과했습니다."),
+    SHORTS_ESSENTIAL_INFO_MISSING(HttpStatus.BAD_REQUEST, "SHORTS_400", "작성자(User) 및 카테고리(Category) 정보는 필수입니다."),
+    SHORTS_DURATION_INVALID(HttpStatus.BAD_REQUEST, "SHORTS_407", "영상 길이는 1초 이상이어야 합니다."),
     SHORTS_FORBIDDEN(HttpStatus.FORBIDDEN, "SHORTS_403", "해당 숏츠에 대한 접근 권한이 없습니다."),
     SHORTS_FILE_TOO_LARGE(HttpStatus.BAD_REQUEST, "SHORTS_400", "파일 크기가 허용 범위를 초과했습니다."),
     SHORTS_UNSUPPORTED_FILE_TYPE(HttpStatus.BAD_REQUEST, "SHORTS_400", "지원하지 않는 파일 형식입니다."),

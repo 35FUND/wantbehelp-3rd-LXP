@@ -5,8 +5,9 @@ import com.example.shortudy.domain.category.repository.CategoryRepository;
 import com.example.shortudy.domain.shorts.dto.ShortsResponse;
 import com.example.shortudy.domain.shorts.dto.ShortsUpdateRequest;
 import com.example.shortudy.domain.shorts.entity.Shorts;
-import com.example.shortudy.domain.shorts.exception.ShortsException;
+import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
+import com.example.shortudy.global.error.ErrorCode;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -89,32 +90,32 @@ public class ShortsService {
 
     private void validateShortsExists(Long shortsId) {
         if (!shortsRepository.existsById(shortsId)) {
-            throw ShortsException.notFound();
+            throw new BaseException(ErrorCode.SHORTS_NOT_FOUND);
         }
     }
 
     private Shorts findShortsWithDetailsById(Long shortsId) {
         return shortsRepository.findWithDetailsById(shortsId)
-            .orElseThrow(ShortsException::notFound);
+                .orElseThrow(() -> new BaseException(ErrorCode.SHORTS_NOT_FOUND));
     }
 
     private Shorts findShortsById(Long shortsId) {
         return shortsRepository.findById(shortsId)
-            .orElseThrow(ShortsException::notFound);
+                .orElseThrow(() -> new BaseException(ErrorCode.SHORTS_NOT_FOUND));
     }
+
 
     private Category findCategoryById(Long categoryId) {
         if (categoryId == null) {
             return null;
         }
-        
         return categoryRepository.findById(categoryId)
-            .orElseThrow(() -> ShortsException.notFound());
+                .orElseThrow(() -> new BaseException(ErrorCode.CATEGORY_NOT_FOUND));
     }
 
     private void validateUpdateRequest(ShortsUpdateRequest request) {
         if (request.durationSec() != null && request.durationSec() <= 0) {
-            throw ShortsException.invalidDuration("영상 길이는 1초 이상이어야 합니다.");
+            throw new BaseException(ErrorCode.SHORTS_DURATION_INVALID);
         }
     }
 
