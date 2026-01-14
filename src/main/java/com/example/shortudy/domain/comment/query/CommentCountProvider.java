@@ -19,7 +19,7 @@ public class CommentCountProvider {
 
     // 전체 댓글의 대댓글 개수 조회
     public Map<Long, Long> replyCountMap(List<Long> parentIds) {
-        if (parentIds.isEmpty()) return Map.of();
+//        if (parentIds.isEmpty()) return Map.of();
 
         return commentRepository.countRepliesByParentIds(parentIds).stream()
                 .collect(Collectors.toMap(

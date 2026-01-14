@@ -9,8 +9,6 @@ import java.util.List;
 
 public interface CommentRepository extends JpaRepository<Comment,Long> {
 
-    List<Comment> findAllByShortsId(Long shortsId);
-
     // 단일 숏츠의 댓글 개수 조회
     long countByShortsId(Long shortsId);
 
@@ -22,7 +20,6 @@ public interface CommentRepository extends JpaRepository<Comment,Long> {
   group by c.shorts.id
 """)
     List<ShortsCommentCountProjection> countAllCommentsByShortsIds(@Param("shortsIds") List<Long> shortsIds);
-
 
     // 댓글 조회
     @Query("""
@@ -52,7 +49,7 @@ public interface CommentRepository extends JpaRepository<Comment,Long> {
     WHERE c.parent.id = :parentId
     ORDER BY c.createdAt ASC
 """)
-    List<Comment> findRepliesWithUser(@Param("parentCommentId") Long parentId);
+    List<Comment> findRepliesWithUser(@Param("parentId") Long parentId);
 
     public interface ReplyCountProjection {
 

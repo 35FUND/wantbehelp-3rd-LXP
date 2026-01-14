@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 
 public record CommentResponse(
 
+        Long shortsId,
         Long commentId,
         String content,
         LocalDateTime createdAt,
@@ -17,6 +18,7 @@ public record CommentResponse(
     public static CommentResponse from(Long myId, Comment comment, long replyCount) {
 
         return new CommentResponse(
+                comment.getShorts().getId(),
                 comment.getId(),
                 comment.getContent(),
                 comment.getCreatedAt(),
