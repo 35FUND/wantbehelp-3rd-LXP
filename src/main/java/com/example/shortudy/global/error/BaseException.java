@@ -18,4 +18,3 @@ public class BaseException extends RuntimeException {
         return errorCode;
     }
 }
-
