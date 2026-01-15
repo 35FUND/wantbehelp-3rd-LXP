@@ -25,7 +25,7 @@ public class KeywordNormalizer {
     public static String normalize(String raw) {
         if (raw == null) throw new BaseException(ErrorCode.INVALID_INPUT);
         String s = raw.trim();
-        if (s.isBlank()) throw new IllegalArgumentException("값은 빈값(공백)일 수 없습니다.");
+        if (s.isBlank()) throw new BaseException(ErrorCode.INVALID_INPUT);
 
         s = Normalizer.normalize(s, Normalizer.Form.NFD);
         s = NON_PRINTABLE.matcher(s).replaceAll(""); // 제어문자 제거
@@ -37,7 +37,7 @@ public class KeywordNormalizer {
 
         s = s.toLowerCase();
 
-        if (s.isBlank()) throw new IllegalArgumentException("유효한 문자열이 아닙니다.");
+        if (s.isBlank()) throw new BaseException(ErrorCode.INVALID_INPUT);
         return s;
     }
 }
