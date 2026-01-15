@@ -45,7 +45,7 @@ public enum ErrorCode {
     // Keyword
     KEYWORD_NOT_FOUND(HttpStatus.NOT_FOUND, "KEYWORD_404", "해당 키워드를 찾을 수 없습니다."),
     DUPLICATE_KEYWORD(HttpStatus.CONFLICT, "KEYWORD_409", "이미 등록된 키워드입니다."),
-    SPACE_ONLY_KEYWORD(HttpStatus.BAD_REQUEST, "KEYWORD_400", "공백만으로 이루어진 키워드는 허용되지 않습니다.");
+    SPACE_ONLY_KEYWORD(HttpStatus.BAD_REQUEST, "KEYWORD_400", "공백만으로 이루어진 키워드는 허용되지 않습니다."),
 
 
 
