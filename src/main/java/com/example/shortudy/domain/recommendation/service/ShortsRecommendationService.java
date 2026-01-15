@@ -13,7 +13,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.example.shortudy.global.error.ErrorCode.*;
+import static com.example.shortudy.global.error.ErrorCode.SHORTS_NOT_FOUND;
 
 @Service
 @Transactional(readOnly = true)
@@ -91,7 +91,7 @@ public class ShortsRecommendationService {
 
     private Set<String> extractKeywords(Shorts shorts) {
         return shorts.getShortsKeywords().stream()
-                .map(sk -> sk.getKeyword().getName())
+                .map(sk -> sk.getKeyword().getDisplayName())
                 .collect(Collectors.toSet());
     }
 }
