@@ -45,7 +45,14 @@ public class ShortsUploadController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody @Valid ShortsUploadCompleteRequest request
     ) {
-        shortsUploadCompleteService.complete(shortId, userDetails.getId(), request.uploadId());
+        shortsUploadCompleteService.complete(
+                shortId,
+                userDetails.getId(),
+                request.uploadId(),
+                request.videoUrl(),
+                request.thumbnailUrl()
+        );
+
         return ApiResponse.success("SUCCESS", "업로드가 완료되었습니다.", null);
     }
 
