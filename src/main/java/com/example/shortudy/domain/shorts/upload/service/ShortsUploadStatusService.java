@@ -1,6 +1,6 @@
 package com.example.shortudy.domain.shorts.upload.service;
 
-import com.example.shortudy.domain.shorts.dto.ShortsUploadStatusResponse;
+import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadStatusResponse;
 import com.example.shortudy.domain.shorts.upload.entity.ShortsUploadSession;
 import com.example.shortudy.domain.shorts.upload.entity.ShortsUploadSession.UploadStatus;
 import com.example.shortudy.domain.shorts.upload.repository.ShortsUploadSessionRepository;

@@ -29,6 +29,12 @@ public enum ErrorCode {
 
     // shorts
     SHORTS_NOT_FOUND(HttpStatus.NOT_FOUND, "SHORTS_404", "해당 숏츠를 찾을 수 없습니다."),
+    SHORTS_UPLOADER_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "SHORTS_500", "숏츠의 작성자 정보를 찾을 수 없습니다."),
+    SHORTS_CATEGORY_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "SHORTS_500", "숏츠의 카테고리 정보를 찾을 수 없습니다."),
+    SHORTS_TITLE_INVALID(HttpStatus.BAD_REQUEST, "SHORTS_400", "숏츠 제목은 필수이며 100자를 초과할 수 없습니다."),
+    SHORTS_URL_INVALID(HttpStatus.BAD_REQUEST, "SHORTS_400", "URL 형식이 올바르지 않거나 길이 제한을 초과했습니다."),
+    SHORTS_ESSENTIAL_INFO_MISSING(HttpStatus.BAD_REQUEST, "SHORTS_400", "작성자(User) 및 카테고리(Category) 정보는 필수입니다."),
+    SHORTS_DURATION_INVALID(HttpStatus.BAD_REQUEST, "SHORTS_407", "영상 길이는 1초 이상이어야 합니다."),
     SHORTS_FORBIDDEN(HttpStatus.FORBIDDEN, "SHORTS_403", "해당 숏츠에 대한 접근 권한이 없습니다."),
     SHORTS_FILE_TOO_LARGE(HttpStatus.BAD_REQUEST, "SHORTS_400", "파일 크기가 허용 범위를 초과했습니다."),
     SHORTS_UNSUPPORTED_FILE_TYPE(HttpStatus.BAD_REQUEST, "SHORTS_400", "지원하지 않는 파일 형식입니다."),
@@ -45,9 +51,15 @@ public enum ErrorCode {
     // Keyword
     KEYWORD_NOT_FOUND(HttpStatus.NOT_FOUND, "KEYWORD_404", "해당 키워드를 찾을 수 없습니다."),
     DUPLICATE_KEYWORD(HttpStatus.CONFLICT, "KEYWORD_409", "이미 등록된 키워드입니다."),
-    SPACE_ONLY_KEYWORD(HttpStatus.BAD_REQUEST, "KEYWORD_400", "공백만으로 이루어진 키워드는 허용되지 않습니다.");
+    SPACE_ONLY_KEYWORD(HttpStatus.BAD_REQUEST, "KEYWORD_400", "공백만으로 이루어진 키워드는 허용되지 않습니다."),
 
 
+
+    // playlist
+    PLAYLIST_NOT_FOUND(HttpStatus.NOT_FOUND, "PLAYLIST_404", "해당 플레이리스트를 찾을 수 없습니다."),
+    PLAYLIST_FORBIDDEN(HttpStatus.FORBIDDEN, "PLAYLIST_403", "해당 플레이리스트에 대한 접근 권한이 없습니다."),
+    ALREADY_ADDED_SHORTS(HttpStatus.BAD_REQUEST, "PLAYLIST_409", "이미 플레이리스트에 추가된 숏츠입니다."),
+    PLAYLIST_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "PLAYLIST_404", "이미 플레이리스트에서 삭제된 숏츠입니다."),
 
     // shortsLike
     ALREADY_UNLIKE(HttpStatus.BAD_REQUEST, "LIKE_400", "좋아요하지 않았습니다."),

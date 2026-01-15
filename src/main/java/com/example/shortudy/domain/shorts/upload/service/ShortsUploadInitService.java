@@ -2,8 +2,8 @@ package com.example.shortudy.domain.shorts.upload.service;
 
 import com.example.shortudy.domain.category.entity.Category;
 import com.example.shortudy.domain.category.repository.CategoryRepository;
-import com.example.shortudy.domain.shorts.dto.ShortsUploadInitRequest;
-import com.example.shortudy.domain.shorts.dto.ShortsUploadInitResponse;
+import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadInitRequest;
+import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadInitResponse;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
@@ -33,6 +33,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
+
+import static com.example.shortudy.domain.shorts.entity.ShortsStatus.DRAFT;
 
 @Service
 @Transactional(readOnly = true)
