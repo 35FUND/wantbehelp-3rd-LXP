@@ -15,6 +15,6 @@ public record ShortsUpdateRequest (
     @Min(value = 1, message = "영상 길이는 1초 이상이어야 합니다.")
     Integer durationSec,
     ShortsStatus status,
-    List<String> tagNames
+    List<String> keywordNames
 ){
 }

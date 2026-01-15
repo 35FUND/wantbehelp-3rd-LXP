@@ -5,14 +5,22 @@ import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
 @Entity
 @Getter
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "shorts")
 public class Shorts {
 
@@ -51,11 +59,31 @@ public class Shorts {
     @Column(name = "duration_sec")
     private Integer durationSec;
 
+    @Column(name = "like_count", nullable = false)
+    private Integer likeCount = 0;
+
+    public Shorts(User user, Category category, @NotBlank(message = "제목은 필수입니다.") @Size(max = 100, message = "제목은 100자 이하여야 합니다.") String title, String description, Object videoUrl, Object thumbnailUrl, @Positive(message = "durationSec는 0보다 커야 합니다.") Integer durationSec, ShortsStatus shortsStatus) {
+    }
+
+    public void incrementLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decrementLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
+    }
+
+    @CreatedDate
+    @Column(updatable = false)
+    public LocalDateTime createdAt;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private ShortsStatus status;
 
-    @OneToMany(mappedBy = "shorts", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "shorts", fetch = FetchType.LAZY)
     private List<ShortsKeyword> shortsKeywords = new ArrayList<>();
 
     protected Shorts() {

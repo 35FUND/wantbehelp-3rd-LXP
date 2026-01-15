@@ -2,12 +2,12 @@ package com.example.shortudy.domain.shorts.controller;
 
 import com.example.shortudy.domain.shorts.dto.ShortsResponse;
 import com.example.shortudy.domain.shorts.dto.ShortsUpdateRequest;
-import com.example.shortudy.domain.shorts.dto.ShortsUploadCompleteRequest;
-import com.example.shortudy.domain.shorts.dto.ShortsUploadInitRequest;
-import com.example.shortudy.domain.shorts.dto.ShortsUploadInitResponse;
+import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadCompleteRequest;
+import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadInitRequest;
+import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadInitResponse;
 import com.example.shortudy.domain.shorts.service.ShortsService;
 import com.example.shortudy.domain.shorts.upload.service.ShortsUploadCompleteService;
-import com.example.shortudy.domain.shorts.dto.ShortsUploadStatusResponse;
+import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadStatusResponse;
 import com.example.shortudy.domain.shorts.upload.service.ShortsUploadInitService;
 import com.example.shortudy.domain.shorts.upload.service.ShortsUploadStatusService;
 import com.example.shortudy.global.common.ApiResponse;
@@ -19,7 +19,6 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.data.domain.Sort.Direction.*;
 
 import static org.springframework.data.domain.Sort.Direction.ASC;
 import static org.springframework.data.domain.Sort.Direction.DESC;
@@ -84,10 +83,6 @@ public class ShortsController {
         return ApiResponse.success("SUCCESS", "업로드 상태 조회에 성공했습니다.", response);
     }
 
-    public ShortsController(ShortsService shortsService) {
-        this.shortsService = shortsService;
-    }
-
     @GetMapping("/{shortId}")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Page<ShortsResponse>> getShortsDetails(
@@ -123,5 +118,17 @@ public class ShortsController {
         shortsService.deleteShorts(shortId);
         return ApiResponse.success(null);
     }
-}
 
+    /**
+     * 인기 숏츠 목록 조회
+     */
+    @GetMapping("/popular")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<Page<ShortsResponse>> getPopularShorts(
+            @RequestParam(required = false, defaultValue = "30") Integer days,
+            @PageableDefault(size = 20, sort = "id", direction = DESC) Pageable pageable
+    ) {
+        Page<ShortsResponse> response = shortsService.getPopularShorts(days, pageable);
+        return ApiResponse.success(response);
+    }
+}

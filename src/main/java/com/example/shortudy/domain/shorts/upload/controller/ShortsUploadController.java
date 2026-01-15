@@ -1,4 +1,4 @@
-package com.example.shortudy.domain.shorts.controller;
+package com.example.shortudy.domain.shorts.upload.controller;
 
 import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadCompleteRequest;
 import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadInitRequest;
@@ -22,12 +22,20 @@ public class ShortsUploadController {
     private final ShortsUploadCompleteService shortsUploadCompleteService;
     private final ShortsUploadStatusService shortsUploadStatusService;
 
-    public ShortsUploadController(ShortsUploadInitService shortsUploadInitService, ShortsUploadCompleteService shortsUploadCompleteService, ShortsUploadStatusService shortsUploadStatusService) {
+    public ShortsUploadController(
+            ShortsUploadInitService shortsUploadInitService,
+            ShortsUploadCompleteService shortsUploadCompleteService,
+            ShortsUploadStatusService shortsUploadStatusService
+    ) {
         this.shortsUploadInitService = shortsUploadInitService;
         this.shortsUploadCompleteService = shortsUploadCompleteService;
         this.shortsUploadStatusService = shortsUploadStatusService;
     }
 
+    /**
+     * 업로드용 Pre-signed URL 발급
+     * - 실제 PUT 업로드는 클라이언트가 S3로 직접 수행한다.
+     */
     @PostMapping("/upload")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<ShortsUploadInitResponse> initUpload(
@@ -38,6 +46,10 @@ public class ShortsUploadController {
         return ApiResponse.success("SUCCESS", "업로드 URL이 생성되었습니다.", response);
     }
 
+    /**
+     * 업로드 완료 알림
+     * - 서버 관점(A안): S3에 객체가 실제로 존재(HEAD)하는지 확인 후 완료 처리한다.
+     */
     @PostMapping("/{shortId}/upload-complete")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Void> uploadComplete(
@@ -48,14 +60,15 @@ public class ShortsUploadController {
         shortsUploadCompleteService.complete(
                 shortId,
                 userDetails.getId(),
-                request.uploadId(),
-                request.videoUrl(),
-                request.thumbnailUrl()
+                request
         );
 
         return ApiResponse.success("SUCCESS", "업로드가 완료되었습니다.", null);
     }
 
+    /**
+     * 업로드 상태 조회
+     */
     @GetMapping("/{shortId}/upload-status")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<ShortsUploadStatusResponse> getUploadStatus(

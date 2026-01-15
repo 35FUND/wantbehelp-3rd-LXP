@@ -15,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Service
@@ -151,5 +152,38 @@ public class ShortsService {
             originalPageable.getPageSize(),
             Sort.by(DEFAULT_SORT_DIRECTION, DEFAULT_SORT_PROPERTY)
         );
+    }
+
+    /**
+     * 카테고리별 숏츠 목록 조회
+     */
+    @Transactional(readOnly = true)
+    public Page<ShortsResponse> getShortsByCategory(Long categoryId, Pageable pageable) {
+        if (!categoryRepository.existsById(categoryId)) {
+            throw new BaseException(ErrorCode.CATEGORY_NOT_FOUND);
+        }
+
+        Pageable safePageable = createSafePageable(pageable);
+
+        return shortsRepository.findByCategoryId(categoryId, safePageable)
+                .map(ShortsResponse::from);
+    }
+
+    /**
+     * 인기 숏츠 목록 조회
+     */
+    @Transactional(readOnly = true)
+    public Page<ShortsResponse> getPopularShorts(Integer days, Pageable pageable) {
+        if (days == null || days <= 0) {
+            days = 30;
+        }
+        if (days > 90) {
+            days = 90;
+        }
+
+        LocalDateTime since = LocalDateTime.now().minusDays(days);
+
+        return shortsRepository.findPopularShorts(since, pageable)
+                .map(ShortsResponse::from);
     }
 }

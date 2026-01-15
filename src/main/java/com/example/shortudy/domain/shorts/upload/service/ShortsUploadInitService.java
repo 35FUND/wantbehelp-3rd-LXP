@@ -34,6 +34,8 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 
+import static com.example.shortudy.domain.shorts.entity.ShortsStatus.DRAFT;
+
 @Service
 @Transactional(readOnly = true)
 public class ShortsUploadInitService {
