@@ -3,6 +3,7 @@ package com.example.shortudy.domain.keyword.service;
 import com.example.shortudy.domain.keyword.dto.response.KeywordResponse;
 import com.example.shortudy.domain.keyword.entity.Keyword;
 import com.example.shortudy.domain.keyword.repository.KeywordRepository;
+import com.example.shortudy.domain.keyword.util.KeywordNormalizer;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
 import org.springframework.stereotype.Service;
@@ -48,16 +49,16 @@ public class KeywordService {
         if (q == null || q.isBlank()) return List.of();
 
         String trimmed = q.trim();
-        String normalizedQuery = trimmed.toLowerCase();
-        boolean hasLatin = trimmed.chars()
-                .anyMatch(ch -> (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'));
+        if (trimmed.isBlank()) return List.of();
 
-        List<Keyword> keywords;
-        if (hasLatin) {
-            keywords = keywordRepository.findByDisplayNameContainingIgnoreCaseOrNormalizedNameContainingIgnoreCase(trimmed, normalizedQuery);
-        } else {
-            keywords = keywordRepository.findByDisplayNameContainingIgnoreCaseOrNormalizedNameContainingIgnoreCase(trimmed, trimmed);
-        }
+        // 검색용 정규화 호출 — 여기서 normalizedForSearch를 정의함
+        String normalizedForSearch = KeywordNormalizer.normalizeForSearch(trimmed);
+        if (normalizedForSearch.isEmpty()) return List.of();
+
+        // 저장된 normalizedName은 내부 공백을 허용하지 않으므로 검색용 정규화 결과의 공백을 제거해서 매칭
+        String normalizedNoSpace = normalizedForSearch.replaceAll("\\s+", "");
+
+        List<Keyword> keywords = keywordRepository.searchKeyword(trimmed, normalizedNoSpace);
 
         return keywords.stream()
                 .map(this::toResponse)
