@@ -1,44 +1,38 @@
-package com.example.shortudy.domain.shorts.controller;
+package com.example.shortudy.domain.shorts.upload.controller;
 
-import com.example.shortudy.domain.shorts.dto.ShortsResponse;
-import com.example.shortudy.domain.shorts.dto.ShortsUpdateRequest;
 import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadCompleteRequest;
 import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadInitRequest;
 import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadInitResponse;
-import com.example.shortudy.domain.shorts.service.ShortsService;
-import com.example.shortudy.domain.shorts.upload.service.ShortsUploadCompleteService;
 import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadStatusResponse;
+import com.example.shortudy.domain.shorts.upload.service.ShortsUploadCompleteService;
 import com.example.shortudy.domain.shorts.upload.service.ShortsUploadInitService;
 import com.example.shortudy.domain.shorts.upload.service.ShortsUploadStatusService;
 import com.example.shortudy.global.common.ApiResponse;
 import com.example.shortudy.global.security.principal.CustomUserDetails;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-
-import static org.springframework.data.domain.Sort.Direction.ASC;
-import static org.springframework.data.domain.Sort.Direction.DESC;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/shorts")
-public class ShortsController {
+@RequestMapping("/api/v1/shorts-upload")
+public class ShortsUploadController {
 
-    private final ShortsService shortsService;
     private final ShortsUploadInitService shortsUploadInitService;
     private final ShortsUploadCompleteService shortsUploadCompleteService;
     private final ShortsUploadStatusService shortsUploadStatusService;
 
-    public ShortsController(
-            ShortsService shortsService,
+    public ShortsUploadController(
             ShortsUploadInitService shortsUploadInitService,
             ShortsUploadCompleteService shortsUploadCompleteService,
             ShortsUploadStatusService shortsUploadStatusService
     ) {
-        this.shortsService = shortsService;
         this.shortsUploadInitService = shortsUploadInitService;
         this.shortsUploadCompleteService = shortsUploadCompleteService;
         this.shortsUploadStatusService = shortsUploadStatusService;
@@ -60,7 +54,7 @@ public class ShortsController {
 
     /**
      * 업로드 완료 알림
-     * - MVP 단계에서는 프론트에서 전달한 URL을 완료 기준으로 저장한다.
+     * - 서버 관점(A안): S3에 객체가 실제로 존재(HEAD)하는지 확인 후 완료 처리한다.
      */
     @PostMapping("/{shortId}/upload-complete")
     @ResponseStatus(HttpStatus.OK)
@@ -69,10 +63,18 @@ public class ShortsController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody @Valid ShortsUploadCompleteRequest request
     ) {
-        shortsUploadCompleteService.complete(shortId, userDetails.getId(), request);
+        shortsUploadCompleteService.complete(
+                shortId,
+                userDetails.getId(),
+                request
+        );
+
         return ApiResponse.success("SUCCESS", "업로드가 완료되었습니다.", null);
     }
 
+    /**
+     * 업로드 상태 조회
+     */
     @GetMapping("/{shortId}/upload-status")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<ShortsUploadStatusResponse> getUploadStatus(
@@ -81,54 +83,5 @@ public class ShortsController {
     ) {
         ShortsUploadStatusResponse response = shortsUploadStatusService.getStatus(shortId, userDetails.getId());
         return ApiResponse.success("SUCCESS", "업로드 상태 조회에 성공했습니다.", response);
-    }
-
-    @GetMapping("/{shortId}")
-    @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<Page<ShortsResponse>> getShortsDetails(
-            @PathVariable Long shortId,
-            @PageableDefault(size = 20, sort = "id", direction = DESC) Pageable pageable
-    ) {
-        Page<ShortsResponse> result = shortsService.getShortsDetailsWithPaging(shortId, pageable);
-        return ApiResponse.success(result);
-    }
-
-    @GetMapping
-    @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<Page<ShortsResponse>> getShortsList(
-            @PageableDefault(size = 8, sort = "id", direction = ASC) Pageable pageable
-    ) {
-        Page<ShortsResponse> response = shortsService.getShortsList(pageable);
-        return ApiResponse.success(response);
-    }
-
-    @PatchMapping("/{shortId}")
-    @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<ShortsResponse> updateShorts(
-            @PathVariable Long shortId,
-            @RequestBody @Valid ShortsUpdateRequest request
-    ) {
-        ShortsResponse response = shortsService.updateShorts(shortId, request);
-        return ApiResponse.success(response);
-    }
-
-    @DeleteMapping("/{shortId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public ApiResponse<Void> deleteShorts(@PathVariable Long shortId) {
-        shortsService.deleteShorts(shortId);
-        return ApiResponse.success(null);
-    }
-
-    /**
-     * 인기 숏츠 목록 조회
-     */
-    @GetMapping("/popular")
-    @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<Page<ShortsResponse>> getPopularShorts(
-            @RequestParam(required = false, defaultValue = "30") Integer days,
-            @PageableDefault(size = 20, sort = "id", direction = DESC) Pageable pageable
-    ) {
-        Page<ShortsResponse> response = shortsService.getPopularShorts(days, pageable);
-        return ApiResponse.success(response);
     }
 }

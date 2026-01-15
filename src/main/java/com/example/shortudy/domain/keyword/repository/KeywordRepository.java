@@ -14,4 +14,5 @@ public interface KeywordRepository extends JpaRepository<Keyword, Long> {
             "or lower(k.normalizedName) like lower(concat('%', :keyword2, '%'))")
     List<Keyword> searchKeyword(@Param("keyword1") String keyword1,
                                 @Param("keyword2") String keyword2);
+    List<Keyword> findByDisplayNameContainingIgnoreCaseOrNormalizedNameContainingIgnoreCase(String keyword1, String keyword2);
 }
