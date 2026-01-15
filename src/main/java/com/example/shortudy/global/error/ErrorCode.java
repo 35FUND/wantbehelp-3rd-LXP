@@ -9,6 +9,7 @@ public enum ErrorCode {
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "COMMON_405", "지원하지 않는 HTTP 메서드입니다."),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON_500", "서버 내부 오류입니다."),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "COMMON_401", "요청 권한이 없습니다."),
+    NOT_IMPLEMENTED(HttpStatus.NOT_IMPLEMENTED, "COMMON_501", "아직 구현되지 않았습니다."),
 
 
     // user
@@ -40,6 +41,13 @@ public enum ErrorCode {
     // comment
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMENT_404", "해당 댓글을 찾을 수 없습니다."),
     COMMENT_FORBIDDEN(HttpStatus.FORBIDDEN, "COMMENT_403", "해당 댓글에 대한 접근 권한이 없습니다."),
+
+    // Keyword
+    KEYWORD_NOT_FOUND(HttpStatus.NOT_FOUND, "KEYWORD_404", "해당 키워드를 찾을 수 없습니다."),
+    DUPLICATE_KEYWORD(HttpStatus.CONFLICT, "KEYWORD_409", "이미 등록된 키워드입니다."),
+    SPACE_ONLY_KEYWORD(HttpStatus.BAD_REQUEST, "KEYWORD_400", "공백만으로 이루어진 키워드는 허용되지 않습니다.");
+
+
 
     // shortsLike
     ALREADY_UNLIKE(HttpStatus.BAD_REQUEST, "LIKE_400", "좋아요하지 않았습니다."),
