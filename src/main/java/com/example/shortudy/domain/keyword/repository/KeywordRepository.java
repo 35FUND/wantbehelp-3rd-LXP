@@ -12,6 +12,6 @@ public interface KeywordRepository extends JpaRepository<Keyword, Long> {
     @Query("select k from Keyword k where " +
             "lower(k.displayName) like lower(concat('%', :keyword1, '%')) " +
             "or lower(k.normalizedName) like lower(concat('%', :keyword2, '%'))")
-    List<Keyword> searchKeyword(@Param("keyword") String keyword,
-                                @Param(("keyword2")) String keyword2);
+    List<Keyword> searchKeyword(@Param("keyword1") String keyword1,
+                                @Param("keyword2") String keyword2);
 }
