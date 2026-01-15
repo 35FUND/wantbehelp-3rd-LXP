@@ -74,4 +74,16 @@ public class ShortsController {
         Page<ShortsResponse> response = shortsService.getPopularShorts(days, pageable);
         return ApiResponse.success(response);
     }
+    /**
+     * 내 쇼츠 목록 조회 (로그인 사용자)
+     */
+    @GetMapping("/me")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<Page<ShortsResponse>> getMyShorts(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PageableDefault(size = 20, sort = "id", direction = DESC) Pageable pageable
+    ) {
+        Page<ShortsResponse> response = shortsService.getMyShorts(userDetails.getId(), pageable);
+        return ApiResponse.success(response);
+    }
 }

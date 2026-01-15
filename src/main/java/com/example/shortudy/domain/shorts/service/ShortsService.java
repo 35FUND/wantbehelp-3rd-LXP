@@ -187,4 +187,14 @@ public class ShortsService {
         return shortsRepository.findPopularShorts(since, pageable)
                 .map(ShortsResponse::from);
     }
+
+    /**
+     * 내 쇼츠 목록 조회
+     */
+    @Transactional(readOnly = true)
+    public Page<ShortsResponse> getMyShorts(Long userId, Pageable pageable) {
+        Pageable safePageable = createSafePageable(pageable);
+        return shortsRepository.findByUserId(userId, safePageable)
+                .map(ShortsResponse::from);
+    }
 }
