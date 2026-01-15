@@ -55,14 +55,15 @@ public class ShortsService {
 
     public Page<ShortsResponse> getShortsList(Pageable pageable) {
         if (isRandomSortRequested(pageable)) {
-            return shortsRepository.findAllRandom(pageable).map(ShortsResponse::from);
+            return shortsRepository.findRandomPublishedShorts(pageable).map(ShortsResponse::from);
         }
 
         if (hasValidSortProperties(pageable)) {
-            return shortsRepository.findAll(pageable).map(ShortsResponse::from);
+            return shortsRepository.findByStatus(com.example.shortudy.domain.shorts.entity.ShortsStatus.PUBLISHED, pageable)
+                    .map(ShortsResponse::from);
         }
 
-        return shortsRepository.findAllRandom(pageable).map(ShortsResponse::from);
+        return shortsRepository.findRandomPublishedShorts(pageable).map(ShortsResponse::from);
     }
 
     @Transactional
@@ -165,7 +166,7 @@ public class ShortsService {
 
         Pageable safePageable = createSafePageable(pageable);
 
-        return shortsRepository.findByCategoryId(categoryId, safePageable)
+        return shortsRepository.findByCategoryIdAndStatus(categoryId, com.example.shortudy.domain.shorts.entity.ShortsStatus.PUBLISHED, safePageable)
                 .map(ShortsResponse::from);
     }
 

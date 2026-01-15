@@ -1,6 +1,7 @@
 package com.example.shortudy.domain.recommendation.service;
 
 import com.example.shortudy.domain.recommendation.dto.response.RecommendationResponse;
+import com.example.shortudy.domain.shorts.entity.ShortsStatus;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
 import com.example.shortudy.global.error.BaseException;
@@ -32,8 +33,8 @@ public class ShortsRecommendationService {
 
         Set<String> baseKeywords = extractKeywords(baseShorts);
 
-        // 2. 후보 Shorts 조회 (기준 제외)
-        List<Shorts> candidates = shortsRepository.findByIdNot(shortsId);
+        // 2. 후보 Shorts 조회 (기준 제외, PUBLISHED 상태만)
+        List<Shorts> candidates = shortsRepository.findRecommendationCandidates(shortsId, ShortsStatus.PUBLISHED);
 
         // 3. 모든 유사도 계산 (한 번만!)
         List<JaccardSimilarityCalculator.SimilarityResult> allResults =
@@ -91,7 +92,7 @@ public class ShortsRecommendationService {
 
     private Set<String> extractKeywords(Shorts shorts) {
         return shorts.getShortsKeywords().stream()
-                .map(sk -> sk.getKeyword().getName())
+                .map(sk -> sk.getKeyword().getDisplayName())
                 .collect(Collectors.toSet());
     }
 }

@@ -62,6 +62,9 @@ public class Shorts {
     @Column(name = "like_count", nullable = false)
     private Integer likeCount = 0;
 
+    @Column(name = "view_count", nullable = false)
+    private Long viewCount = 0L;
+
     public Shorts(User user, Category category, @NotBlank(message = "제목은 필수입니다.") @Size(max = 100, message = "제목은 100자 이하여야 합니다.") String title, String description, Object videoUrl, Object thumbnailUrl, @Positive(message = "durationSec는 0보다 커야 합니다.") Integer durationSec, ShortsStatus shortsStatus) {
     }
 
