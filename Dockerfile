@@ -7,11 +7,12 @@ COPY build.gradle settings.gradle ./
 # 소스 코드 복사
 COPY src ./src
 
-# Gradle 내장 명령어로 빌드 (Wrapper 사용 안 함)
+# Gradle 내장 명령어로 빌드
 RUN gradle bootJar --no-daemon
 
 # Stage 2: Run
-FROM openjdk:17-jdk-slim
+# openjdk 이미지는 deprecated 되었으므로 유지보수가 잘 되는 eclipse-temurin을 사용합니다.
+FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 
 # 타임존 설정
