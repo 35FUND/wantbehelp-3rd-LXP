@@ -102,6 +102,21 @@ public class KeywordService {
         keywordRepository.deleteById(id);
     }
 
+    @Transactional
+    public Keyword getOrCreateKeyword(String displayName) {
+        String normalized = KeywordNormalizer.normalize(displayName);
+
+        if (normalized == null || normalized.isBlank()) {
+            throw new BaseException(ErrorCode.INVALID_INPUT);
+        }
+
+        return keywordRepository.findByNormalizedName(normalized)
+                .orElseGet(() -> {
+                    Keyword keyword = new Keyword(displayName, normalized);
+                    return keywordRepository.save(keyword);
+                });
+    }
+
     private KeywordResponse toResponse(Keyword k) {
         return new KeywordResponse(k.getId(), k.getDisplayName(), k.getNormalizedName());
     }

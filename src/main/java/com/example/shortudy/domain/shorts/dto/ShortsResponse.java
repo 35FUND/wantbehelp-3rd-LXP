@@ -4,6 +4,7 @@ import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -43,7 +44,9 @@ public record ShortsResponse(
         List<String> keywords,
         Long viewCount,
         Integer likeCount,
-        Long commentCount
+        Long commentCount,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
 ) {
 
     /**
@@ -78,7 +81,9 @@ public record ShortsResponse(
                         .toList(),
                 viewCount != null ? viewCount : shorts.getViewCount(),
                 shorts.getLikeCount(),
-                commentCount
+                commentCount,
+                shorts.getCreatedAt(),
+                shorts.getUpdatedAt()
         );
     }
 

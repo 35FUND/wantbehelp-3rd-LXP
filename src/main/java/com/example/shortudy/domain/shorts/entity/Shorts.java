@@ -7,6 +7,7 @@ import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
 import jakarta.persistence.*;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import lombok.Getter;
 
@@ -66,6 +67,9 @@ public class Shorts {
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
@@ -148,6 +152,15 @@ public class Shorts {
         if (status != null) {
             this.status = status;
         }
+    }
+
+    public void addKeyword(Keyword keyword) {
+        ShortsKeyword shortsKeyword = ShortsKeyword.of(this, keyword);
+        this.shortsKeywords.add(shortsKeyword);
+    }
+
+    public void clearKeywords() {
+        this.shortsKeywords.clear();
     }
 
     private void validateTitle(String title) {

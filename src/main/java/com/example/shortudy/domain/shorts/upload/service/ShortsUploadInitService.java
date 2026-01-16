@@ -2,6 +2,7 @@ package com.example.shortudy.domain.shorts.upload.service;
 
 import com.example.shortudy.domain.category.entity.Category;
 import com.example.shortudy.domain.category.repository.CategoryRepository;
+import com.example.shortudy.domain.keyword.service.KeywordService;
 import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadInitRequest;
 import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadInitResponse;
 import com.example.shortudy.domain.shorts.entity.Shorts;
@@ -51,19 +52,22 @@ public class ShortsUploadInitService {
     private final CategoryRepository categoryRepository;
     private final ShortsRepository shortsRepository;
     private final ShortsUploadSessionRepository uploadSessionRepository;
+    private final KeywordService keywordService;
 
     public ShortsUploadInitService(
             AwsProperties awsProperties,
             UserRepository userRepository,
             CategoryRepository categoryRepository,
             ShortsRepository shortsRepository,
-            ShortsUploadSessionRepository uploadSessionRepository
+            ShortsUploadSessionRepository uploadSessionRepository,
+            KeywordService keywordService
     ) {
         this.awsProperties = awsProperties;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.shortsRepository = shortsRepository;
         this.uploadSessionRepository = uploadSessionRepository;
+        this.keywordService = keywordService;
     }
 
     @PostConstruct
@@ -109,6 +113,11 @@ public class ShortsUploadInitService {
                 body.durationSec(),
                 DRAFT
         );
+
+        // 키워드 저장
+        if (body.keywords() != null) {
+            body.keywords().forEach(k -> shorts.addKeyword(keywordService.getOrCreateKeyword(k)));
+        }
 
         Shorts savedShorts = shortsRepository.save(shorts);
 

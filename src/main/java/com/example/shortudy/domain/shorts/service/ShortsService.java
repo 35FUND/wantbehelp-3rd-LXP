@@ -2,6 +2,7 @@ package com.example.shortudy.domain.shorts.service;
 
 import com.example.shortudy.domain.category.entity.Category;
 import com.example.shortudy.domain.category.repository.CategoryRepository;
+import com.example.shortudy.domain.keyword.service.KeywordService;
 import com.example.shortudy.domain.shorts.dto.ShortsResponse;
 import com.example.shortudy.domain.shorts.dto.ShortsUpdateRequest;
 import com.example.shortudy.domain.shorts.entity.Shorts;
@@ -37,10 +38,12 @@ public class ShortsService {
 
     private final ShortsRepository shortsRepository;
     private final CategoryRepository categoryRepository;
+    private final KeywordService keywordService;
 
-    public ShortsService(ShortsRepository shortsRepository, CategoryRepository categoryRepository) {
+    public ShortsService(ShortsRepository shortsRepository, CategoryRepository categoryRepository, KeywordService keywordService) {
         this.shortsRepository = shortsRepository;
         this.categoryRepository = categoryRepository;
+        this.keywordService = keywordService;
     }
 
     public Shorts findShortsWithDetails(Long shortsId) {
@@ -91,6 +94,11 @@ public class ShortsService {
             category,
             request.status()
         );
+
+        if (request.keywordNames() != null) {
+            shorts.clearKeywords();
+            request.keywordNames().forEach(k -> shorts.addKeyword(keywordService.getOrCreateKeyword(k)));
+        }
 
         return ShortsResponse.of(shorts, 0L, shorts.getViewCount());
     }
