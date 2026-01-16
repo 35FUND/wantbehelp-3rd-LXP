@@ -2,11 +2,13 @@ package com.example.shortudy.domain.shorts.service;
 
 import com.example.shortudy.domain.category.entity.Category;
 import com.example.shortudy.domain.category.repository.CategoryRepository;
+import com.example.shortudy.domain.keyword.entity.Keyword;
 import com.example.shortudy.domain.shorts.dto.ShortsResponse;
 import com.example.shortudy.domain.shorts.dto.ShortsUpdateRequest;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
+import com.example.shortudy.domain.keyword.repository.KeywordRepository;
 import com.example.shortudy.global.error.ErrorCode;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -16,7 +18,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
+
+
 
 @Service
 @Transactional(readOnly = true)
@@ -36,6 +41,7 @@ public class ShortsService {
 
     private final ShortsRepository shortsRepository;
     private final CategoryRepository categoryRepository;
+    private KeywordRepository keywordRepository;
 
     public ShortsService(ShortsRepository shortsRepository, CategoryRepository categoryRepository) {
         this.shortsRepository = shortsRepository;
@@ -80,7 +86,24 @@ public class ShortsService {
             category,
             request.status()
         );
+        if (request.keywordNames() != null) {
+            List<Keyword> keywordEntities = request.keywordNames().stream()
+                    .map(k -> {
+                        // 1. 공백 제거 및 소문자 변환 (정규화)
+                        String normalized = k.trim().toLowerCase();
+                        String display = k.trim();
 
+                        // 2. 정규화된 이름(normalizedName)으로 DB 검색
+                        // 없으면 -> 생성자 2개(display, normalized) 넣어서 새로 저장
+                        return keywordRepository.findByNormalizedName(normalized)
+                                .orElseGet(() -> keywordRepository.save(new Keyword(display, normalized)));
+                    })
+                    .distinct() // 요청에 중복된 키워드가 있을 경우 제거
+                    .toList();
+
+            // 3. 쇼츠 엔티티에 반영
+            shorts.replaceKeywords(keywordEntities);
+        }
         return ShortsResponse.from(shorts);
     }
 
