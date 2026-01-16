@@ -65,7 +65,6 @@ public enum ErrorCode {
     ALREADY_UNLIKE(HttpStatus.BAD_REQUEST, "LIKE_400", "좋아요하지 않았습니다."),
     ALREADY_LIKE(HttpStatus.BAD_REQUEST, "LIKE_400", "이미 좋아요했습니다."),
 
-
     ;
     private final HttpStatus status;
     private final String code;

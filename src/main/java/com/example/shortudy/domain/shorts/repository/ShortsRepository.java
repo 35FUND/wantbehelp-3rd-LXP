@@ -7,11 +7,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import jakarta.persistence.QueryHint;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -19,25 +17,49 @@ import java.util.Optional;
 @Repository
 public interface ShortsRepository extends JpaRepository<Shorts, Long> {
 
+    // ============================================
+    // 기본 조회
+    // ============================================
+
+    /**
+     * 상세 조회 - 기본 정보 (User, Category)
+     */
     @Query("SELECT s FROM Shorts s " +
             "JOIN FETCH s.user " +
             "JOIN FETCH s.category " +
             "WHERE s.id = :id")
-    @QueryHints(@QueryHint(name = "org.hibernate.fetchSize", value = "100"))
     Optional<Shorts> findWithDetailsById(@Param("id") Long id);
 
+    /**
+     * 상세 조회 - Keyword 포함
+     */
+    @Query("SELECT DISTINCT s FROM Shorts s " +
+            "JOIN FETCH s.user " +
+            "JOIN FETCH s.category " +
+            "LEFT JOIN FETCH s.shortsKeywords sk " +
+            "LEFT JOIN FETCH sk.keyword " +
+            "WHERE s.id = :id")
+    Optional<Shorts> findWithDetailsAndKeywordsById(@Param("id") Long id);
+
+    /**
+     * 목록 조회 - 기본 (페이징)
+     */
     @EntityGraph(attributePaths = {"user", "category"})
     Page<Shorts> findAll(Pageable pageable);
 
-    @EntityGraph(attributePaths = {"user", "category"})
-    Page<Shorts> findByUserId(Long userId, Pageable pageable);
+    // ============================================
+    // Status별 조회
+    // ============================================
 
+    /**
+     * Status별 조회
+     */
     @EntityGraph(attributePaths = {"user", "category"})
     Page<Shorts> findByStatus(ShortsStatus status, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"user", "category"})
-    Page<Shorts> findByCategoryIdAndStatus(Long categoryId, ShortsStatus status, Pageable pageable);
-
+    /**
+     * 랜덤 PUBLISHED 숏츠 조회
+     */
     @Query(value = "SELECT s.* FROM shorts s " +
             "WHERE s.status = 'PUBLISHED' " +
             "ORDER BY RAND()",
@@ -45,19 +67,80 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
             nativeQuery = true)
     Page<Shorts> findRandomPublishedShorts(Pageable pageable);
 
-    // nativeQuery = true로 변경하여 SQL 문법 사용
-    @Query(value = "SELECT s.* FROM shorts s " +
+    // ============================================
+    // 사용자별 조회
+    // ============================================
+
+    /**
+     * 특정 사용자의 숏츠 목록 조회
+     */
+    @EntityGraph(attributePaths = {"user", "category"})
+    Page<Shorts> findByUserId(Long userId, Pageable pageable);
+
+    // ============================================
+    // 카테고리별 조회
+    // ============================================
+
+    /**
+     * 카테고리별 숏츠 목록 조회
+     */
+    @EntityGraph(attributePaths = {"user", "category"})
+    Page<Shorts> findByCategoryId(Long categoryId, Pageable pageable);
+
+    /**
+     * 카테고리 + Status 조회
+     */
+    @EntityGraph(attributePaths = {"user", "category"})
+    Page<Shorts> findByCategoryIdAndStatus(Long categoryId, ShortsStatus status, Pageable pageable);
+
+    // ============================================
+    // 인기 숏츠 조회
+    // ============================================
+
+    /**
+     * 인기 숏츠 조회 (likeCount 기준)
+     * - 최근 N일 이내
+     * - PUBLISHED 상태만
+     */
+    @Query("SELECT s FROM Shorts s " +
             "WHERE s.status = 'PUBLISHED' " +
-            "AND s.created_at >= :since " +
-            "ORDER BY s.like_count DESC, s.created_at DESC",
-            countQuery = "SELECT COUNT(*) FROM shorts WHERE status = 'PUBLISHED' AND created_at >= :since",
-            nativeQuery = true)
+            "AND s.createdAt >= :since " +
+            "ORDER BY s.likeCount DESC, s.createdAt DESC")
+    @EntityGraph(attributePaths = {"user", "category"})
     Page<Shorts> findPopularShorts(@Param("since") LocalDateTime since, Pageable pageable);
 
-    @org.springframework.data.jpa.repository.Modifying
-    @Query("UPDATE Shorts s SET s.viewCount = s.viewCount + :count WHERE s.id = :shortsId")
-    void incrementViewCount(@Param("shortsId") Long shortsId, @Param("count") Long count);
+    /**
+     * 인기 숏츠 조회 (Like 테이블 JOIN 버전)
+     * - likeCount 컬럼이 없을 때 사용
+     */
+    @Query("SELECT s FROM Shorts s " +
+            "LEFT JOIN ShortsLike l ON l.shorts = s " +
+            "WHERE s.status = 'PUBLISHED' " +
+            "AND s.createdAt >= :since " +
+            "GROUP BY s.id " +
+            "ORDER BY COUNT(l.id) DESC, s.createdAt DESC")
+    @EntityGraph(attributePaths = {"user", "category"})
+    Page<Shorts> findPopularShortsByLikes(@Param("since") LocalDateTime since, Pageable pageable);
 
-    @Query("SELECT s FROM Shorts s WHERE s.id != :excludeId AND s.status = :status")
-    List<Shorts> findRecommendationCandidates(@Param("excludeId") Long excludeId, @Param("status") ShortsStatus status);
+    /**
+     * 특정 ID를 제외한 숏츠 조회
+     */
+    List<Shorts> findByIdNot(Long shortsId);
+
+    /**
+     * 랜덤 조회 (전체) - 레거시
+     */
+    @Query(value = "SELECT s.* FROM shorts s ORDER BY RAND()",
+            countQuery = "SELECT COUNT(*) FROM shorts",
+            nativeQuery = true)
+    Page<Shorts> findAllRandom(Pageable pageable);
+
+    @Query(value = "SELECT * FROM shorts s " +
+            "WHERE s.id != :shortsId " +
+            "AND s.status = :status " +
+            "ORDER BY RAND() " +
+            "LIMIT 10", nativeQuery = true)
+    List<Shorts> findRecommendationCandidates
+            (@Param("shortsId") Long shortsId,
+             @Param("status") String status);
 }

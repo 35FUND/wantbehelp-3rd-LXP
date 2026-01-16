@@ -1,13 +1,11 @@
 package com.example.shortudy.domain.shorts.entity;
 
 import com.example.shortudy.domain.category.entity.Category;
+import com.example.shortudy.domain.keyword.entity.Keyword;
 import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -17,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Entity
 @Getter
@@ -59,6 +58,9 @@ public class Shorts {
     @Column(name = "duration_sec")
     private Integer durationSec;
 
+    @Column(name = "keywords", columnDefinition = "TEXT")
+    private String keywords;
+
     @Column(name = "like_count", nullable = false)
     private Integer likeCount = 0;
 
@@ -83,7 +85,8 @@ public class Shorts {
     @Column(name = "status")
     private ShortsStatus status;
 
-    @OneToMany(mappedBy = "shorts", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "shorts", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ShortsKeyword> shortsKeywords = new ArrayList<>();
 
     protected Shorts() {
@@ -115,6 +118,16 @@ public class Shorts {
         this.status = status;
         this.shortsKeywords = new ArrayList<>();
     }
+
+    /** Keyword 목록 조회 (편의 메서드)
+     * ShortsKeyword를 거쳐서 실제 Keyword 엔티티 반환
+     */
+    public List<Keyword> getKeywords() {
+        return shortsKeywords.stream()
+                .map(ShortsKeyword::getKeyword)
+                .collect(Collectors.toList());
+    }
+
 
     // 비즈니스 메서드 (URL 수정)
     public void updateVideoUrl(String videoUrl) {

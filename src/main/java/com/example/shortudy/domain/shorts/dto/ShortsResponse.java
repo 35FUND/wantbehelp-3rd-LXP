@@ -4,6 +4,7 @@ import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
+import java.util.List;
 
 /**
  * 숏폼 응답 DTO
@@ -24,6 +25,7 @@ import com.example.shortudy.global.error.ErrorCode;
  * @param userProfileUrl  업로더 프로필 이미지 URL
  * @param categoryId      카테고리 ID
  * @param categoryName    카테고리 이름
+ * @param keywords        키워드 목록
  */
 public record ShortsResponse(
         Long shortsId,
@@ -37,7 +39,8 @@ public record ShortsResponse(
         String userNickname,
         String userProfileUrl,
         Long categoryId,
-        String categoryName
+        String categoryName,
+        List<String> keywords
 ) {
 
     /**
@@ -73,7 +76,10 @@ public record ShortsResponse(
                 shorts.getUser().getNickname(),
                 shorts.getUser().getProfileUrl(),
                 shorts.getCategory().getId(),
-                shorts.getCategory().getName()
+                shorts.getCategory().getName(),
+                shorts.getKeywords().stream()
+                        .map(keyword -> keyword.getDisplayName())
+                        .toList()
         );
     }
 }

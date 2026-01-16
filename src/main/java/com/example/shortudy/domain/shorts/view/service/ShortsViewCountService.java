@@ -38,7 +38,8 @@ public class ShortsViewCountService {
             viewCountRepository.increaseViewCount(shortId);
         }
     }
-
+}
+    /*
     // Redis 누적 조회수 DB 반영
     @Transactional
     public void flushViewCounts() {
@@ -48,8 +49,8 @@ public class ShortsViewCountService {
         }
 
         for (Map.Entry<Long, Long> entry : counts.entrySet()) {
-            shortsRepository.incrementViewCount(entry.getKey(), entry.getValue());
+            shortsRepository.(entry.getKey(), entry.getValue());
         }
         viewCountRepository.clearPending(counts.keySet());
     }
-}
+}*/

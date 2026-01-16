@@ -1,8 +1,8 @@
 package com.example.shortudy.domain.recommendation.service;
 
 import com.example.shortudy.domain.recommendation.dto.response.RecommendationResponse;
-import com.example.shortudy.domain.shorts.entity.ShortsStatus;
 import com.example.shortudy.domain.shorts.entity.Shorts;
+import com.example.shortudy.domain.shorts.entity.ShortsStatus;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
 import com.example.shortudy.global.error.BaseException;
 import org.springframework.stereotype.Service;
@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.example.shortudy.domain.shorts.entity.ShortsStatus.PUBLISHED;
 import static com.example.shortudy.global.error.ErrorCode.SHORTS_NOT_FOUND;
 
 @Service
@@ -34,7 +35,9 @@ public class ShortsRecommendationService {
         Set<String> baseKeywords = extractKeywords(baseShorts);
 
         // 2. 후보 Shorts 조회 (기준 제외, PUBLISHED 상태만)
-        List<Shorts> candidates = shortsRepository.findRecommendationCandidates(shortsId, ShortsStatus.PUBLISHED);
+        List<Shorts> candidates = shortsRepository.findRecommendationCandidates(
+                shortsId,
+                ShortsStatus.PUBLISHED.name());
 
         // 3. 모든 유사도 계산 (한 번만!)
         List<JaccardSimilarityCalculator.SimilarityResult> allResults =

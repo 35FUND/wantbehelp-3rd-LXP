@@ -6,7 +6,9 @@ import lombok.Getter;
 
 @Entity
 @Getter
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"shorts_id", "keyword_id"})
+@Table(
+        name = "shorts_keyword",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"shorts_id", "keyword_id"})
 )
 public class ShortsKeyword {
 
@@ -29,11 +31,12 @@ public class ShortsKeyword {
         this.keyword = keyword;
     }
 
+    /**
+     * 정적 팩토리 메서드
+     * 양방향 관계는 Shorts에서 관리하므로 여기서는 단순 생성만
+     */
     public static ShortsKeyword of(Shorts shorts, Keyword keyword) {
+        {}
         return new ShortsKeyword(shorts, keyword);
-    }
-
-    public void setShorts(Shorts shorts) {
-        this.shorts = shorts;
     }
 }
