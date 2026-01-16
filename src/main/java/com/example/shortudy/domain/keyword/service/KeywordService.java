@@ -68,14 +68,14 @@ public class KeywordService {
 
     @Transactional
     public KeywordResponse createKeyword(String displayName) {
-        String normalized = KeywordNormalizer.normalize(displayName);
+        String normalized = KeywordNormalizer.normalizeForSearch(displayName);
 
         if (normalized == null || normalized.isBlank()) {
             throw new BaseException(ErrorCode.SPACE_ONLY_KEYWORD);
         }
 
         // 중복 확인 (repository에 findByNormalizedName 또는 existsByNormalizedName 추가 필요)
-        Optional<Keyword> existing = keywordRepository.findByNormalizedName(normalized);
+        Optional<Keyword> existing = keywordRepository.findByNormalizedName((normalized));
         if (existing.isPresent()) {
             throw new BaseException(ErrorCode.DUPLICATE_KEYWORD);
         }
@@ -90,7 +90,7 @@ public class KeywordService {
         Keyword existing = keywordRepository.findById(id)
                 .orElseThrow(() -> new BaseException(ErrorCode.KEYWORD_NOT_FOUND));
 
-        String normalized = KeywordNormalizer.normalize(displayName);
+        String normalized = KeywordNormalizer.normalizeForSearch(displayName);
 
         if (normalized == null || normalized.isBlank()) {
             throw new BaseException(ErrorCode.SPACE_ONLY_KEYWORD);

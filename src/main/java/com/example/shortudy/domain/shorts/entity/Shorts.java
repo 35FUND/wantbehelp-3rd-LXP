@@ -67,19 +67,13 @@ public class Shorts {
     @Column(name = "view_count", nullable = false)
     private Long viewCount = 0L;
 
-    public void incrementLikeCount() {
-        this.likeCount++;
-    }
-
-    public void decrementLikeCount() {
-        if (this.likeCount > 0) {
-            this.likeCount--;
-        }
-    }
-
     @CreatedDate
-    @Column(updatable = false)
-    public LocalDateTime createdAt;
+    @Column(name = "created_at", updatable = false, nullable = false)
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
@@ -113,23 +107,80 @@ public class Shorts {
         this.videoUrl = videoUrl;
         this.thumbnailUrl = thumbnailUrl;
         this.durationSec = durationSec;
-
-        // 기본값 설정
         this.status = status;
         this.shortsKeywords = new ArrayList<>();
     }
 
-    /** Keyword 목록 조회 (편의 메서드)
-     * ShortsKeyword를 거쳐서 실제 Keyword 엔티티 반환
-     */
-    public List<Keyword> getKeywords() {
-        return shortsKeywords.stream()
-                .map(ShortsKeyword::getKeyword)
-                .collect(Collectors.toList());
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
     }
 
 
-    // 비즈니스 메서드 (URL 수정)
+    public List<String> getKeywordNames() {
+        return shortsKeywords.stream()
+                .map(sk -> sk.getKeyword().getDisplayName())
+                .collect(Collectors.toList());
+    }
+
+    public void addKeyword(Keyword keyword) {
+        if (keyword == null) {
+            throw new IllegalArgumentException("Keyword는 null일 수 없습니다.");
+        }
+
+        boolean alreadyExists = shortsKeywords.stream()
+                .anyMatch(sk -> sk.getKeyword().getId().equals(keyword.getId()));
+
+        if (alreadyExists) {
+            return;
+        }
+
+        ShortsKeyword shortsKeyword = ShortsKeyword.of(this, keyword);
+        shortsKeywords.add(shortsKeyword);
+    }
+
+    public void addKeywords(List<Keyword> keywords) {
+        if (keywords != null) {
+            keywords.forEach(this::addKeyword);
+        }
+    }
+
+    public void removeKeyword(Keyword keyword) {
+        if (keyword == null) {
+            return;
+        }
+        shortsKeywords.removeIf(sk ->
+                sk.getKeyword().getId().equals(keyword.getId())
+        );
+    }
+
+    public void clearKeywords() {
+        shortsKeywords.clear();
+    }
+
+    public void replaceKeywords(List<Keyword> newKeywords) {
+        clearKeywords();
+        addKeywords(newKeywords);
+    }
+
+
+    public void incrementLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decrementLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
+    }
+
+    public void incrementViewCount() {
+        this.viewCount++;
+    }
+
     public void updateVideoUrl(String videoUrl) {
         if (videoUrl != null && !videoUrl.isBlank()) {
             validateUrl(videoUrl);
@@ -137,7 +188,6 @@ public class Shorts {
         }
     }
 
-    // 비즈니스 메서드 (정보 수정)
     public void updateShorts(String title, String description, String thumbnailUrl,
                              Category category, ShortsStatus status) {
         if (title != null && !title.isBlank()) {
@@ -154,21 +204,17 @@ public class Shorts {
         if (category != null) {
             this.category = category;
         }
-
         if (status != null) {
             this.status = status;
         }
-
     }
 
-    // 내부 검증 로직 - 제목
     private void validateTitle(String title) {
         if (title == null || title.isBlank() || title.length() > MAX_TITLE_LENGTH) {
             throw new BaseException(ErrorCode.SHORTS_TITLE_INVALID);
         }
     }
 
-    // 내부 검증 로직 - URL
     private void validateUrl(String url) {
         if (url.length() > MAX_URL_LENGTH || !URL_PATTERN.matcher(url).matches()) {
             throw new BaseException(ErrorCode.SHORTS_URL_INVALID);

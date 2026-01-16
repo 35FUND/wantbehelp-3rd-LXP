@@ -98,7 +98,7 @@ public class ShortsUploadInitService {
         Category category = categoryRepository.findById(body.categoryId())
                 .orElseThrow(() -> new BaseException(ErrorCode.CATEGORY_NOT_FOUND));
 
-        // 프론트가 추출한 메타데이터(durationSec 등)를 그대로 저장한다.
+        // 프론트가 추출한 메타데이터(duration 등)를 그대로 저장한다.
         Shorts shorts = new Shorts(
                 user,
                 category,

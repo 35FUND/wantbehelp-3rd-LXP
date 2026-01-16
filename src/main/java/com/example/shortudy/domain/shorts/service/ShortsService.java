@@ -23,11 +23,11 @@ import java.util.Set;
 public class ShortsService {
 
     private static final Set<String> VALID_SORT_PROPERTIES = Set.of(
-        "id", "title", "durationSec", "createdAt", "updatedAt"
+        "id", "title", "duration", "createdAt", "updatedAt"
     );
     
     private static final Set<String> EXTENDED_VALID_SORT_PROPERTIES = Set.of(
-        "id", "title", "durationSec", "createdAt", "updatedAt",
+        "id", "title", "duration", "createdAt", "updatedAt",
         "videoUrl", "thumbnailUrl", "description"
     );
 

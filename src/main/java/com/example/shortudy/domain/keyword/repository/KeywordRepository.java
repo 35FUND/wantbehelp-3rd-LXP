@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface KeywordRepository extends JpaRepository<Keyword, Long> {
 
@@ -14,4 +15,6 @@ public interface KeywordRepository extends JpaRepository<Keyword, Long> {
             "or lower(k.normalizedName) like lower(concat('%', :keyword2, '%'))")
     List<Keyword> searchKeyword(@Param("keyword1") String keyword1,
                                 @Param("keyword2") String keyword2);
+
+    Optional<Keyword> findByNormalizedName(String normalizedName);
 }

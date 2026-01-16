@@ -24,7 +24,7 @@ public class ShortsKeyword {
     @JoinColumn(name = "keyword_id", nullable = false)
     private Keyword keyword;
 
-    protected ShortsKeyword() {}
+    public ShortsKeyword() {}
 
     private ShortsKeyword(Shorts shorts, Keyword keyword) {
         this.shorts = shorts;

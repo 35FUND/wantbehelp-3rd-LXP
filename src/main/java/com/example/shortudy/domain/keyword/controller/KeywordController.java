@@ -44,7 +44,7 @@ public class KeywordController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<KeywordResponse>> create(@RequestBody KeywordRequest req) {
-        KeywordResponse created = keywordService.createKeyword(req.displayName());
+        KeywordResponse created = keywordService.createKeyword(req.name());
         return ResponseEntity.created(URI.create("/api/v1/keywords/" + created.id()))
                 .body(ApiResponse.success(created));
     }
@@ -53,7 +53,7 @@ public class KeywordController {
     public ResponseEntity<ApiResponse<KeywordResponse>> update(
             @PathVariable Long id,
             @RequestBody KeywordRequest req) {
-        KeywordResponse updated = keywordService.updateKeyword(id, req.displayName());
+        KeywordResponse updated = keywordService.updateKeyword(id, req.name());
         return ResponseEntity.ok(ApiResponse.success(updated));
     }
 

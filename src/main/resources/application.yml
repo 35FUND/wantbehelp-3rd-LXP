@@ -4,8 +4,8 @@ server:
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/test
-    username: 
-    password:
+    username: root
+    password: 1234
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -30,7 +30,7 @@ spring:
       max-request-size: 50MB
 
 jwt:
-  secret:
+  secret: clthrlsdhkdjujfhbtkdufhkjadfjkhasbdfkjbfkjsdfnkjshfdkjasnfd
   access-expiration: 3600000 #1800000 30분
   refresh-expiration: 1209600000 #604800000 7일
 
