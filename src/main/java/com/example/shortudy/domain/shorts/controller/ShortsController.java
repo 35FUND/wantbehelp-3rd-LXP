@@ -68,15 +68,6 @@ public class ShortsController {
         return ApiResponse.success(response);
     }
 
-    @GetMapping("/{shortsId}")
-    @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<ShortsResponse> getShortsDetails(
-            @PathVariable Long shortsId
-    ) {
-        ShortsResponse result = shortsQueryFacade.getShortsDetails(shortsId);
-        return ApiResponse.success(result);
-    }
-
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Page<ShortsResponse>> getShortsList(
