@@ -7,11 +7,10 @@ COPY build.gradle settings.gradle ./
 # 소스 코드 복사
 COPY src ./src
 
-# Gradle 내장 명령어로 빌드
-RUN gradle bootJar --no-daemon
+# Gradle 내장 명령어로 빌드 (반드시 clean을 수행하여 이전 결과물 제거)
+RUN gradle clean bootJar --no-daemon
 
 # Stage 2: Run
-# [수정] AWS 배포에 최적화된 Amazon Corretto 이미지를 사용합니다.
 FROM amazoncorretto:17-al2023-headless
 WORKDIR /app
 
@@ -19,7 +18,7 @@ WORKDIR /app
 ENV TZ=Asia/Seoul
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# 빌드된 JAR 파일 복사
+# 빌드된 JAR 파일 복사 (패턴 매칭으로 정확한 파일 선택)
 COPY --from=build /app/build/libs/*.jar app.jar
 
 ENV SPRING_PROFILES_ACTIVE=prod
