@@ -65,9 +65,6 @@ public class Shorts {
     @Column(name = "view_count", nullable = false)
     private Long viewCount = 0L;
 
-    public Shorts(User user, Category category, @NotBlank(message = "제목은 필수입니다.") @Size(max = 100, message = "제목은 100자 이하여야 합니다.") String title, String description, Object videoUrl, Object thumbnailUrl, @Positive(message = "durationSec는 0보다 커야 합니다.") Integer durationSec, ShortsStatus shortsStatus) {
-    }
-
     public void incrementLikeCount() {
         this.likeCount++;
     }
@@ -93,7 +90,7 @@ public class Shorts {
     }
 
     public Shorts(User user, Category category, String title, String description,
-                  String videoUrl, String thumbnailUrl, Integer durationSec) {
+                  String videoUrl, String thumbnailUrl, Integer durationSec, ShortsStatus status) {
 
         if (user == null || category == null) {
             throw new BaseException(ErrorCode.SHORTS_ESSENTIAL_INFO_MISSING);
@@ -115,7 +112,7 @@ public class Shorts {
         this.durationSec = durationSec;
 
         // 기본값 설정
-        this.status = ShortsStatus.PUBLISHED;
+        this.status = status;
         this.shortsKeywords = new ArrayList<>();
     }
 
@@ -163,10 +160,5 @@ public class Shorts {
         if (url.length() > MAX_URL_LENGTH || !URL_PATTERN.matcher(url).matches()) {
             throw new BaseException(ErrorCode.SHORTS_URL_INVALID);
         }
-    }
-
-    // 편의 메서드
-    public boolean isPublished() {
-        return ShortsStatus.PUBLISHED.equals(this.status);
     }
 }
