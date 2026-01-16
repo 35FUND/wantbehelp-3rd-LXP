@@ -45,6 +45,7 @@ services:
       retries: 10
     volumes:
       - mysql-data:/var/lib/mysql
+      - ./src/main/resources/dad.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - shortudy-net
     restart: always
