@@ -6,12 +6,14 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/shortudy?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/shortudy?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=wlalstn12
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
       - JWT_SECRET=c2hvcnR1ZHktc2VjcmV0LWtleS1mb3ItZGV2ZWxvcG1lbnQtMjAyNjAxMTY=
+    volumes:
+      - ./logs:/logs
     depends_on:
       db:
         condition: service_healthy
@@ -19,6 +21,7 @@ services:
         condition: service_started
     networks:
       - shortudy-net
+    restart: always
 
   # 2. MySQL Database
   db:
@@ -29,6 +32,9 @@ services:
     environment:
       - MYSQL_DATABASE=shortudy
       - MYSQL_ROOT_PASSWORD=wlalstn12
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
       timeout: 5s
@@ -37,6 +43,7 @@ services:
       - mysql-data:/var/lib/mysql
     networks:
       - shortudy-net
+    restart: always
 
   # 3. Redis Cache
   redis:
@@ -46,6 +53,7 @@ services:
       - "6379:6379"
     networks:
       - shortudy-net
+    restart: always
 
 networks:
   shortudy-net:
