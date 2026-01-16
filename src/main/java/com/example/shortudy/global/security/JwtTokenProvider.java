@@ -8,7 +8,6 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,10 +18,12 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import java.security.Key;
 import java.util.Date;
 
-//TODO 토큰 만료, 탈취 등 예외처리 세분화 필요
+/**
+ * JWT 토큰 생성 및 검증을 담당하는 컴포넌트
+ * JJWT 0.12.x 최신 API를 사용하도록 리팩토링됨
+ */
 @Component
 public class JwtTokenProvider {
 
@@ -43,7 +44,7 @@ public class JwtTokenProvider {
     @Value("${jwt.refresh-expiration}")
     private long refreshExpiration;
 
-    private Key signingKey() {
+    private SecretKey getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
@@ -53,12 +54,12 @@ public class JwtTokenProvider {
         Date expiryDate = new Date(now.getTime() + accessExpiration);
 
         return Jwts.builder()
-                .setSubject(String.valueOf(userId))
+                .subject(String.valueOf(userId))
                 .claim("email", email)
                 .claim("role", role.name())
                 .issuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(signingKey(), SignatureAlgorithm.HS256)
+                .expiration(expiryDate)
+                .signWith(getSigningKey())
                 .compact();
     }
 
@@ -67,10 +68,10 @@ public class JwtTokenProvider {
         Date expiryDate = new Date(now.getTime() + refreshExpiration);
 
         return Jwts.builder()
-                .setSubject(String.valueOf(userId))
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(signingKey(), SignatureAlgorithm.HS256)
+                .subject(String.valueOf(userId))
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(getSigningKey())
                 .compact();
     }
 
@@ -86,7 +87,7 @@ public class JwtTokenProvider {
 
     private Claims parseClaims(String token) {
         return Jwts.parser()
-                .verifyWith((SecretKey) signingKey())
+                .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
@@ -94,15 +95,12 @@ public class JwtTokenProvider {
 
     public Long getUserIdFromToken(String token) {
         Claims claims = parseClaims(token);
-
         return Long.parseLong(claims.getSubject());
     }
 
     public Authentication getAuthentication(String token) {
         Claims claims = parseClaims(token);
-
         String email = claims.get("email", String.class);
-
         UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
         return new UsernamePasswordAuthenticationToken(
@@ -111,37 +109,4 @@ public class JwtTokenProvider {
                 userDetails.getAuthorities()
         );
     }
-
-//    public String getEmailFromToken(String token) {
-//        return parseClaims(token).getSubject();
-//    }
-
-//    /**
-//     * 토큰에서 역할 추출
-//     */
-//    @SuppressWarnings("unchecked")
-//    public List<String> getRolesFromToken(String token) {
-//        return (List<String>) parseClaims(token).get("roles");
-//    }
-
-//    /**
-//     * 토큰 유효성 검증
-//     */
-//    public boolean validateToken(String token) {
-//        try {
-//            parseClaims(token);
-//            return true;
-//        } catch (JwtException | IllegalArgumentException e) {
-//            return false;
-//        }
-//    }
-
-//    private Claims parseClaims(String token) {
-//        return Jwts.parser()
-//                .verifyWith(secretKey)
-//                .build()
-//                .parseSignedClaims(token)
-//                .getPayload();
-//    }
 }
-
