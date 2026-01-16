@@ -108,7 +108,7 @@ public class ShortsUploadInitService {
                 null,
                 null,
                 body.durationSec(),
-                ShortsStatus.DRAFT
+                DRAFT
         );
 
         Shorts savedShorts = shortsRepository.save(shorts);

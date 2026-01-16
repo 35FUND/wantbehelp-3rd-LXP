@@ -17,16 +17,18 @@ import static org.springframework.data.domain.Sort.Direction.ASC;
 import static org.springframework.data.domain.Sort.Direction.DESC;
 
 @RestController
-@RequestMapping("/api/v1/shorts")
+@RequestMapping("/api/v1")
 public class ShortsController {
 
     private final ShortsService shortsService;
 
-    public ShortsController(ShortsService shortsService) {
+    public ShortsController(
+            ShortsService shortsService
+    ) {
         this.shortsService = shortsService;
     }
 
-    @GetMapping("/{shortId}")
+    @GetMapping("/shorts/{shortsId}")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Page<ShortsResponse>> getShortsDetails(
             @PathVariable Long shortId,
@@ -36,7 +38,7 @@ public class ShortsController {
         return ApiResponse.success(result);
     }
 
-    @GetMapping
+    @GetMapping("/shorts")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Page<ShortsResponse>> getShortsList(
             @PageableDefault(size = 8, sort = "id", direction = ASC) Pageable pageable
@@ -45,7 +47,7 @@ public class ShortsController {
         return ApiResponse.success(response);
     }
 
-    @PatchMapping("/{shortId}")
+    @PatchMapping("/shorts/{shortId}")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<ShortsResponse> updateShorts(
             @PathVariable Long shortId,
@@ -55,7 +57,7 @@ public class ShortsController {
         return ApiResponse.success(response);
     }
 
-    @DeleteMapping("/{shortId}")
+    @DeleteMapping("/shorts/{shortId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ApiResponse<Void> deleteShorts(@PathVariable Long shortId) {
         shortsService.deleteShorts(shortId);
@@ -65,7 +67,7 @@ public class ShortsController {
     /**
      * 인기 숏츠 목록 조회
      */
-    @GetMapping("/popular")
+    @GetMapping("/shorts/popular")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Page<ShortsResponse>> getPopularShorts(
             @RequestParam(required = false, defaultValue = "30") Integer days,
