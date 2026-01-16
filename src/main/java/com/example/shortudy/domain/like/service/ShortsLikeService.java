@@ -38,6 +38,7 @@ public class ShortsLikeService {
         }
 
         shortsLikeRepository.save(ShortsLike.of(user, shorts));
+        shorts.incrementLikeCount(); // [추가] 카운트 증가
     }
 
     @Transactional
@@ -54,5 +55,7 @@ public class ShortsLikeService {
                 .orElseThrow(() -> new BaseException(ErrorCode.ALREADY_UNLIKE));
 
         shortsLikeRepository.delete(like);
+        shorts.decrementLikeCount(); // [추가] 카운트 감소
     }
+
 }

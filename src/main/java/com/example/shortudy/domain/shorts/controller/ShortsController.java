@@ -4,8 +4,10 @@ import com.example.shortudy.domain.shorts.dto.ShortsResponse;
 import com.example.shortudy.domain.shorts.dto.ShortsUpdateRequest;
 import com.example.shortudy.domain.shorts.facade.ShortsQueryFacade;
 import com.example.shortudy.domain.shorts.service.ShortsService;
+import com.example.shortudy.domain.shorts.view.service.ShortsViewCountService;
 import com.example.shortudy.global.common.ApiResponse;
 import com.example.shortudy.global.security.principal.CustomUserDetails;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,26 +21,39 @@ import static org.springframework.data.domain.Sort.Direction.ASC;
 import static org.springframework.data.domain.Sort.Direction.DESC;
 
 @RestController
-@RequestMapping("/api/v1/shorts") // 공통 경로를 /shorts로 설정
+@RequestMapping("/api/v1/shorts")
 @RequiredArgsConstructor
 public class ShortsController {
 
     private final ShortsService shortsService;
     private final ShortsQueryFacade shortsQueryFacade;
+    private final ShortsViewCountService viewCountService;
 
-    /**
-     * 내 쇼츠 목록 조회 (로그인 사용자)
-     * - 고정 경로(/me)를 변수 경로({shortsId})보다 먼저 정의하여 충돌 방지
-     */
-    @GetMapping("/me")
+    @GetMapping("/{shortsId}")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<Page<ShortsResponse>> getMyShorts(
+    public ApiResponse<ShortsResponse> getShortsDetails(
+            @PathVariable Long shortsId,
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PageableDefault(size = 20, sort = "id", direction = DESC) Pageable pageable
+            HttpServletRequest request
     ) {
-        Page<ShortsResponse> response = shortsQueryFacade.getMyShorts(userDetails.getId(), pageable);
-        return ApiResponse.success(response);
+        // 1. 조회수 증가 로직 (IP 또는 UserID 기반 중복 방지)
+        String visitorId = (userDetails != null) ? 
+                String.valueOf(userDetails.getId()) : getClientIp(request);
+        viewCountService.increaseViewCount(shortsId, visitorId);
+
+        // 2. 통합 정보 조회
+        ShortsResponse result = shortsQueryFacade.getShortsDetails(shortsId);
+        return ApiResponse.success(result);
     }
+
+    private String getClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        return ip;
+    }
+
 
     /**
      * 인기 숏츠 목록 조회

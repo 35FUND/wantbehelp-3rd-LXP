@@ -30,8 +30,9 @@ public class ShortsQueryFacade {
         Shorts shorts = shortsService.findShortsWithDetails(shortsId);
         long commentCount = commentCountProvider.commentCount(shortsId);
         
-        // 실시간 조회수 보정 (DB + Redis Pending)
-        long realTimeViewCount = calculateRealTimeViewCount(shortsId, shorts.getViewCount());
+        // 실시간 조회수 보정: DB 값 + Redis 미반영분
+        Map<Long, Long> pendingCounts = redisShortsViewCountRepository.findPendingViewCounts();
+        long realTimeViewCount = shorts.getViewCount() + pendingCounts.getOrDefault(shortsId, 0L);
         
         return ShortsResponse.of(shorts, commentCount, realTimeViewCount);
     }
