@@ -97,6 +97,7 @@ public class ShortsService {
 
         if (request.keywords() != null) {
             shorts.clearKeywords();
+            shortsRepository.flush();
             request.keywords().forEach(k -> shorts.addKeyword(keywordService.getOrCreateKeyword(k)));
         }
 
