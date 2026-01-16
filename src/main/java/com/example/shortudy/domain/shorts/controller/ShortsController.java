@@ -37,7 +37,7 @@ public class ShortsController {
             HttpServletRequest request
     ) {
         // 1. 조회수 증가 로직 (IP 또는 UserID 기반 중복 방지)
-        String visitorId = (userDetails != null) ? 
+        String visitorId = (userDetails != null) ?
                 String.valueOf(userDetails.getId()) : getClientIp(request);
         viewCountService.increaseViewCount(shortsId, visitorId);
 
@@ -54,6 +54,15 @@ public class ShortsController {
         return ip;
     }
 
+    @GetMapping("/me")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<Page<ShortsResponse>> getMyShorts(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PageableDefault(size = 20, sort = "id", direction = DESC) Pageable pageable
+    ) {
+        Page<ShortsResponse> response = shortsQueryFacade.getMyShorts(userDetails.getId(), pageable);
+        return ApiResponse.success(response);
+    }
 
     /**
      * 인기 숏츠 목록 조회
