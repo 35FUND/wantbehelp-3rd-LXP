@@ -19,63 +19,16 @@ import static org.springframework.data.domain.Sort.Direction.ASC;
 import static org.springframework.data.domain.Sort.Direction.DESC;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/shorts") // 공통 경로를 /shorts로 설정
 @RequiredArgsConstructor
 public class ShortsController {
 
     private final ShortsService shortsService;
     private final ShortsQueryFacade shortsQueryFacade;
 
-    @GetMapping("/shorts/{shortsId}")
-    @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<ShortsResponse> getShortsDetails(
-            @PathVariable Long shortsId
-    ) {
-        ShortsResponse result = shortsQueryFacade.getShortsDetails(shortsId);
-        return ApiResponse.success(result);
-    }
-
-    @GetMapping("/shorts")
-    @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<Page<ShortsResponse>> getShortsList(
-            @PageableDefault(size = 8, sort = "id", direction = ASC) Pageable pageable
-    ) {
-        Page<ShortsResponse> response = shortsQueryFacade.getShortsList(pageable);
-        return ApiResponse.success(response);
-    }
-
-    @PatchMapping("/shorts/{shortsId}")
-    @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<ShortsResponse> updateShorts(
-            @PathVariable Long shortsId,
-            @RequestBody @Valid ShortsUpdateRequest request
-    ) {
-        ShortsResponse response = shortsService.updateShorts(shortsId, request);
-        return ApiResponse.success(response);
-    }
-
-    @DeleteMapping("/shorts/{shortsId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public ApiResponse<Void> deleteShorts(@PathVariable Long shortsId) {
-        shortsService.deleteShorts(shortsId);
-        return ApiResponse.success(null);
-    }
-
-    /**
-     * 인기 숏츠 목록 조회
-     */
-    @GetMapping("/shorts/popular")
-    @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<Page<ShortsResponse>> getPopularShorts(
-            @RequestParam(required = false, defaultValue = "30") Integer days,
-            @PageableDefault(size = 20, sort = "id", direction = DESC) Pageable pageable
-    ) {
-        Page<ShortsResponse> response = shortsQueryFacade.getPopularShorts(days, pageable);
-        return ApiResponse.success(response);
-    }
-
     /**
      * 내 쇼츠 목록 조회 (로그인 사용자)
+     * - 고정 경로(/me)를 변수 경로({shortsId})보다 먼저 정의하여 충돌 방지
      */
     @GetMapping("/me")
     @ResponseStatus(HttpStatus.OK)
@@ -85,5 +38,53 @@ public class ShortsController {
     ) {
         Page<ShortsResponse> response = shortsQueryFacade.getMyShorts(userDetails.getId(), pageable);
         return ApiResponse.success(response);
+    }
+
+    /**
+     * 인기 숏츠 목록 조회
+     */
+    @GetMapping("/popular")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<Page<ShortsResponse>> getPopularShorts(
+            @RequestParam(required = false, defaultValue = "30") Integer days,
+            @PageableDefault(size = 20, sort = "id", direction = DESC) Pageable pageable
+    ) {
+        Page<ShortsResponse> response = shortsQueryFacade.getPopularShorts(days, pageable);
+        return ApiResponse.success(response);
+    }
+
+    @GetMapping("/{shortsId}")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<ShortsResponse> getShortsDetails(
+            @PathVariable Long shortsId
+    ) {
+        ShortsResponse result = shortsQueryFacade.getShortsDetails(shortsId);
+        return ApiResponse.success(result);
+    }
+
+    @GetMapping
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<Page<ShortsResponse>> getShortsList(
+            @PageableDefault(size = 8, sort = "id", direction = ASC) Pageable pageable
+    ) {
+        Page<ShortsResponse> response = shortsQueryFacade.getShortsList(pageable);
+        return ApiResponse.success(response);
+    }
+
+    @PatchMapping("/{shortsId}")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<ShortsResponse> updateShorts(
+            @PathVariable Long shortsId,
+            @RequestBody @Valid ShortsUpdateRequest request
+    ) {
+        ShortsResponse response = shortsService.updateShorts(shortsId, request);
+        return ApiResponse.success(response);
+    }
+
+    @DeleteMapping("/{shortsId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public ApiResponse<Void> deleteShorts(@PathVariable Long shortsId) {
+        shortsService.deleteShorts(shortsId);
+        return ApiResponse.success(null);
     }
 }
