@@ -11,8 +11,8 @@ COPY src ./src
 RUN gradle bootJar --no-daemon
 
 # Stage 2: Run
-# openjdk 이미지는 deprecated 되었으므로 유지보수가 잘 되는 eclipse-temurin을 사용합니다.
-FROM eclipse-temurin:17-jre-jammy
+# [수정] AWS 배포에 최적화된 Amazon Corretto 이미지를 사용합니다.
+FROM amazoncorretto:17-al2023-headless
 WORKDIR /app
 
 # 타임존 설정
