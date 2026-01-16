@@ -62,7 +62,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/categories/**", "/api/v1/keywords/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/categories/**", "/api/v1/keywords/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/categories/**", "/api/v1/keywords/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/keywords/**").hasRole("ADMIN")
 
                         // 의외에 모든 요청에는 반드시 토큰 검증이 필요하다.
                         .anyRequest().authenticated()

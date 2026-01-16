@@ -80,7 +80,7 @@ public class CategoryController {
     @GetMapping("/{categoryId}/shorts")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<ApiResponse<Page<ShortsResponse>>> getShortsByCategory(
-            @PathVariable Long categoryId,
+            @PathVariable("categoryId") Long categoryId,
             @PageableDefault(size = 20, sort = "id", direction = DESC) Pageable pageable
     ) {
         Page<ShortsResponse> response = shortsService.getShortsByCategory(categoryId, pageable);

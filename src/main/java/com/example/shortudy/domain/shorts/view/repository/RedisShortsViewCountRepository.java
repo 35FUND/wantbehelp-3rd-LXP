@@ -38,9 +38,9 @@ public class RedisShortsViewCountRepository {
     }
 
     // 조회수 카운터 증가
-    public void increaseViewCount(Long shortId) {
-        hashOperations.increment(COUNT_KEY, shortId.toString(), 1L);
-        setOperations.add(PENDING_KEY, shortId.toString());
+    public void increaseViewCount(Long shortsId) {
+        hashOperations.increment(COUNT_KEY, shortsId.toString(), 1L);
+        setOperations.add(PENDING_KEY, shortsId.toString());
     }
 
     // Redis에 누적된 조회수 조회

@@ -5,7 +5,6 @@ import com.example.shortudy.domain.category.repository.CategoryRepository;
 import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadInitRequest;
 import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadInitResponse;
 import com.example.shortudy.domain.shorts.entity.Shorts;
-import com.example.shortudy.domain.shorts.entity.ShortsStatus;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
 import com.example.shortudy.domain.shorts.upload.entity.ShortsUploadSession;
 import com.example.shortudy.domain.shorts.upload.repository.ShortsUploadSessionRepository;
