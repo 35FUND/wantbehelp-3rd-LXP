@@ -10,11 +10,11 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create # 테이블 강제 생성
-    show-sql: true # SQL 로그 확인
+      ddl-auto: update # 다시 update로 복구
+    show-sql: false # 로그 간소화
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
         dialect: org.hibernate.dialect.MySQLDialect
 
         jdbc:
