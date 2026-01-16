@@ -62,7 +62,7 @@ public class ShortsUploadCompleteService {
 
         // 클라이언트가 준 URL을 믿지 않고, 서버가 직접 경로 생성
         // (Init 단계에서 정한 규칙대로 URL을 다시 조립)
-        String videoUrl = generateS3Url("shorts", shortId, "mp4"); // 확장자는 mp4 고정 가정
+        String videoUrl = generateS3Url("videos", shortId, "mp4"); // 확장자는 mp4 고정 가정
         String thumbnailUrl = generateS3Url("thumbnails", shortId, "jpg"); // 썸네일은 jpg 고정 가정
 
         // 5. 엔티티 및 세션 업데이트

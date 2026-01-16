@@ -5,6 +5,7 @@ import com.example.shortudy.domain.category.repository.CategoryRepository;
 import com.example.shortudy.domain.shorts.dto.ShortsResponse;
 import com.example.shortudy.domain.shorts.dto.ShortsUpdateRequest;
 import com.example.shortudy.domain.shorts.entity.Shorts;
+import com.example.shortudy.domain.shorts.entity.ShortsStatus;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
 import com.example.shortudy.global.error.ErrorCode;
@@ -42,28 +43,38 @@ public class ShortsService {
         this.categoryRepository = categoryRepository;
     }
 
-    public ShortsResponse getShortsDetails(Long shortsId) {
-        Shorts shorts = findShortsWithDetailsById(shortsId);
-        return ShortsResponse.from(shorts);
+    public Shorts findShortsWithDetails(Long shortsId) {
+        return shortsRepository.findWithDetailsAndKeywordsById(shortsId)
+                .orElseThrow(() -> new BaseException(ErrorCode.SHORTS_NOT_FOUND));
     }
 
-    public Page<ShortsResponse> getShortsDetailsWithPaging(Long shortsId, Pageable pageable) {
-        validateShortsExists(shortsId);
-        Pageable safePageable = createSafePageable(pageable);
-        return shortsRepository.findAll(safePageable).map(ShortsResponse::from);
-    }
-
-    public Page<ShortsResponse> getShortsList(Pageable pageable) {
+    public Page<Shorts> getShortsEntityList(Pageable pageable) {
         if (isRandomSortRequested(pageable)) {
-            return shortsRepository.findRandomPublishedShorts(pageable).map(ShortsResponse::from);
+            return shortsRepository.findRandomPublishedShorts(pageable);
         }
 
         if (hasValidSortProperties(pageable)) {
-            return shortsRepository.findByStatus(com.example.shortudy.domain.shorts.entity.ShortsStatus.PUBLISHED, pageable)
-                    .map(ShortsResponse::from);
+            return shortsRepository.findByStatus(ShortsStatus.PUBLISHED, pageable);
         }
 
-        return shortsRepository.findRandomPublishedShorts(pageable).map(ShortsResponse::from);
+        return shortsRepository.findRandomPublishedShorts(pageable);
+    }
+
+    public Page<Shorts> getShortsEntityByCategory(Long categoryId, Pageable pageable) {
+        Pageable safePageable = createSafePageable(pageable);
+        return shortsRepository.findByCategoryIdAndStatus(categoryId, ShortsStatus.PUBLISHED, safePageable);
+    }
+
+    public Page<Shorts> getPopularShortsEntities(Integer days, Pageable pageable) {
+        if (days == null || days <= 0) days = 30;
+        if (days > 90) days = 90;
+        LocalDateTime since = LocalDateTime.now().minusDays(days);
+        return shortsRepository.findPopularShorts(since, pageable);
+    }
+
+    public Page<Shorts> getMyShortsEntities(Long userId, Pageable pageable) {
+        Pageable safePageable = createSafePageable(pageable);
+        return shortsRepository.findByUserId(userId, safePageable);
     }
 
     @Transactional
@@ -81,7 +92,7 @@ public class ShortsService {
             request.status()
         );
 
-        return ShortsResponse.from(shorts);
+        return ShortsResponse.of(shorts, 0L, shorts.getViewCount());
     }
 
     @Transactional
@@ -94,11 +105,6 @@ public class ShortsService {
         if (!shortsRepository.existsById(shortsId)) {
             throw new BaseException(ErrorCode.SHORTS_NOT_FOUND);
         }
-    }
-
-    private Shorts findShortsWithDetailsById(Long shortsId) {
-        return shortsRepository.findWithDetailsById(shortsId)
-                .orElseThrow(() -> new BaseException(ErrorCode.SHORTS_NOT_FOUND));
     }
 
     private Shorts findShortsById(Long shortsId) {
@@ -153,48 +159,5 @@ public class ShortsService {
             originalPageable.getPageSize(),
             Sort.by(DEFAULT_SORT_DIRECTION, DEFAULT_SORT_PROPERTY)
         );
-    }
-
-    /**
-     * 카테고리별 숏츠 목록 조회
-     */
-    @Transactional(readOnly = true)
-    public Page<ShortsResponse> getShortsByCategory(Long categoryId, Pageable pageable) {
-        if (!categoryRepository.existsById(categoryId)) {
-            throw new BaseException(ErrorCode.CATEGORY_NOT_FOUND);
-        }
-
-        Pageable safePageable = createSafePageable(pageable);
-
-        return shortsRepository.findByCategoryIdAndStatus(categoryId, com.example.shortudy.domain.shorts.entity.ShortsStatus.PUBLISHED, safePageable)
-                .map(ShortsResponse::from);
-    }
-
-    /**
-     * 인기 숏츠 목록 조회
-     */
-    @Transactional(readOnly = true)
-    public Page<ShortsResponse> getPopularShorts(Integer days, Pageable pageable) {
-        if (days == null || days <= 0) {
-            days = 30;
-        }
-        if (days > 90) {
-            days = 90;
-        }
-
-        LocalDateTime since = LocalDateTime.now().minusDays(days);
-
-        return shortsRepository.findPopularShorts(since, pageable)
-                .map(ShortsResponse::from);
-    }
-
-    /**
-     * 내 쇼츠 목록 조회
-     */
-    @Transactional(readOnly = true)
-    public Page<ShortsResponse> getMyShorts(Long userId, Pageable pageable) {
-        Pageable safePageable = createSafePageable(pageable);
-        return shortsRepository.findByUserId(userId, safePageable)
-                .map(ShortsResponse::from);
     }
 }
