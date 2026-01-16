@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.Map;
+import java.util.Set;
+
 
 @Service
 public class ShortsViewCountService {
@@ -38,8 +40,7 @@ public class ShortsViewCountService {
             viewCountRepository.increaseViewCount(shortId);
         }
     }
-}
-    /*
+
     // Redis 누적 조회수 DB 반영
     @Transactional
     public void flushViewCounts() {
@@ -49,8 +50,9 @@ public class ShortsViewCountService {
         }
 
         for (Map.Entry<Long, Long> entry : counts.entrySet()) {
-            shortsRepository.(entry.getKey(), entry.getValue());
+            shortsRepository.updateViewCount(entry.getKey(), entry.getValue());
         }
         viewCountRepository.clearPending(counts.keySet());
     }
-}*/
+}
+

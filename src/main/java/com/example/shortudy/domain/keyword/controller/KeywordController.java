@@ -12,7 +12,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/keywords")
-
 public class KeywordController {
 
     private final KeywordService keywordService;
@@ -37,14 +36,14 @@ public class KeywordController {
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<List<KeywordResponse>>> search(
             @RequestParam(value = "q", required = false) String q) {
-        String trimmed = q == null ? "" : q.trim();
         List<KeywordResponse> response = keywordService.searchKeywords(q);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @PostMapping
     public ResponseEntity<ApiResponse<KeywordResponse>> create(@RequestBody KeywordRequest req) {
-        KeywordResponse created = keywordService.createKeyword(req.displayName());
+        // [수정] req.displayName() 대신 req.name() 사용 (KeywordRequest 레코드 규격)
+        KeywordResponse created = keywordService.createKeyword(req.name());
         return ResponseEntity.created(URI.create("/api/v1/keywords/" + created.id()))
                 .body(ApiResponse.success(created));
     }
@@ -53,7 +52,8 @@ public class KeywordController {
     public ResponseEntity<ApiResponse<KeywordResponse>> update(
             @PathVariable Long id,
             @RequestBody KeywordRequest req) {
-        KeywordResponse updated = keywordService.updateKeyword(id, req.displayName());
+        // [수정] req.displayName() 대신 req.name() 사용
+        KeywordResponse updated = keywordService.updateKeyword(id, req.name());
         return ResponseEntity.ok(ApiResponse.success(updated));
     }
 

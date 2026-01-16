@@ -1,11 +1,13 @@
 package com.example.shortudy.domain.shorts.repository;
 
+import com.example.shortudy.domain.shorts.dto.ShortsResponse;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -16,6 +18,14 @@ import java.util.Optional;
 
 @Repository
 public interface ShortsRepository extends JpaRepository<Shorts, Long> {
+
+    /**
+     * 조회수 일괄 업데이트 (Redis -> DB)
+     */
+    @Modifying
+    @Query("UPDATE Shorts s SET s.viewCount = s.viewCount + :count WHERE s.id = :id")
+    void updateViewCount(@Param("id") Long id, @Param("count") Long count);
+
 
     // ============================================
     // 기본 조회
@@ -85,13 +95,14 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
      * 카테고리별 숏츠 목록 조회
      */
     @EntityGraph(attributePaths = {"user", "category"})
-    Page<Shorts> findByCategoryId(Long categoryId, Pageable pageable);
+    Page<ShortsResponse> findByCategoryId(Long categoryId, Pageable pageable);
 
     /**
      * 카테고리 + Status 조회
      */
     @EntityGraph(attributePaths = {"user", "category"})
     Page<Shorts> findByCategoryIdAndStatus(Long categoryId, ShortsStatus status, Pageable pageable);
+
 
     // ============================================
     // 인기 숏츠 조회

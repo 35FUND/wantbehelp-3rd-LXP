@@ -7,7 +7,6 @@ import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
 import jakarta.persistence.*;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import lombok.Getter;
 
@@ -58,28 +57,15 @@ public class Shorts {
     @Column(name = "duration_sec")
     private Integer durationSec;
 
-    @Column(name = "keywords", columnDefinition = "TEXT")
-    private String keywords;
-
     @Column(name = "like_count", nullable = false)
     private Integer likeCount = 0;
 
     @Column(name = "view_count", nullable = false)
     private Long viewCount = 0L;
 
-    public void incrementLikeCount() {
-        this.likeCount++;
-    }
-
-    public void decrementLikeCount() {
-        if (this.likeCount > 0) {
-            this.likeCount--;
-        }
-    }
-
     @CreatedDate
     @Column(updatable = false)
-    public LocalDateTime createdAt;
+    private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
@@ -113,14 +99,12 @@ public class Shorts {
         this.videoUrl = videoUrl;
         this.thumbnailUrl = thumbnailUrl;
         this.durationSec = durationSec;
-
-        // 기본값 설정
         this.status = status;
         this.shortsKeywords = new ArrayList<>();
     }
 
-    /** Keyword 목록 조회 (편의 메서드)
-     * ShortsKeyword를 거쳐서 실제 Keyword 엔티티 반환
+    /** Keyword 목록 조회
+     * ShortsKeyword 연관 엔티티에서 실제 Keyword 엔티티를 추출합니다.
      */
     public List<Keyword> getKeywords() {
         return shortsKeywords.stream()
@@ -128,8 +112,16 @@ public class Shorts {
                 .collect(Collectors.toList());
     }
 
+    public void incrementLikeCount() {
+        this.likeCount++;
+    }
 
-    // 비즈니스 메서드 (URL 수정)
+    public void decrementLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
+    }
+
     public void updateVideoUrl(String videoUrl) {
         if (videoUrl != null && !videoUrl.isBlank()) {
             validateUrl(videoUrl);
@@ -137,7 +129,6 @@ public class Shorts {
         }
     }
 
-    // 비즈니스 메서드 (정보 수정)
     public void updateShorts(String title, String description, String thumbnailUrl,
                              Category category, ShortsStatus status) {
         if (title != null && !title.isBlank()) {
@@ -154,21 +145,17 @@ public class Shorts {
         if (category != null) {
             this.category = category;
         }
-
         if (status != null) {
             this.status = status;
         }
-
     }
 
-    // 내부 검증 로직 - 제목
     private void validateTitle(String title) {
         if (title == null || title.isBlank() || title.length() > MAX_TITLE_LENGTH) {
             throw new BaseException(ErrorCode.SHORTS_TITLE_INVALID);
         }
     }
 
-    // 내부 검증 로직 - URL
     private void validateUrl(String url) {
         if (url.length() > MAX_URL_LENGTH || !URL_PATTERN.matcher(url).matches()) {
             throw new BaseException(ErrorCode.SHORTS_URL_INVALID);

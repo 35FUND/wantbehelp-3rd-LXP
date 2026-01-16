@@ -40,20 +40,16 @@ public record ShortsResponse(
         String userProfileUrl,
         Long categoryId,
         String categoryName,
-        List<String> keywords
+        List<String> keywords,
+        Long viewCount,
+        Integer likeCount,
+        Long commentCount
 ) {
 
     /**
-     * Shorts 엔티티를 ShortsResponse DTO로 변환합니다.
-     * 
-     * <p>이 메서드는 엔티티의 관계 정보를 플랫 구조의 DTO 필드로 매핑합니다.
-     * User와 Category 엔티티의 정보를 각각 해당 필드에 직접 매핑하여
-     * 중첩 구조 없이 직렬화할 수 있습니다.</p>
-     * 
-     * @param shorts 변환할 Shorts 엔티티
-     * @return 변환된 ShortsResponse DTO
+     * Shorts 엔티티와 집계된 카운트 정보를 ShortsResponse DTO로 변환합니다.
      */
-    public static ShortsResponse from(Shorts shorts) {
+    public static ShortsResponse of(Shorts shorts, Long commentCount, Long viewCount) {
         if (shorts == null) {
             throw new BaseException(ErrorCode.SHORTS_NOT_FOUND);
         }
@@ -79,9 +75,13 @@ public record ShortsResponse(
                 shorts.getCategory().getName(),
                 shorts.getKeywords().stream()
                         .map(keyword -> keyword.getDisplayName())
-                        .toList()
+                        .toList(),
+                viewCount != null ? viewCount : shorts.getViewCount(),
+                shorts.getLikeCount(),
+                commentCount
         );
     }
+
 }
 
 

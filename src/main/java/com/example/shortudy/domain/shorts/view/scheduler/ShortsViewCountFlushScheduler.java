@@ -12,12 +12,10 @@ public class ShortsViewCountFlushScheduler {
     public ShortsViewCountFlushScheduler(ShortsViewCountService shortsViewCountService) {
         this.shortsViewCountService = shortsViewCountService;
     }
-}
-    /*
-    // Redis 조회수를 DB에 주기적으로 반영
+
+    // Redis 조회수를 DB에 주기적으로 반영 (기본 1분)
     @Scheduled(fixedDelayString = "${shorts.view.flush-interval-ms:60000}")
     public void flushViewCounts() {
         shortsViewCountService.flushViewCounts();
     }
 }
-*/
