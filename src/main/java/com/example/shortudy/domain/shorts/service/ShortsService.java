@@ -100,6 +100,8 @@ public class ShortsService {
             request.keywords().forEach(k -> shorts.addKeyword(keywordService.getOrCreateKeyword(k)));
         }
 
+        shortsRepository.saveAndFlush(shorts);
+
         return ShortsResponse.of(shorts, 0L, shorts.getViewCount());
     }
 

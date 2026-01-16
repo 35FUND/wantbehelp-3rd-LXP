@@ -36,7 +36,6 @@ public class ShortsKeyword {
      * 양방향 관계는 Shorts에서 관리하므로 여기서는 단순 생성만
      */
     public static ShortsKeyword of(Shorts shorts, Keyword keyword) {
-        {}
         return new ShortsKeyword(shorts, keyword);
     }
 }
