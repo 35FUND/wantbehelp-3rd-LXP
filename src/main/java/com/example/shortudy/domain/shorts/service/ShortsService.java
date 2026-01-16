@@ -97,7 +97,7 @@ public class ShortsService {
 
         if (request.keywords() != null) {
             shorts.clearKeywords();
-            request.keywors().forEach(k -> shorts.addKeyword(keywordService.getOrCreateKeyword(k)));
+            request.keywords().forEach(k -> shorts.addKeyword(keywordService.getOrCreateKeyword(k)));
         }
 
         return ShortsResponse.of(shorts, 0L, shorts.getViewCount());
