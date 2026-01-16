@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/shorts-upload")
+@RequestMapping("/api/v1/shorts")
 public class ShortsUploadController {
 
     private final ShortsUploadInitService shortsUploadInitService;
