@@ -19,10 +19,8 @@ services:
     volumes:
       - ./logs:/logs
     depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_started
+      - db
+      - redis
     networks:
       - shortudy-net
     restart: always
@@ -39,10 +37,6 @@ services:
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
-    healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
-      timeout: 5s
-      retries: 10
     volumes:
       - mysql-data:/var/lib/mysql
       - ./src/main/resources/dad.sql:/docker-entrypoint-initdb.d/init.sql

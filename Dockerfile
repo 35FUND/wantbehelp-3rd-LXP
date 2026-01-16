@@ -2,12 +2,11 @@
 FROM gradle:8.5-jdk17 AS build
 WORKDIR /app
 
-# Gradle 설정 파일만 먼저 복사하여 종속성 캐싱 최적화
+# 설정 파일 및 소스 복사
 COPY build.gradle settings.gradle ./
-# 소스 코드 복사
 COPY src ./src
 
-# Gradle 내장 명령어로 빌드 (반드시 clean을 수행하여 이전 결과물 제거)
+# Gradle 빌드 (clean 필수, bootJar 실행)
 RUN gradle clean bootJar --no-daemon
 
 # Stage 2: Run
@@ -18,10 +17,11 @@ WORKDIR /app
 ENV TZ=Asia/Seoul
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# 빌드된 JAR 파일 복사 (패턴 매칭으로 정확한 파일 선택)
-COPY --from=build /app/build/libs/*.jar app.jar
+# 빌드 단계에서 생성된 'app.jar'를 정확하게 복사
+COPY --from=build /app/build/libs/app.jar app.jar
 
 ENV SPRING_PROFILES_ACTIVE=prod
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "-Duser.timezone=Asia/Seoul", "app.jar"]
+# 메인 클래스를 명시적으로 지정하여 실행 (매니페스트 오류 방지)
+ENTRYPOINT ["java", "-cp", "app.jar", "org.springframework.boot.loader.launch.JarLauncher", "com.example.shortudy.ShortsApplication"]

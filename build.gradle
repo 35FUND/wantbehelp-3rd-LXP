@@ -51,6 +51,7 @@ tasks.named('test') {
 }
 
 bootJar {
+    archiveFileName = 'app.jar'
     mainClass.set('com.example.shortudy.ShortsApplication')
 }
 
