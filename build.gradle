@@ -51,8 +51,9 @@ tasks.named('test') {
 }
 
 bootJar {
-    mainClass.set('com.example.shortudy.ShortudyApplication')
+    mainClass.set('com.example.shortudy.ShortsApplication')
 }
+
 
 // OpenAPI 문서 생성 설정
 //openApi {
