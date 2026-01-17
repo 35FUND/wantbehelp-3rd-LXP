@@ -50,7 +50,8 @@ public class ShortsController {
         viewCountService.increaseViewCount(shortsId, visitorId);
 
         // 2. 통합 정보 조회
-        ShortsResponse result = shortsQueryFacade.getShortsDetails(shortsId);
+        Long userId = (userDetails != null) ? userDetails.getId() : null;
+        ShortsResponse result = shortsQueryFacade.getShortsDetails(shortsId, userId);
         return ApiResponse.success(result);
     }
 
@@ -79,18 +80,22 @@ public class ShortsController {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Page<ShortsResponse>> getPopularShorts(
             @RequestParam(required = false, defaultValue = "30") Integer days,
-            @PageableDefault(size = 20, sort = "id", direction = DESC) Pageable pageable
+            @PageableDefault(size = 20, sort = "id", direction = DESC) Pageable pageable,
+            @AuthenticationPrincipal CustomUserDetails me
     ) {
-        Page<ShortsResponse> response = shortsQueryFacade.getPopularShorts(days, pageable);
+        Long userId = (me != null) ? me.getId() : null;
+        Page<ShortsResponse> response = shortsQueryFacade.getPopularShorts(days, pageable, userId);
         return ApiResponse.success(response);
     }
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Page<ShortsResponse>> getShortsList(
-            @PageableDefault(size = 8, sort = "id", direction = ASC) Pageable pageable
+            @PageableDefault(size = 8, sort = "id", direction = ASC) Pageable pageable,
+            @AuthenticationPrincipal CustomUserDetails me
     ) {
-        Page<ShortsResponse> response = shortsQueryFacade.getShortsList(pageable);
+        Long userId = (me != null) ? me.getId() : null;
+        Page<ShortsResponse> response = shortsQueryFacade.getShortsList(pageable, userId);
         return ApiResponse.success(response);
     }
 

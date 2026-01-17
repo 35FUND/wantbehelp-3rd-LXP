@@ -46,13 +46,14 @@ public record ShortsResponse(
         Integer likeCount,
         Long commentCount,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        Boolean isLiked
 ) {
 
     /**
      * Shorts 엔티티와 집계된 카운트 정보를 ShortsResponse DTO로 변환합니다.
      */
-    public static ShortsResponse of(Shorts shorts, Long commentCount, Long viewCount) {
+    public static ShortsResponse of(Shorts shorts, Long commentCount, Long viewCount, Boolean isLiked) {
         if (shorts == null) {
             throw new BaseException(ErrorCode.SHORTS_NOT_FOUND);
         }
@@ -83,7 +84,8 @@ public record ShortsResponse(
                 shorts.getLikeCount(),
                 commentCount,
                 shorts.getCreatedAt(),
-                shorts.getUpdatedAt()
+                shorts.getUpdatedAt(),
+                isLiked
         );
     }
 

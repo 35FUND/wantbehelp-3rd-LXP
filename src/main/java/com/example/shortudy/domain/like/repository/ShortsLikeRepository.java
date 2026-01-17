@@ -15,6 +15,10 @@ public interface ShortsLikeRepository extends JpaRepository<ShortsLike, Long> {
 
     Optional<ShortsLike> findByUserIdAndShortsId(Long userId, Long shortsId);
 
+    // 내 좋아요 목록 조회 (Batch)
+    @Query("select sl from ShortsLike sl where sl.user.id = :userId and sl.shorts.id in :shortsIds")
+    List<ShortsLike> findByUserIdAndShortsIdIn(@Param("userId") Long userId, @Param("shortsIds") List<Long> shortsIds);
+
     boolean existsByUserIdAndShortsId(Long userId, Long shortsId);
 
     public interface ShortsLikeCountProjection {

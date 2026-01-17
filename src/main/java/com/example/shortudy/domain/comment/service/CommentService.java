@@ -71,7 +71,7 @@ public class CommentService {
         Comment comment = commentRepository.findById(commentId).orElseThrow(() ->
                 new BaseException(ErrorCode.COMMENT_NOT_FOUND));
 
-        if (comment.isWrittenBy(userId)) {
+        if (!comment.isWrittenBy(userId)) {
             throw new BaseException(ErrorCode.COMMENT_FORBIDDEN);
         } else {
             comment.updateContent(request.content());

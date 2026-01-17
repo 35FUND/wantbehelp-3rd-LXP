@@ -115,7 +115,8 @@ public class ShortsService {
 
         shortsRepository.saveAndFlush(shorts);
 
-        return ShortsResponse.of(shorts, 0L, shorts.getViewCount());
+        boolean isLiked = shortsLikeRepository.existsByUserIdAndShortsId(userId, shortsId);
+        return ShortsResponse.of(shorts, 0L, shorts.getViewCount(), isLiked);
     }
 
     @Transactional

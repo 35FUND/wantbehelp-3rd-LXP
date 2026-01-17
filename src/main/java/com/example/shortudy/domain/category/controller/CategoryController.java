@@ -6,12 +6,14 @@ import com.example.shortudy.domain.category.service.CategoryService;
 import com.example.shortudy.domain.shorts.dto.ShortsResponse;
 import com.example.shortudy.domain.shorts.facade.ShortsQueryFacade;
 import com.example.shortudy.global.common.ApiResponse;
+import com.example.shortudy.global.security.principal.CustomUserDetails;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -76,10 +78,11 @@ public class CategoryController {
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<ApiResponse<Page<ShortsResponse>>> getShortsByCategory(
             @PathVariable("categoryId") Long categoryId,
-            @PageableDefault(size = 20, sort = "id", direction = DESC) Pageable pageable
+            @PageableDefault(size = 20, sort = "id", direction = DESC) Pageable pageable,
+            @AuthenticationPrincipal CustomUserDetails me
     ) {
-        // [수정] shortsService 대신 shortsQueryFacade를 호출하여 Page<ShortsResponse> 타입을 일치시킴
-        Page<ShortsResponse> response = shortsQueryFacade.getShortsByCategory(categoryId, pageable);
+        Long userId = (me != null) ? me.getId() : null;
+        Page<ShortsResponse> response = shortsQueryFacade.getShortsByCategory(categoryId, pageable, userId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

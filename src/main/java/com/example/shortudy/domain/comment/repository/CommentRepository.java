@@ -11,13 +11,14 @@ import java.util.List;
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     // 단일 숏츠의 댓글 개수 조회
-    long countByShortsId(Long shortsId);
+    @Query("select count(c) from Comment c where c.shorts.id = :shortsId and c.status = 'ACTIVE'")
+    long countByShortsId(@Param("shortsId") Long shortsId);
 
     // 전체 숏츠의 댓글 개수 조회
     @Query("""
               select c.shorts.id as shortsId, count(c.id) as cnt
               from Comment c
-              where c.shorts.id in :shortsIds
+              where c.shorts.id in :shortsIds and c.status = 'ACTIVE'
               group by c.shorts.id
             """)
     List<ShortsCommentCountProjection> countAllCommentsByShortsIds(@Param("shortsIds") List<Long> shortsIds);
@@ -37,7 +38,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Query("""
                 SELECT r.parent.id AS parentId, COUNT(r.id) AS cnt
                 FROM Comment r
-                WHERE r.parent.id IN :parentIds
+                WHERE r.parent.id IN :parentIds AND r.status = 'ACTIVE'
                 GROUP BY r.parent.id
             """)
     List<ReplyCountProjection> countRepliesByParentIds(@Param("parentIds") List<Long> parentIds);
