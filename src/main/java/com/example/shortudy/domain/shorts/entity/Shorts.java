@@ -5,11 +5,24 @@ import com.example.shortudy.domain.keyword.entity.Keyword;
 import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.Getter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -173,5 +186,10 @@ public class Shorts {
         if (url.length() > MAX_URL_LENGTH || !URL_PATTERN.matcher(url).matches()) {
             throw new BaseException(ErrorCode.SHORTS_URL_INVALID);
         }
+    }
+
+    public boolean isWrittenBy(Long userId) {
+
+        return this.user.getId().equals(userId);
     }
 }

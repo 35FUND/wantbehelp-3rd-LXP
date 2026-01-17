@@ -2,6 +2,7 @@ package com.example.shortudy.domain.like.repository;
 
 import com.example.shortudy.domain.like.entity.ShortsLike;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -30,6 +31,10 @@ public interface ShortsLikeRepository extends JpaRepository<ShortsLike, Long> {
               group by sl.shorts.id
             """)
     List<ShortsLikeCountProjection> countLikesByShortsIds(@Param("shortsIds") List<Long> shortsIds);
+
+    // 숏츠 삭제 시 좋아요 전부 삭제
+    @Modifying(clearAutomatically = true) // 변경 감지(영속성 컨텍스트 1차 캐싱) 초기화
+    void deleteByShortsId(Long shortsId);
 }
 
 

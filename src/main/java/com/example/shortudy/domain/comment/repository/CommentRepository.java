@@ -2,6 +2,7 @@ package com.example.shortudy.domain.comment.repository;
 
 import com.example.shortudy.domain.comment.entity.Comment;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -50,6 +51,10 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
                 ORDER BY c.createdAt ASC
             """)
     List<Comment> findRepliesWithUser(@Param("parentId") Long parentId);
+
+    // 숏츠 삭제 시 댓글 전부 삭제
+    @Modifying(clearAutomatically = true) // 변경 감지(영속성 컨텍스트 1차 캐싱) 초기화
+    void deleteByShortsId(Long shortsId);
 
     public interface ReplyCountProjection {
 
