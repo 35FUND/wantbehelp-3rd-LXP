@@ -87,7 +87,7 @@ public class CommentService {
         if (!comment.isWrittenBy(userId)) {
             throw new BaseException(ErrorCode.COMMENT_FORBIDDEN);
         }
-        commentRepository.deleteById(commentId);
+        comment.softDelete(commentId);
     }
 
     // 대댓글 생성

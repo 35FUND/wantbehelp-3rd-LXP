@@ -1,6 +1,7 @@
 package com.example.shortudy.domain.comment.dto.response;
 
 import com.example.shortudy.domain.comment.entity.Comment;
+import com.example.shortudy.domain.comment.entity.CommentStatus;
 
 import java.time.LocalDateTime;
 
@@ -20,7 +21,7 @@ public record CommentResponse(
         return new CommentResponse(
                 comment.getShorts().getId(),
                 comment.getId(),
-                comment.getContent(),
+                comment.getStatus() == CommentStatus.DELETED ? "삭제된 댓글입니다." : comment.getContent(),
                 comment.getCreatedAt(),
                 WriterResponse.from(comment.getUser()),
                 replyCount,

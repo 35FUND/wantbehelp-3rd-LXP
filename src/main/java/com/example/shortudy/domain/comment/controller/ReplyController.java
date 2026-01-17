@@ -49,7 +49,7 @@ public class ReplyController {
             @PathVariable Long parentId,
             @AuthenticationPrincipal CustomUserDetails me
     ) {
-        Long myId = (me != null) ? me.getId() : null;
+        Long myId = (me.getId() != null) ? me.getId() : null;
 
         return ResponseEntity.ok(ApiResponse.success(commentService.findReplies(parentId, myId)));
     }
