@@ -71,10 +71,11 @@ public class CommentService {
         Comment comment = commentRepository.findById(commentId).orElseThrow(() ->
                 new BaseException(ErrorCode.COMMENT_NOT_FOUND));
 
-        if (!comment.isWrittenBy(userId)) {
+        if (comment.isWrittenBy(userId)) {
             throw new BaseException(ErrorCode.COMMENT_FORBIDDEN);
+        } else {
+            comment.updateContent(request.content());
         }
-        comment.updateContent(request.content());
     }
 
     // 댓글, 대댓글 삭제
@@ -87,7 +88,9 @@ public class CommentService {
         if (!comment.isWrittenBy(userId)) {
             throw new BaseException(ErrorCode.COMMENT_FORBIDDEN);
         }
-        comment.softDelete(commentId);
+
+            comment.softDelete(userId);
+
     }
 
     // 대댓글 생성

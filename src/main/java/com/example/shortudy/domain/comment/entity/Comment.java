@@ -104,8 +104,9 @@ public class Comment {
         return new Comment(user, parent.getShorts(), parent, content);
     }
 
-    public void softDelete(Long commentId) {
-        if (!isWrittenBy(commentId)) {
+    public void softDelete(Long userId) {
+
+        if((!isWrittenBy(userId))) {
             throw new BaseException(ErrorCode.COMMENT_FORBIDDEN);
         }
 
