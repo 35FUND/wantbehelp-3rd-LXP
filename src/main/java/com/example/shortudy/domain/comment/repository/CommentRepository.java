@@ -57,6 +57,9 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Modifying(clearAutomatically = true) // 변경 감지(영속성 컨텍스트 1차 캐싱) 초기화
     void deleteByShortsId(Long shortsId);
 
+    // 부모 댓글 ID로 자식 댓글 조회 (삭제용)
+    List<Comment> findAllByParentId(Long parentId);
+
     public interface ReplyCountProjection {
 
         Long getParentId();

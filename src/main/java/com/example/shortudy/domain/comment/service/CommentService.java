@@ -1,6 +1,7 @@
 package com.example.shortudy.domain.comment.service;
 
 import com.example.shortudy.domain.comment.dto.request.CommentRequest;
+import com.example.shortudy.domain.comment.dto.response.CommentListResponse;
 import com.example.shortudy.domain.comment.dto.response.CommentResponse;
 import com.example.shortudy.domain.comment.dto.response.ReplyResponse;
 import com.example.shortudy.domain.comment.entity.Comment;
@@ -48,20 +49,25 @@ public class CommentService {
 
     // 댓글 조회
     @Transactional(readOnly = true)
-    public List<CommentResponse> findComments(Long shortsId, Long myIdOrNull) {
+    public CommentListResponse findComments(Long shortsId, Long myIdOrNull) {
 
         List<Comment> comments = commentRepository.findCommentsWithUser(shortsId);
         List<Long> parentIds = comments.stream().map(Comment::getId).toList();
 
         Map<Long, Long> replyCountMap = commentCountProvider.replyCountMap(parentIds);
 
-        return comments.stream()
+        List<CommentResponse> commentResponses = comments.stream()
                 .map(c -> CommentResponse.from(
                                 myIdOrNull,
                                 c,
                                 replyCountMap.getOrDefault(c.getId(), 0L)
                         )
                 ).toList();
+
+        // 전체 댓글 수 조회 (대댓글 포함, ACTIVE 상태만)
+        long totalCount = commentRepository.countByShortsId(shortsId);
+
+        return new CommentListResponse(totalCount, commentResponses);
     }
 
     // 댓글, 대댓글 수정
@@ -89,8 +95,15 @@ public class CommentService {
             throw new BaseException(ErrorCode.COMMENT_FORBIDDEN);
         }
 
-            comment.softDelete(userId);
+        // 부모 댓글 삭제 시 대댓글도 일괄 삭제
+        if (comment.getParent() == null) {
+            List<Comment> replies = commentRepository.findAllByParentId(commentId);
+            for (Comment reply : replies) {
+                reply.softDelete(reply.getUser().getId()); // 대댓글 작성자 권한으로 삭제 처리 (혹은 강제 삭제)
+            }
+        }
 
+        comment.softDelete(userId);
     }
 
     // 대댓글 생성

@@ -1,6 +1,7 @@
 package com.example.shortudy.domain.comment.controller;
 
 import com.example.shortudy.domain.comment.dto.request.CommentRequest;
+import com.example.shortudy.domain.comment.dto.response.CommentListResponse;
 import com.example.shortudy.domain.comment.dto.response.CommentResponse;
 import com.example.shortudy.domain.comment.service.CommentService;
 import com.example.shortudy.global.common.ApiResponse;
@@ -45,7 +46,7 @@ public class CommentController {
     }
 
     @GetMapping("/shorts/{shortsId}/comments")
-    public ResponseEntity<ApiResponse<List<CommentResponse>>> getComments(
+    public ResponseEntity<ApiResponse<CommentListResponse>> getComments(
             @PathVariable Long shortsId,
             @AuthenticationPrincipal CustomUserDetails me
     ) {
