@@ -2,13 +2,15 @@ package com.example.shortudy.domain.shorts.service;
 
 import com.example.shortudy.domain.category.entity.Category;
 import com.example.shortudy.domain.category.repository.CategoryRepository;
+import com.example.shortudy.domain.comment.repository.CommentRepository;
 import com.example.shortudy.domain.keyword.service.KeywordService;
+import com.example.shortudy.domain.like.repository.ShortsLikeRepository;
 import com.example.shortudy.domain.shorts.dto.ShortsResponse;
 import com.example.shortudy.domain.shorts.dto.ShortsUpdateRequest;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
-import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
+import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -40,10 +42,16 @@ public class ShortsService {
     private final CategoryRepository categoryRepository;
     private final KeywordService keywordService;
 
-    public ShortsService(ShortsRepository shortsRepository, CategoryRepository categoryRepository, KeywordService keywordService) {
+    // 숏츠 삭제 시 댓글/좋아요도 다 날리기 위해 추가
+    private final CommentRepository commentRepository;
+    private final ShortsLikeRepository shortsLikeRepository;
+
+    public ShortsService(ShortsRepository shortsRepository, CategoryRepository categoryRepository, KeywordService keywordService, CommentRepository commentRepository, ShortsLikeRepository shortsLikeRepository) {
         this.shortsRepository = shortsRepository;
         this.categoryRepository = categoryRepository;
         this.keywordService = keywordService;
+        this.commentRepository = commentRepository;
+        this.shortsLikeRepository = shortsLikeRepository;
     }
 
     public Shorts findShortsWithDetails(Long shortsId) {
@@ -81,11 +89,15 @@ public class ShortsService {
     }
 
     @Transactional
-    public ShortsResponse updateShorts(Long shortsId, ShortsUpdateRequest request) {
+    public ShortsResponse updateShorts(Long shortsId, ShortsUpdateRequest request, Long userId) {
         Shorts shorts = findShortsById(shortsId);
         Category category = findCategoryById(request.categoryId());
         
         validateUpdateRequest(request);
+
+        if (!shorts.isWrittenBy(userId)) {
+            throw new BaseException(ErrorCode.SHORTS_FORBIDDEN);
+        }
         
         shorts.updateShorts(
             request.title(),
@@ -107,8 +119,16 @@ public class ShortsService {
     }
 
     @Transactional
-    public void deleteShorts(Long shortsId) {
+    public void deleteShorts(Long shortsId, Long userId) {
         validateShortsExists(shortsId);
+
+        Shorts shorts = findShortsById(shortsId);
+        if (!shorts.isWrittenBy(userId)) {
+            throw new BaseException(ErrorCode.SHORTS_FORBIDDEN);
+        }
+
+        shortsLikeRepository.deleteByShortsId(shortsId); // 자식(좋아요 먼저 삭제)
+        commentRepository.deleteByShortsId(shortsId);    // 자식(댓글 삭제)
         shortsRepository.deleteById(shortsId);
     }
 
