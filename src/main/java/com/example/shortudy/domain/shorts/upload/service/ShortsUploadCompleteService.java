@@ -45,7 +45,7 @@ public class ShortsUploadCompleteService {
         validateShortId(shortId);
 
         // 1. 세션 조회
-        ShortsUploadSession session = uploadSessionRepository.findById(shortId)
+        ShortsUploadSession session = uploadSessionRepository.findByShortId(shortId)
                 .orElseThrow(() -> new BaseException(ErrorCode.SHORTS_UPLOAD_SESSION_NOT_FOUND));
 
         // 2. 검증 (UploadID, UserID, 만료 여부)
