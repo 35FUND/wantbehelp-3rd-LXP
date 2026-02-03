@@ -15,10 +15,10 @@ public enum ErrorCode {
     // user
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_404", "사용자를 찾을 수 없습니다."),
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_404", "리소스를 찾을 수 없습니다."),
-    INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "USER_401", "비밀번호가 다릅니다."),
+    INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "USER_400", "비밀번호가 다릅니다."),
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "USER_409", "이미 사용 중인 이메일입니다."),
     LOGIN_REQUIRED(HttpStatus.BAD_REQUEST, "USER_400", "로그인이 필요합니다."),
-    INVALID_TOKEN(HttpStatus.BAD_REQUEST, "USER_400", "유효하지 않은 토큰정보입니다."),
+    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "USER_401", "유효하지 않은 토큰정보입니다."),
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "USER_401", "토큰이 만료되었습니다."),
     SAME_PASSWORD(HttpStatus.BAD_REQUEST, "USER_401", "변경할 비밀번호가 현재 비밀번호와 같습니다."),
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "USER_409", "이미 사용중인 별명입니다."),
