@@ -54,20 +54,21 @@ public class CategoryService {
         categoryRepository.delete(toErase);
     }
 
-    @Transactional
-    public CategoryResponse updateCategory(Long id, CategoryRequest request) {
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("카테고리를 찾을 수 없습니다: " + id));
-
-        // 다른 카테고리와 이름 중복 체크
-        categoryRepository.findByName(request.name())
-                .filter(existing -> !existing.getId().equals(id))
-                .ifPresent(existing -> {
-                    throw new IllegalArgumentException("이미 존재하는 카테고리입니다: " + request.name());
-                });
-
-        category.updateName(request.name());
-        return CategoryResponse.of(category);
-    }
+    // TODO : 카테고리 수정 API를 사용하지 않으므로 주석 처리
+//    @Transactional
+//    public CategoryResponse updateCategory(Long id, CategoryRequest request) {
+//        Category category = categoryRepository.findById(id)
+//                .orElseThrow(() -> new EntityNotFoundException("카테고리를 찾을 수 없습니다: " + id));
+//
+//        // 다른 카테고리와 이름 중복 체크
+//        categoryRepository.findByName(request.name())
+//                .filter(existing -> !existing.getId().equals(id))
+//                .ifPresent(existing -> {
+//                    throw new IllegalArgumentException("이미 존재하는 카테고리입니다: " + request.name());
+//                });
+//
+//        category.updateName(request.name());
+//        return CategoryResponse.of(category);
+//    }
 }
 

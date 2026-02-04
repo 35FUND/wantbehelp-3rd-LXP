@@ -66,12 +66,15 @@ public class CategoryController {
 //        return ResponseEntity.ok(ApiResponse.success(resp));
 //    }
 
-    @PutMapping("/{categoryId}")
-    public ResponseEntity<ApiResponse<CategoryResponse>> updateCategory(@PathVariable Long categoryId,
-                                                                        @RequestBody @Valid CategoryRequest request) {
-        CategoryResponse updated = categoryService.updateCategory(categoryId, request);
-        return ResponseEntity.ok(ApiResponse.success(updated));
-    }
+    // 카테고리 업데이트.
+    // TODO : 카테고리 업데이트는 필요 없을 것 같음.
+    // TODO : "백엔드"라는 카테고리를 생성했다가 "poo"로 변경이 되면 안될 것 같음.
+//    @PutMapping("/{categoryId}")
+//    public ResponseEntity<ApiResponse<CategoryResponse>> updateCategory(@PathVariable Long categoryId,
+//                                                                        @RequestBody @Valid CategoryRequest request) {
+//        CategoryResponse updated = categoryService.updateCategory(categoryId, request);
+//        return ResponseEntity.ok(ApiResponse.success(updated));
+//    }
 
     @DeleteMapping("/{categoryId}")
     public ResponseEntity<Void> deleteCategory(@PathVariable Long categoryId) {
