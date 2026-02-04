@@ -49,8 +49,9 @@ public class CategoryService {
 
     @Transactional
     public void delete(Long id) {
-        Category toErase = categoryRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("카테고리를 찾을 수 없습니다: " + id));
+        Category toErase = categoryRepository.findById(id).orElseThrow(
+                () -> new BaseException(ErrorCode.CATEGORY_NOT_FOUND)
+        );
         categoryRepository.delete(toErase);
     }
 

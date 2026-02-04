@@ -27,7 +27,7 @@ import static org.springframework.data.domain.Sort.Direction.DESC;
 public class CategoryController {
 
     private final CategoryService categoryService;
-    private final ShortsQueryFacade shortsQueryFacade;
+    private final ShortsQueryFacade shortsQueryFacade; // TODO : 이 부분 shortsQueryService로 이름 변경됨.
 
     public CategoryController(CategoryService categoryService, ShortsQueryFacade shortsQueryFacade) {
         this.categoryService = categoryService;
@@ -77,9 +77,9 @@ public class CategoryController {
 //    }
 
     @DeleteMapping("/{categoryId}")
-    public ResponseEntity<Void> deleteCategory(@PathVariable Long categoryId) {
+    public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable Long categoryId) {
         categoryService.delete(categoryId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(null));
     }
 
     /**
