@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ShortsRepository extends JpaRepository<Shorts, Long> {
+public interface ShortsRepository extends JpaRepository<Shorts, Long>, ShortsRepositoryCustom {
 
     /**
      * [조회수 일괄 업데이트]
@@ -28,6 +28,7 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
     @Query("UPDATE Shorts s SET s.viewCount = s.viewCount + :count WHERE s.id = :id")
     void updateViewCount(@Param("id") Long id, @Param("count") Long count);
 
+<<<<<<< HEAD
     /**
      * [상세 조회 통합 쿼리 상세 분석]
      * JPQL의 'new' 생성자 방식에서는 반드시 클래스의 전체 패키지 경로(FQN)를 적어야 합니다.
@@ -142,6 +143,14 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
 
     /**
      * [엔티티 상세 조회 - Keywords 포함]
+=======
+    // ============================================
+    // 상세 조회 - 기본 (ID 기반)
+    // ============================================
+
+    /**
+     * 상세 조회 - Keyword 포함
+>>>>>>> 13ec47e (refactor : facade 패턴 제거)
      */
     @Query("SELECT DISTINCT s FROM Shorts s " +
             "JOIN FETCH s.user " +
