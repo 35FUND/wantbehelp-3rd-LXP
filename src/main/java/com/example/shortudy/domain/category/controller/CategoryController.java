@@ -58,12 +58,13 @@ public class CategoryController {
     }
 
     // 카테고리 단일 조회.
-    @GetMapping("/{categoryId}")
-    public ResponseEntity<ApiResponse<CategoryResponse>> readCategory(
-            @PathVariable Long categoryId) {
-        CategoryResponse resp = categoryService.readCategory(categoryId);
-        return ResponseEntity.ok(ApiResponse.success(resp));
-    }
+    // TODO : 카테고리 단일 조회 API가 필요한지 모르겠음. 추가적으로 현재 FE에서 사용하고 있지 않는 API
+//    @GetMapping("/{categoryId}")
+//    public ResponseEntity<ApiResponse<CategoryResponse>> readCategory(
+//            @PathVariable Long categoryId) {
+//        CategoryResponse resp = categoryService.readCategory(categoryId);
+//        return ResponseEntity.ok(ApiResponse.success(resp));
+//    }
 
     @PutMapping("/{categoryId}")
     public ResponseEntity<ApiResponse<CategoryResponse>> updateCategory(@PathVariable Long categoryId,

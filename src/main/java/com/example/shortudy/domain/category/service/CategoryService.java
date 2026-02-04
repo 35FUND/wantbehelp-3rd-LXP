@@ -33,11 +33,12 @@ public class CategoryService {
         return CategoryResponse.of(created);
     }
 
-    public CategoryResponse readCategory(Long id) {
-        Category found = categoryRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("카테고리를 찾을 수 없습니다: " + id));
-        return CategoryResponse.of(found);
-    }
+    // TODO : 카테고리 단일 조회 API를 사용하지 않으므로 주석 처리
+//    public CategoryResponse readCategory(Long id) {
+//        Category found = categoryRepository.findById(id)
+//                .orElseThrow(() -> new EntityNotFoundException("카테고리를 찾을 수 없습니다: " + id));
+//        return CategoryResponse.of(found);
+//    }
 
     public List<CategoryResponse> readAllCategories() {
         return categoryRepository.findAll()
