@@ -6,7 +6,6 @@ import com.example.shortudy.domain.category.entity.Category;
 import com.example.shortudy.domain.category.repository.CategoryRepository;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +39,7 @@ public class CategoryService {
 //        return CategoryResponse.of(found);
 //    }
 
+    // TODO : 백오피스를 고려하면 status가 ACTIVE인 카테고리만 조회하는 기능이 필요할 수도 있음.
     public List<CategoryResponse> readAllCategories() {
         return categoryRepository.findAll()
                 .stream()
@@ -47,6 +47,7 @@ public class CategoryService {
                 .toList();
     }
 
+    // TODO : 백오피스를 고려하면 status가 ACTIVE/INACTIVE로 변경되는 기능이 필요할 수도 있음.
     @Transactional
     public void delete(Long id) {
         Category toErase = categoryRepository.findById(id).orElseThrow(
