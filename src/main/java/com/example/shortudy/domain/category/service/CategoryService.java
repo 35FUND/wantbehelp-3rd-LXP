@@ -4,6 +4,8 @@ import com.example.shortudy.domain.category.dto.request.CategoryRequest;
 import com.example.shortudy.domain.category.dto.response.CategoryResponse;
 import com.example.shortudy.domain.category.entity.Category;
 import com.example.shortudy.domain.category.repository.CategoryRepository;
+import com.example.shortudy.global.error.BaseException;
+import com.example.shortudy.global.error.ErrorCode;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +26,7 @@ public class CategoryService {
     public CategoryResponse createCategory(CategoryRequest request) {
         // 중복 카테고리명 체크
         if (categoryRepository.existsByName(request.name())) {
-            throw new IllegalArgumentException("이미 존재하는 카테고리입니다: " + request.name());
+            throw new BaseException(ErrorCode.DUPLICATE_CATEGORY_NAME);
         }
 
         Category created = categoryRepository.save(new Category(request.name()));

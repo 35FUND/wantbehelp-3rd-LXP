@@ -35,22 +35,29 @@ public class CategoryController {
     }
 
 
+    // 카테고리 생성.
     @PostMapping
     public ResponseEntity<ApiResponse<CategoryResponse>> create(@RequestBody @Valid CategoryRequest request) {
         CategoryResponse created = categoryService.createCategory(request);
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{categoryId}")
-                .buildAndExpand(created.id()) 
-                .toUri();
-        return ResponseEntity.created(location).body(ApiResponse.success(created));
+
+        // TODO : 카테고리 단일 조회 API가 필요한지 모르겠음.
+//        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+//                .path("/{categoryId}")
+//                .buildAndExpand(created.id())
+//                .toUri();
+//        return ResponseEntity.created(location).body(ApiResponse.success(created));
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(created));
     }
 
+    // 카테고리 전체 조회.
     @GetMapping
     public ResponseEntity<ApiResponse<List<CategoryResponse>>> readAllCategories() {
         List<CategoryResponse> list = categoryService.readAllCategories();
         return ResponseEntity.ok(ApiResponse.success(list));
     }
 
+    // 카테고리 단일 조회.
     @GetMapping("/{categoryId}")
     public ResponseEntity<ApiResponse<CategoryResponse>> readCategory(
             @PathVariable Long categoryId) {
