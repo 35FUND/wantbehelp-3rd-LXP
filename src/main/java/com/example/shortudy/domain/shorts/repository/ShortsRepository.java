@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ShortsRepository extends JpaRepository<Shorts, Long> {
+public interface ShortsRepository extends JpaRepository<Shorts, Long>, ShortsRepositoryCustom {
 
     /**
      * 조회수 일괄 업데이트 (Redis -> DB)
@@ -26,19 +26,9 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
     @Query("UPDATE Shorts s SET s.viewCount = s.viewCount + :count WHERE s.id = :id")
     void updateViewCount(@Param("id") Long id, @Param("count") Long count);
 
-
     // ============================================
-    // 기본 조회
+    // 상세 조회 - 기본 (ID 기반)
     // ============================================
-
-    /**
-     * 상세 조회 - 기본 정보 (User, Category)
-     */
-    @Query("SELECT s FROM Shorts s " +
-            "JOIN FETCH s.user " +
-            "JOIN FETCH s.category " +
-            "WHERE s.id = :id")
-    Optional<Shorts> findWithDetailsById(@Param("id") Long id);
 
     /**
      * 상세 조회 - Keyword 포함
