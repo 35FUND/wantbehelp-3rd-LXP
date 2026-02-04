@@ -19,88 +19,19 @@ import java.util.Collection;
 import java.util.Optional;
 
 @Repository
-public interface ShortsRepository extends JpaRepository<Shorts, Long> {
+public interface ShortsRepository extends JpaRepository<Shorts, Long>, ShortsRepositoryCustom {
 
     @Modifying
     @Query("UPDATE Shorts s SET s.viewCount = s.viewCount + :count WHERE s.id = :id")
     void updateViewCount(@Param("id") Long id, @Param("count") Long count);
 
-    @Query("SELECT new com.example.shortudy.domain.shorts.dto.ShortsResponse(" +
-            "s.id, s.title, s.description, s.videoUrl, s.thumbnailUrl, s.durationSec, s.status, " +
-            "u.id, COALESCE(u.nickname, '알 수 없음'), u.profileUrl, " +
-            "c.id, c.name, " +
-            "null, " + 
-            "s.viewCount, s.likeCount, " +
-            "(SELECT count(cm) FROM Comment cm WHERE cm.shorts = s), " +
-            "s.createdAt, s.updatedAt, " +
-            "(SELECT count(l) > 0 FROM ShortsLike l WHERE l.shorts = s AND l.user.id = :userId)) " +
-            "FROM Shorts s " +
-            "LEFT JOIN s.user u " +
-            "JOIN s.category c " +
-            "WHERE s.id = :id " +
-            "AND ((s.status = 'PUBLISHED' AND s.visibility = 'PUBLIC') OR s.user.id = :userId)")
-    Optional<ShortsResponse> findResponseById(@Param("id") Long id, @Param("userId") Long userId);
+    // ============================================
+    // 상세 조회 - 기본 (ID 기반)
+    // ============================================
 
-    @Query("SELECT new com.example.shortudy.domain.shorts.dto.ShortsResponse(" +
-            "s.id, s.title, s.description, s.videoUrl, s.thumbnailUrl, s.durationSec, s.status, " +
-            "u.id, COALESCE(u.nickname, '알 수 없음'), u.profileUrl, " +
-            "c.id, c.name, " +
-            "null, " + 
-            "s.viewCount, s.likeCount, " +
-            "(SELECT count(cm) FROM Comment cm WHERE cm.shorts = s), " +
-            "s.createdAt, s.updatedAt, " +
-            "(SELECT count(l) > 0 FROM ShortsLike l WHERE l.shorts = s AND l.user.id = :userId)) " +
-            "FROM Shorts s " +
-            "LEFT JOIN s.user u " +
-            "JOIN s.category c " +
-            "WHERE s.status = :status AND s.visibility = 'PUBLIC'")
-    Page<ShortsResponse> findResponsesByStatus(@Param("status") ShortsStatus status, @Param("userId") Long userId, Pageable pageable);
-
-    @Query("SELECT new com.example.shortudy.domain.shorts.dto.ShortsResponse(" +
-            "s.id, s.title, s.description, s.videoUrl, s.thumbnailUrl, s.durationSec, s.status, " +
-            "u.id, COALESCE(u.nickname, '알 수 없음'), u.profileUrl, " +
-            "c.id, c.name, " +
-            "null, " + 
-            "s.viewCount, s.likeCount, " +
-            "(SELECT count(cm) FROM Comment cm WHERE cm.shorts = s), " +
-            "s.createdAt, s.updatedAt, " +
-            "(SELECT count(l) > 0 FROM ShortsLike l WHERE l.shorts = s AND l.user.id = :userId)) " +
-            "FROM Shorts s " +
-            "LEFT JOIN s.user u " +
-            "JOIN s.category c " +
-            "WHERE s.category.id = :categoryId AND s.status = :status AND s.visibility = 'PUBLIC'")
-    Page<ShortsResponse> findResponsesByCategoryIdAndStatus(@Param("categoryId") Long categoryId, @Param("status") ShortsStatus status, @Param("userId") Long userId, Pageable pageable);
-
-    @Query("SELECT new com.example.shortudy.domain.shorts.dto.ShortsResponse(" +
-            "s.id, s.title, s.description, s.videoUrl, s.thumbnailUrl, s.durationSec, s.status, " +
-            "u.id, COALESCE(u.nickname, '알 수 없음'), u.profileUrl, " +
-            "c.id, c.name, " +
-            "null, " + 
-            "s.viewCount, s.likeCount, " +
-            "(SELECT count(cm) FROM Comment cm WHERE cm.shorts = s), " +
-            "s.createdAt, s.updatedAt, " +
-            "(SELECT count(l) > 0 FROM ShortsLike l WHERE l.shorts = s AND l.user.id = :userId)) " +
-            "FROM Shorts s " +
-            "LEFT JOIN s.user u " +
-            "JOIN s.category c " +
-            "WHERE s.status = 'PUBLISHED' AND s.visibility = 'PUBLIC' AND s.createdAt >= :since")
-    Page<ShortsResponse> findPopularResponses(@Param("since") LocalDateTime since, @Param("userId") Long userId, Pageable pageable);
-
-    @Query("SELECT new com.example.shortudy.domain.shorts.dto.ShortsResponse(" +
-            "s.id, s.title, s.description, s.videoUrl, s.thumbnailUrl, s.durationSec, s.status, s.visibility, " +
-            "u.id, u.nickname, u.profileUrl, " +
-            "c.id, c.name, " +
-            "null, " + 
-            "s.viewCount, s.likeCount, " +
-            "(SELECT count(cm) FROM Comment cm WHERE cm.shorts = s), " +
-            "s.createdAt, s.updatedAt, " +
-            "(SELECT count(l) > 0 FROM ShortsLike l WHERE l.shorts = s AND l.user.id = :userId)) " +
-            "FROM Shorts s " +
-            "JOIN s.user u " +
-            "JOIN s.category c " +
-            "WHERE s.user.id = :userId")
-    Page<ShortsResponse> findMyResponses(@Param("userId") Long userId, Pageable pageable);
-
+    /**
+     * 상세 조회 - Keyword 포함
+     */
     @Query("SELECT DISTINCT s FROM Shorts s " +
             "JOIN FETCH s.user " +
             "JOIN FETCH s.category " +

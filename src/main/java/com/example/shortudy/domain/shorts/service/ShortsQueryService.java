@@ -40,29 +40,26 @@ public class ShortsQueryService {
      * 상세 조회 - DB 집계 데이터와 Redis 실시간 조회수를 통합하여 반환합니다.
      */
     public ShortsResponse getShortsDetails(Long shortsId, Long userId) {
-        ShortsResponse response = shortsRepository.findResponseById(shortsId, userId)
+        Object[] result = shortsRepository.findShortsWithCounts(shortsId, userId)
                 .orElseThrow(() -> new BaseException(ErrorCode.SHORTS_NOT_FOUND));
         
-        // Keywords는 별도로 채워주거나, 엔티티 조회가 필요할 시 별도 로직 수행
-        return enrich(fillKeywords(response, shortsId));
+        return mergeRealTimeViewCount(toShortsResponse(result));
     }
 
     /**
      * 목록 조회 - 발행된 숏츠 목록을 집계 데이터와 함께 조회합니다.
      */
     public Page<ShortsResponse> getShortsList(Pageable pageable, Long userId) {
-        Page<ShortsResponse> responses = shortsRepository.findResponsesByStatus(ShortsStatus.PUBLISHED, userId, pageable);
-        Page<ShortsResponse> enriched = enrichAll(responses);
-        return fillKeywords(enriched);
+        Page<Object[]> results = shortsRepository.findShortsPageWithCounts(ShortsStatus.PUBLISHED, userId, pageable);
+        return mergeRealTimeViewCounts(results.map(this::toShortsResponse));
     }
 
     /**
      * 카테고리별 조회 - 특정 카테고리의 숏츠 목록을 집계 데이터와 함께 조회합니다.
      */
     public Page<ShortsResponse> getShortsByCategory(Long categoryId, Pageable pageable, Long userId) {
-        Page<ShortsResponse> responses = shortsRepository.findResponsesByCategoryIdAndStatus(categoryId, ShortsStatus.PUBLISHED, userId, pageable);
-        Page<ShortsResponse> enriched = enrichAll(responses);
-        return fillKeywords(enriched);
+        Page<Object[]> results = shortsRepository.findByCategoryWithCounts(categoryId, ShortsStatus.PUBLISHED, userId, pageable);
+        return mergeRealTimeViewCounts(results.map(this::toShortsResponse));
     }
 
     /**
@@ -71,92 +68,26 @@ public class ShortsQueryService {
     public Page<ShortsResponse> getPopularShorts(Integer days, Pageable pageable, Long userId) {
         if (days == null || days <= 0) days = 30;
         LocalDateTime since = LocalDateTime.now().minusDays(days);
-        Page<ShortsResponse> responses = shortsRepository.findPopularResponses(since, userId, pageable);
-        Page<ShortsResponse> enriched = enrichAll(responses);
-        return fillKeywords(enriched);
+        Page<Object[]> results = shortsRepository.findPopularWithCounts(since, userId, pageable);
+        return mergeRealTimeViewCounts(results.map(this::toShortsResponse));
     }
 
     /**
      * 내 쇼츠 조회 - 내가 작성한 숏츠 목록을 집계 데이터와 함께 조회합니다.
      */
-    public Page<ShortsStatusDescriptionResponse> getMyShorts(Long userId, Pageable pageable) {
-        Page<ShortsResponse> responses = shortsRepository.findMyResponses(userId, pageable);
-        Page<ShortsResponse> enriched = enrichAll(responses);
-        Page<ShortsResponse> withKeywords = fillKeywords(enriched);
-
-        // 1) 이번 페이지의 shortsId만 뽑아서
-        List<Long> shortsIds = withKeywords.getContent().stream()
-            .map(ShortsResponse::shortsId)
-            .toList();
-
-        // 2) 한방 조회 후 Map으로 변환 (shortsId -> reason)
-        Map<Long, String> reasonMap = shortsInspectionResultsRepository.findByShortsIdIn(shortsIds).stream()
-            .collect(Collectors.toMap(
-                r -> r.getShorts().getId(),   // 혹은 r.getShortsId() 형태면 그걸로
-                ShortsInspectionResults::getReason,
-                (a, b) -> a // 중복 시 첫 값 사용(보통은 중복 없어야 정상)
-            ));
-
-        // 3) 응답 매핑
-        return withKeywords.map(shorts -> {
-            String desc = reasonMap.get(shorts.shortsId()); // 없으면 null
-            return ShortsStatusDescriptionResponse.of(shorts, desc);
-        });
+    public Page<ShortsResponse> getMyShorts(Long userId, Pageable pageable) {
+        Page<Object[]> results = shortsRepository.findMyShortsWithCounts(userId, pageable);
+        return mergeRealTimeViewCounts(results.map(this::toShortsResponse));
     }
 
     /**
-     * DTO의 키워드 목록을 채워줍니다. (Batch Fetch 활용을 위해 엔티티에서 추출)
+     * Repository의 Object[] 결과를 ShortsResponse DTO로 변환합니다.
      */
-    private ShortsResponse fillKeywords(ShortsResponse original, Long shortsId) {
-        return shortsRepository.findWithDetailsAndKeywordsById(shortsId)
-                .map(shorts -> new ShortsResponse(
-                        original.shortsId(), original.title(), original.description(),
-                        original.videoUrl(), original.thumbnailUrl(), original.durationSec(),
-                        original.status(), original.visibility(), original.userId(), original.userNickname(),
-                        original.userProfileUrl(), original.categoryId(), original.categoryName(),
-                        shorts.getKeywords().stream().map(k -> k.getDisplayName()).toList(),
-                        original.viewCount(), original.likeCount(), original.commentCount(),
-                        original.createdAt(), original.updatedAt(), original.isLiked()
-                )).orElse(original);
-    }
-
-    /**
-     * 목록 응답의 키워드를 배치 조회로 채워 N+1을 방지한다.
-     */
-    private Page<ShortsResponse> fillKeywords(Page<ShortsResponse> responses) {
-        if (responses.isEmpty()) {
-            return responses;
-        }
-
-        List<Long> ids = responses.stream().map(ShortsResponse::shortsId).toList();
-        Map<Long, List<String>> keywordsByShortsId = shortsRepository.findWithDetailsAndKeywordsByIdIn(ids).stream()
-                .collect(Collectors.toMap(
-                        Shorts::getId,
-                        shorts -> shorts.getKeywords().stream().map(k -> k.getDisplayName()).toList()
-                ));
-
-        return responses.map(original -> new ShortsResponse(
-                original.shortsId(),
-                original.title(),
-                original.description(),
-                original.videoUrl(),
-                original.thumbnailUrl(),
-                original.durationSec(),
-                original.status(),
-                original.visibility(),
-                original.userId(),
-                original.userNickname(),
-                original.userProfileUrl(),
-                original.categoryId(),
-                original.categoryName(),
-                keywordsByShortsId.getOrDefault(original.shortsId(), List.of()),
-                original.viewCount(),
-                original.likeCount(),
-                original.commentCount(),
-                original.createdAt(),
-                original.updatedAt(),
-                original.isLiked()
-        ));
+    private ShortsResponse toShortsResponse(Object[] result) {
+        Shorts shorts = (Shorts) result[0];
+        Long commentCount = (Long) result[1];
+        Boolean isLiked = (Boolean) result[2];
+        return ShortsResponse.of(shorts, commentCount, shorts.getViewCount(), isLiked);
     }
 
     /**
