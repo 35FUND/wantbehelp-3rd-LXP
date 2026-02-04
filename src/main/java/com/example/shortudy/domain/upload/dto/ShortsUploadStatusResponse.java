@@ -1,4 +1,4 @@
-package com.example.shortudy.domain.shorts.upload.dto;
+package com.example.shortudy.domain.upload.dto;
 
 import java.time.LocalDateTime;
 

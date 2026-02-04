@@ -1,12 +1,12 @@
-package com.example.shortudy.domain.shorts.upload.service;
+package com.example.shortudy.domain.upload.service;
 
-import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadCompleteRequest;
+import com.example.shortudy.domain.upload.dto.ShortsUploadCompleteRequest;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
-import com.example.shortudy.domain.shorts.upload.entity.ShortsUploadSession;
-import com.example.shortudy.domain.shorts.upload.entity.ShortsUploadSession.UploadStatus;
-import com.example.shortudy.domain.shorts.upload.repository.ShortsUploadSessionRepository;
+import com.example.shortudy.domain.upload.entity.ShortsUploadSession;
+import com.example.shortudy.domain.upload.entity.ShortsUploadSession.UploadStatus;
+import com.example.shortudy.domain.upload.repository.ShortsUploadSessionRepository;
 import com.example.shortudy.global.config.AwsProperties;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;

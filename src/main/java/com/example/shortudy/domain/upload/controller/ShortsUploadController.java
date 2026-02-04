@@ -1,12 +1,12 @@
-package com.example.shortudy.domain.shorts.upload.controller;
+package com.example.shortudy.domain.upload.controller;
 
-import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadCompleteRequest;
-import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadInitRequest;
-import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadInitResponse;
-import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadStatusResponse;
-import com.example.shortudy.domain.shorts.upload.service.ShortsUploadCompleteService;
-import com.example.shortudy.domain.shorts.upload.service.ShortsUploadInitService;
-import com.example.shortudy.domain.shorts.upload.service.ShortsUploadStatusService;
+import com.example.shortudy.domain.upload.dto.ShortsUploadCompleteRequest;
+import com.example.shortudy.domain.upload.dto.ShortsUploadInitRequest;
+import com.example.shortudy.domain.upload.dto.ShortsUploadInitResponse;
+import com.example.shortudy.domain.upload.dto.ShortsUploadStatusResponse;
+import com.example.shortudy.domain.upload.service.ShortsUploadCompleteService;
+import com.example.shortudy.domain.upload.service.ShortsUploadInitService;
+import com.example.shortudy.domain.upload.service.ShortsUploadStatusService;
 import com.example.shortudy.global.common.ApiResponse;
 import com.example.shortudy.global.security.principal.CustomUserDetails;
 import jakarta.validation.Valid;

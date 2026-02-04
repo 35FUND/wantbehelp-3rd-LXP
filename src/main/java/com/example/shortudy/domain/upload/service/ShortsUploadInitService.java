@@ -1,14 +1,14 @@
-package com.example.shortudy.domain.shorts.upload.service;
+package com.example.shortudy.domain.upload.service;
 
 import com.example.shortudy.domain.category.entity.Category;
 import com.example.shortudy.domain.category.repository.CategoryRepository;
 import com.example.shortudy.domain.keyword.service.KeywordService;
-import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadInitRequest;
-import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadInitResponse;
+import com.example.shortudy.domain.upload.dto.ShortsUploadInitRequest;
+import com.example.shortudy.domain.upload.dto.ShortsUploadInitResponse;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
-import com.example.shortudy.domain.shorts.upload.entity.ShortsUploadSession;
-import com.example.shortudy.domain.shorts.upload.repository.ShortsUploadSessionRepository;
+import com.example.shortudy.domain.upload.entity.ShortsUploadSession;
+import com.example.shortudy.domain.upload.repository.ShortsUploadSessionRepository;
 import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.domain.user.repository.UserRepository;
 import com.example.shortudy.global.config.AwsProperties;

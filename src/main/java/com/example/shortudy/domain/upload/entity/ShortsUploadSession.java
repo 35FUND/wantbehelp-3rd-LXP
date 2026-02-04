@@ -1,4 +1,4 @@
-package com.example.shortudy.domain.shorts.upload.entity;
+package com.example.shortudy.domain.upload.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
