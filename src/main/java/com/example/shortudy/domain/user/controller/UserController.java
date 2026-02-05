@@ -1,6 +1,8 @@
 package com.example.shortudy.domain.user.controller;
 
 import com.example.shortudy.domain.user.dto.request.PasswordChangeRequest;
+import com.example.shortudy.domain.user.dto.request.PresignedUrlResponse;
+import com.example.shortudy.domain.user.dto.request.ProfileImageUpdateRequest;
 import com.example.shortudy.domain.user.dto.request.UpdateProfileRequest;
 import com.example.shortudy.global.security.principal.CustomUserDetails;
 import com.example.shortudy.domain.user.dto.request.SignUpRequest;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -42,6 +45,21 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    @GetMapping("/me/profile/presigned-url")
+    public ResponseEntity<ApiResponse<PresignedUrlResponse>> getPresignedUrl(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam String fileName) {
+        return ResponseEntity.ok(ApiResponse.success(userService.prepareProfileUpload(userDetails.getId(), fileName)));
+    }
+
+    @PatchMapping("/me/profile/image")
+    public ResponseEntity<ApiResponse<Void>> updateProfileImage(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                                                @RequestBody @Valid ProfileImageUpdateRequest request) {
+        userService.completeProfileUpdate(userDetails.getId(), request.newImageKey());
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    // TODO 프로필 수정 변경 예정 (프로필 사진 변경, 닉네임 변경 분리 예정)
     @PatchMapping("/me")
     public ResponseEntity<ApiResponse<Void>> updateProfile(@AuthenticationPrincipal CustomUserDetails userDetails,
                                                            @RequestBody @Valid UpdateProfileRequest request) {
