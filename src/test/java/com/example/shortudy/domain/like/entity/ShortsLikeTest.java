@@ -2,6 +2,7 @@ package com.example.shortudy.domain.like.entity;
 
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.user.entity.User;
+import com.example.shortudy.global.error.BaseException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -35,7 +36,7 @@ class ShortsLikeTest {
 
         // when, then
         assertThrows(
-                NullPointerException.class,
+                BaseException.class,
                 () -> ShortsLike.of(null, mockShorts),
                 "유저 정보가 없으면 엔티티 생성이 실패합니다");
     }
@@ -48,7 +49,7 @@ class ShortsLikeTest {
 
         // when, then
         assertThrows(
-                NullPointerException.class,
+                BaseException.class,
                 () -> ShortsLike.of(mockUser, null),
                 "숏츠 정보가 없으면 엔티티 생성이 실패합니다");
     }

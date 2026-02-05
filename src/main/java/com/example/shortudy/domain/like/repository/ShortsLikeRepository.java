@@ -13,6 +13,18 @@ import java.util.Optional;
 @Repository
 public interface ShortsLikeRepository extends JpaRepository<ShortsLike, Long> {
 
+    /**
+     * 사용자 ID, 숏츠 ID 기반 삭제(Soft Delete) 되지 않은 좋아요 찾기
+     * @param userId 사용자 ID
+     * @param shortsId 숏츠 ID
+     * @return 삭제 처리 된 좋아요 엔티티 객체(Optional)
+     */
+    @Query(value = "SELECT * FROM shorts_like " +
+            "WHERE user_id = :userId " +
+            "AND shorts_id = :shortsId",
+            nativeQuery = true)
+    Optional<ShortsLike> findWithDeleted(Long userId, Long shortsId);
+
     Optional<ShortsLike> findByUserIdAndShortsId(Long userId, Long shortsId);
 
     // 내 좋아요 목록 조회 (Batch)
