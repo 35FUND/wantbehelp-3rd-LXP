@@ -1,7 +1,8 @@
 package com.example.shortudy.global.common;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
 /**
  * API 공통 응답 클래스
