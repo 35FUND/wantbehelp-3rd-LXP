@@ -18,6 +18,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @EntityListeners(AuditingEntityListener.class)
 @Getter
@@ -44,13 +45,17 @@ public class ShortsLike {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    protected ShortsLike() {
+    protected ShortsLike() {}
+
+    private ShortsLike(User user, Shorts shorts) {
+        this.user = user;
+        this.shorts = shorts;
     }
 
     public static ShortsLike of(User user, Shorts shorts) {
-        ShortsLike like = new ShortsLike();
-        like.user = user;
-        like.shorts = shorts;
-        return like;
+        Objects.requireNonNull(user, "유저 정보는 필수입니다");
+        Objects.requireNonNull(shorts, "숏츠 정보는 필수입니다");
+
+        return new ShortsLike(user, shorts);
     }
 }

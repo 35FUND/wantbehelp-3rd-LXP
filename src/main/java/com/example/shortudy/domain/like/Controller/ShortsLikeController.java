@@ -1,5 +1,6 @@
 package com.example.shortudy.domain.like.Controller;
 
+import com.example.shortudy.domain.like.dto.LikeToggleResponse;
 import com.example.shortudy.domain.like.service.ShortsLikeService;
 import com.example.shortudy.global.common.ApiResponse;
 import com.example.shortudy.global.security.principal.CustomUserDetails;
@@ -12,6 +13,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 좋아요 엔드포인트
+ */
 @RestController
 @RequestMapping("/api/v1")
 public class ShortsLikeController {
@@ -22,15 +26,22 @@ public class ShortsLikeController {
         this.shortsLikeService = shortsLikeService;
     }
 
+    /**
+     * [POST] 좋아요 요청
+     * @param me 로그인 된 유저 정보
+     * @param shortsId 숏츠 ID
+     * @return 좋아요 상태 DTO
+     */
     @PostMapping("/shorts/{shortsId}/likes")
-    public ResponseEntity<ApiResponse<Void>> like(
+    public ResponseEntity<ApiResponse<LikeToggleResponse>> like(
             @AuthenticationPrincipal CustomUserDetails me,
             @PathVariable Long shortsId
     ) {
-        shortsLikeService.like(me.getId(), shortsId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(null));
+        LikeToggleResponse response = shortsLikeService.toggleLike(me.getId(), shortsId);
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(response));
     }
 
+    @Deprecated(since = "토글 형태로 바꿀 예정이므로 삭제 예정")
     @DeleteMapping("/shorts/{shortsId}/unlikes")
     public ResponseEntity<ApiResponse<Void>> unlike(
             @AuthenticationPrincipal CustomUserDetails me,
