@@ -4,7 +4,8 @@ import com.example.shortudy.domain.category.dto.request.CategoryRequest;
 import com.example.shortudy.domain.category.dto.response.CategoryResponse;
 import com.example.shortudy.domain.category.entity.Category;
 import com.example.shortudy.domain.category.repository.CategoryRepository;
-import jakarta.persistence.EntityNotFoundException;
+import com.example.shortudy.global.error.BaseException;
+import com.example.shortudy.global.error.ErrorCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,19 +25,21 @@ public class CategoryService {
     public CategoryResponse createCategory(CategoryRequest request) {
         // 중복 카테고리명 체크
         if (categoryRepository.existsByName(request.name())) {
-            throw new IllegalArgumentException("이미 존재하는 카테고리입니다: " + request.name());
+            throw new BaseException(ErrorCode.DUPLICATE_CATEGORY_NAME);
         }
 
         Category created = categoryRepository.save(new Category(request.name()));
         return CategoryResponse.of(created);
     }
 
-    public CategoryResponse readCategory(Long id) {
-        Category found = categoryRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("카테고리를 찾을 수 없습니다: " + id));
-        return CategoryResponse.of(found);
-    }
+    // TODO : 카테고리 단일 조회 API를 사용하지 않으므로 주석 처리
+//    public CategoryResponse readCategory(Long id) {
+//        Category found = categoryRepository.findById(id)
+//                .orElseThrow(() -> new EntityNotFoundException("카테고리를 찾을 수 없습니다: " + id));
+//        return CategoryResponse.of(found);
+//    }
 
+    // TODO : 백오피스를 고려하면 status가 ACTIVE인 카테고리만 조회하는 기능이 필요할 수도 있음.
     public List<CategoryResponse> readAllCategories() {
         return categoryRepository.findAll()
                 .stream()
@@ -44,27 +47,30 @@ public class CategoryService {
                 .toList();
     }
 
+    // TODO : 백오피스를 고려하면 status가 ACTIVE/INACTIVE로 변경되는 기능이 필요할 수도 있음.
     @Transactional
     public void delete(Long id) {
-        Category toErase = categoryRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("카테고리를 찾을 수 없습니다: " + id));
+        Category toErase = categoryRepository.findById(id).orElseThrow(
+                () -> new BaseException(ErrorCode.CATEGORY_NOT_FOUND)
+        );
         categoryRepository.delete(toErase);
     }
 
-    @Transactional
-    public CategoryResponse updateCategory(Long id, CategoryRequest request) {
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("카테고리를 찾을 수 없습니다: " + id));
-
-        // 다른 카테고리와 이름 중복 체크
-        categoryRepository.findByName(request.name())
-                .filter(existing -> !existing.getId().equals(id))
-                .ifPresent(existing -> {
-                    throw new IllegalArgumentException("이미 존재하는 카테고리입니다: " + request.name());
-                });
-
-        category.updateName(request.name());
-        return CategoryResponse.of(category);
-    }
+    // TODO : 카테고리 수정 API를 사용하지 않으므로 주석 처리
+//    @Transactional
+//    public CategoryResponse updateCategory(Long id, CategoryRequest request) {
+//        Category category = categoryRepository.findById(id)
+//                .orElseThrow(() -> new EntityNotFoundException("카테고리를 찾을 수 없습니다: " + id));
+//
+//        // 다른 카테고리와 이름 중복 체크
+//        categoryRepository.findByName(request.name())
+//                .filter(existing -> !existing.getId().equals(id))
+//                .ifPresent(existing -> {
+//                    throw new IllegalArgumentException("이미 존재하는 카테고리입니다: " + request.name());
+//                });
+//
+//        category.updateName(request.name());
+//        return CategoryResponse.of(category);
+//    }
 }
 
