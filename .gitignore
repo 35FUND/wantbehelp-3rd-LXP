@@ -37,4 +37,9 @@ out/
 ### VS Code ###
 .vscode/
 /md파일/백엔드용
+
+### MAC ###
 .DS_Store
+
+### env ###
+.env
