@@ -85,6 +85,12 @@ public class CategoryController {
     /**
      * 카테고리별 숏츠 목록 조회
      */
+    /*
+    * TODO : 해당 API는 category에 대해서만 필터링이 가능해서 추후 삭제될 예정임.
+    *       카테고리별 숏츠 조회는 /api/v1/shorts?categoryId={categoryId} 형태로 통합될 예정임.
+    * */
+
+    @Deprecated(since = "확장 가능성이 낮아 삭제 예정.")
     @GetMapping("/{categoryId}/shorts")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<ApiResponse<Page<ShortsResponse>>> getShortsByCategory(
