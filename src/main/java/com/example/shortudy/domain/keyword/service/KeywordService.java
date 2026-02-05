@@ -29,12 +29,16 @@ public class KeywordService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
-    public KeywordResponse getKeyword(Long keywordId) {
-        return keywordRepository.findById(keywordId)
-                .map(this::toResponse)
-                .orElseThrow(() -> new BaseException(ErrorCode.KEYWORD_NOT_FOUND));
-    }
+    /*
+    * TODO : 해당 API가 실제로 필요한지 검토 필요.
+    *  필요 없으면 삭제 예정.
+    * */
+//    @Transactional(readOnly = true)
+//    public KeywordResponse getKeyword(Long keywordId) {
+//        return keywordRepository.findById(keywordId)
+//                .map(this::toResponse)
+//                .orElseThrow(() -> new BaseException(ErrorCode.KEYWORD_NOT_FOUND));
+//    }
 
     @Transactional(readOnly = true)
     public List<KeywordResponse> searchKeywords(String q) {
