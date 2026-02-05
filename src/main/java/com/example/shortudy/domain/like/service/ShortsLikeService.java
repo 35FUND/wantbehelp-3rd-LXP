@@ -26,7 +26,6 @@ public class ShortsLikeService {
     private final UserRepository userRepository;
 
     public ShortsLikeService(
-            ShortsService shortsService,
             ShortsLikeRepository shortsLikeRepository,
             ShortsRepository shortsRepository,
             UserRepository userRepository) {
@@ -36,34 +35,55 @@ public class ShortsLikeService {
     }
 
     /**
-     * 좋아요 토글
+     * 좋아요 처리
      * 취소 : 데이터 삭제 및 카운트 감소 요청
      * 등록 : 데이터 저장 및 카운트 증가 요청
      * @param userId 유저 ID
      * @param shortsId 쇼츠 ID
      */
-    /* TODO: 고려 할 점
-     * 1. 현재 shortRepository, userRepository를 직접 사용하고 있는데, 각 서비스의 서비스레이어에서 기능을 제공하도록 수정해야하는가
-     * 2. 정책이 추가 될 게 있는지?
-     */
     @Transactional
     public LikeToggleResponse toggleLike(Long userId, Long shortsId) {
         Shorts shorts = shortsRepository.findById(shortsId)
                 .orElseThrow(() -> new BaseException(ErrorCode.SHORTS_NOT_FOUND));
-        Optional<ShortsLike> existingLike = shortsLikeRepository.findByUserIdAndShortsId(userId, shortsId);
+        Optional<ShortsLike> existingLike = shortsLikeRepository.findWithDeleted(userId, shortsId);
 
         if (existingLike.isPresent()) {
-            shortsLikeRepository.delete(existingLike.get());
-            shorts.decrementLikeCount();
+            ShortsLike like = existingLike.get();
+            return toggleExistingLike(shorts, like);
+        }
 
-            return new LikeToggleResponse(false, shorts.getLikeCount());
-        } else {
-            User user = userRepository.getReferenceById(userId);
-            shortsLikeRepository.save(ShortsLike.of(user, shorts));
+        return createNewLike(userId, shorts);
+    }
+
+    /**
+     * 좋아요가 존재할때의 토글 처리
+     * @param shorts 좋아요 대상의 숏츠
+     * @param like 존재하는 좋아요 엔티티
+     * @return 좋아요 결과 응답 DTO
+     */
+    private LikeToggleResponse toggleExistingLike(Shorts shorts, ShortsLike like) {
+        if(like.isDeleted()) {
+            like.restore();
             shorts.incrementLikeCount();
-
             return new LikeToggleResponse(true, shorts.getLikeCount());
         }
+
+        shortsLikeRepository.delete(like);
+        shorts.decrementLikeCount();
+        return new LikeToggleResponse(false, shorts.getLikeCount());
+    }
+
+    /**
+     * 좋아요 객체 생성
+     * @param userId 좋아요 누른 사용자
+     * @param shorts 좋아요 눌러진 숏츠
+     * @return 좋아요 결과 응답 DTO
+     */
+    private LikeToggleResponse createNewLike(Long userId, Shorts shorts) {
+        User user = userRepository.getReferenceById(userId);
+        shortsLikeRepository.save(ShortsLike.of(user, shorts));
+        shorts.incrementLikeCount();
+        return new LikeToggleResponse(true, shorts.getLikeCount());
     }
 
     @Deprecated(since = "토글 체크 로직으로 삭제 예정")
