@@ -51,6 +51,6 @@ public class GlobalExceptionHandler {
 
     private ResponseEntity<ApiResponse<?>> error(ErrorCode ec, String message, HttpServletRequest request) {
         return ResponseEntity.status(ec.status())
-                .body(ApiResponse.error(ec.code(), message, request.getRequestURI()));
+                .body(ApiResponse.error(message, ec.code(), request.getRequestURI()));
     }
 }
