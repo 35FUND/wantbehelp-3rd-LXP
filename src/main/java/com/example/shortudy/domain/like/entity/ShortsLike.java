@@ -2,6 +2,7 @@ package com.example.shortudy.domain.like.entity;
 
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.user.entity.User;
+import com.example.shortudy.global.util.AssertUtil;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -53,8 +54,8 @@ public class ShortsLike {
     }
 
     public static ShortsLike of(User user, Shorts shorts) {
-        Objects.requireNonNull(user, "유저 정보는 필수입니다");
-        Objects.requireNonNull(shorts, "숏츠 정보는 필수입니다");
+        AssertUtil.notNull(user, "유저 정보는 필수입니다");
+        AssertUtil.notNull(shorts, "숏츠 정보는 필수입니다");
 
         return new ShortsLike(user, shorts);
     }
