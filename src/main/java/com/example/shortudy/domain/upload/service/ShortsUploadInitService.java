@@ -13,9 +13,10 @@ import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.domain.user.repository.UserRepository;
 import com.example.shortudy.global.config.S3Service;
 import com.example.shortudy.domain.user.dto.request.PresignedUrlResponse;
+import com.example.shortudy.global.error.ErrorCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.example.shortudy.global.error.BaseException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -63,10 +64,10 @@ public class ShortsUploadInitService {
         validateThumbnail(body);
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new com.example.shortudy.global.error.BaseException(com.example.shortudy.global.error.ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
 
         Category category = categoryRepository.findById(body.categoryId())
-                .orElseThrow(() -> new com.example.shortudy.global.error.BaseException(com.example.shortudy.global.error.ErrorCode.CATEGORY_NOT_FOUND));
+                .orElseThrow(() -> new BaseException(ErrorCode.CATEGORY_NOT_FOUND));
 
         // 프론트가 추출한 메타데이터(durationSec 등)를 그대로 저장한다.
         Shorts shorts = new Shorts(
@@ -136,17 +137,17 @@ public class ShortsUploadInitService {
     // 업로드용 비디오 파일 검증
     private void validateFile(String fileName, Long fileSize, String contentType) {
         if (fileSize != null && fileSize > MAX_FILE_SIZE_BYTES) {
-            throw new com.example.shortudy.global.error.BaseException(com.example.shortudy.global.error.ErrorCode.SHORTS_FILE_TOO_LARGE);
+            throw new BaseException(ErrorCode.SHORTS_FILE_TOO_LARGE);
         }
 
         String normalizedContentType = contentType == null ? null : contentType.trim().toLowerCase(Locale.ROOT);
         if (!ALLOWED_CONTENT_TYPE.equals(normalizedContentType)) {
-            throw new com.example.shortudy.global.error.BaseException(com.example.shortudy.global.error.ErrorCode.SHORTS_UNSUPPORTED_FILE_TYPE);
+            throw new BaseException(ErrorCode.SHORTS_UNSUPPORTED_FILE_TYPE);
         }
 
         String normalizedFileName = fileName == null ? null : fileName.trim().toLowerCase(Locale.ROOT);
         if (normalizedFileName == null || !normalizedFileName.endsWith(".mp4")) {
-            throw new com.example.shortudy.global.error.BaseException(com.example.shortudy.global.error.ErrorCode.SHORTS_UNSUPPORTED_FILE_TYPE);
+            throw new BaseException(ErrorCode.SHORTS_UNSUPPORTED_FILE_TYPE);
         }
     }
 
@@ -161,28 +162,28 @@ public class ShortsUploadInitService {
         }
 
         if (!hasFileName || !hasFileSize || !hasContentType) {
-            throw new com.example.shortudy.global.error.BaseException(com.example.shortudy.global.error.ErrorCode.INVALID_INPUT, "thumbnail: 파일 정보가 충분하지 않습니다.");
+            throw new BaseException(ErrorCode.INVALID_INPUT, "thumbnail: 파일 정보가 충분하지 않습니다.");
         }
 
         if (body.thumbnailFileSize() > MAX_THUMBNAIL_SIZE_BYTES) {
-            throw new com.example.shortudy.global.error.BaseException(com.example.shortudy.global.error.ErrorCode.SHORTS_FILE_TOO_LARGE, "thumbnail: 파일 크기가 허용 범위를 초과했습니다.");
+            throw new BaseException(ErrorCode.SHORTS_FILE_TOO_LARGE, "thumbnail: 파일 크기가 허용 범위를 초과했습니다.");
         }
 
         String normalizedContentType = body.thumbnailContentType().trim().toLowerCase(Locale.ROOT);
         if (!ALLOWED_THUMBNAIL_CONTENT_TYPES.contains(normalizedContentType)) {
-            throw new com.example.shortudy.global.error.BaseException(com.example.shortudy.global.error.ErrorCode.SHORTS_UNSUPPORTED_FILE_TYPE, "thumbnail: 지원하지 않는 파일 형식입니다.");
+            throw new BaseException(ErrorCode.SHORTS_UNSUPPORTED_FILE_TYPE, "thumbnail: 지원하지 않는 파일 형식입니다.");
         }
 
         String normalizedFileName = body.thumbnailFileName().trim().toLowerCase(Locale.ROOT);
         if (!(normalizedFileName.endsWith(".jpg") || normalizedFileName.endsWith(".jpeg") || normalizedFileName.endsWith(".png"))) {
-            throw new com.example.shortudy.global.error.BaseException(com.example.shortudy.global.error.ErrorCode.SHORTS_UNSUPPORTED_FILE_TYPE, "thumbnail: 확장자가 올바르지 않습니다.");
+            throw new BaseException(ErrorCode.SHORTS_UNSUPPORTED_FILE_TYPE, "thumbnail: 확장자가 올바르지 않습니다.");
         }
     }
 
     // 키워드 목록 정리
     private String joinKeywords(List<String> keywords) {
         if (keywords == null || keywords.isEmpty()) {
-            throw new com.example.shortudy.global.error.BaseException(com.example.shortudy.global.error.ErrorCode.INVALID_INPUT, "키워드는 필수입니다.");
+            throw new BaseException(ErrorCode.INVALID_INPUT, "키워드는 필수입니다.");
         }
         return keywords.stream()
                 .filter(Objects::nonNull)
@@ -191,7 +192,7 @@ public class ShortsUploadInitService {
                 .distinct()
                 .limit(30)
                 .reduce((a, b) -> a + "," + b)
-                .orElseThrow(() -> new com.example.shortudy.global.error.BaseException(com.example.shortudy.global.error.ErrorCode.INVALID_INPUT, "키워드는 필수입니다."));
+                .orElseThrow(() -> new BaseException(ErrorCode.INVALID_INPUT, "키워드는 필수입니다."));
     }
 
     // 썸네일 키 생성
