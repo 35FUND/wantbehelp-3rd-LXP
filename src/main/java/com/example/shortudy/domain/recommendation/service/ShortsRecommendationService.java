@@ -77,8 +77,10 @@ public class ShortsRecommendationService {
                 .map(sk -> sk.getKeyword().getDisplayName())
                 .collect(Collectors.toSet());
 
-        // 2. 2단계 fallback으로 후보 ID 수집
-        List<Long> candidateIds = collectCandidateIds(baseShorts);
+        // 2. 후보 Shorts 조회 (기준 제외, PUBLISHED 상태만)
+        List<Shorts> candidates = shortsRepository.findRecommendationCandidates(
+                shortsId,
+                ShortsStatus.PUBLISHED);
 
         // 3. 모든 유사도 계산
         List<JaccardSimilarityCalculator.SimilarityResult> allResults =
