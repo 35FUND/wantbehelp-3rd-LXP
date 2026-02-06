@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class KeywordService {
 
     private final KeywordRepository keywordRepository;
@@ -22,7 +23,6 @@ public class KeywordService {
         this.keywordRepository = keywordRepository;
     }
 
-    @Transactional(readOnly = true)
     public List<KeywordResponse> getAllKeywords() {
         return keywordRepository.findAll().stream()
                 .map(this::toResponse)
@@ -40,7 +40,7 @@ public class KeywordService {
 //                .orElseThrow(() -> new BaseException(ErrorCode.KEYWORD_NOT_FOUND));
 //    }
 
-    @Transactional(readOnly = true)
+    @Deprecated(since = "해당 메서드는 제거될 가능성이 있습니다.")
     public List<KeywordResponse> searchKeywords(String q) {
         if (q == null || q.isBlank()) return List.of();
 

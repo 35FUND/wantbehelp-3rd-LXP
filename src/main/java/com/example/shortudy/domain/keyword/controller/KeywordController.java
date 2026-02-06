@@ -40,6 +40,7 @@ public class KeywordController {
 //    }
 
     // 키워드 검색 기능
+    @Deprecated(since = "해당 API는 제거될 가능성이 있습니다.")
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<List<KeywordResponse>>> search(
             @RequestParam(value = "q", required = false) String q) {
