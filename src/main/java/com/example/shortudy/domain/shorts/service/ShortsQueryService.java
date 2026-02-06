@@ -40,26 +40,28 @@ public class ShortsQueryService {
      * 상세 조회 - DB 집계 데이터와 Redis 실시간 조회수를 통합하여 반환합니다.
      */
     public ShortsResponse getShortsDetails(Long shortsId, Long userId) {
-        Object[] result = shortsRepository.findShortsWithCounts(shortsId, userId)
+        ShortsResponse response = shortsRepository.findResponseById(shortsId, userId)
                 .orElseThrow(() -> new BaseException(ErrorCode.SHORTS_NOT_FOUND));
         
-        return mergeRealTimeViewCount(toShortsResponse(result));
+        // Keywords는 별도로 채워주거나, 엔티티 조회가 필요할 시 별도 로직 수행
+        // 현재 Response DTO는 생성자 프로젝션으로 인해 keywords가 null인 상태임
+        return mergeRealTimeViewCount(fillKeywords(response, shortsId));
     }
 
     /**
      * 목록 조회 - 발행된 숏츠 목록을 집계 데이터와 함께 조회합니다.
      */
     public Page<ShortsResponse> getShortsList(Pageable pageable, Long userId) {
-        Page<Object[]> results = shortsRepository.findShortsPageWithCounts(ShortsStatus.PUBLISHED, userId, pageable);
-        return mergeRealTimeViewCounts(results.map(this::toShortsResponse));
+        Page<ShortsResponse> responses = shortsRepository.findResponsesByStatus(ShortsStatus.PUBLISHED, userId, pageable);
+        return mergeRealTimeViewCounts(responses);
     }
 
     /**
      * 카테고리별 조회 - 특정 카테고리의 숏츠 목록을 집계 데이터와 함께 조회합니다.
      */
     public Page<ShortsResponse> getShortsByCategory(Long categoryId, Pageable pageable, Long userId) {
-        Page<Object[]> results = shortsRepository.findByCategoryWithCounts(categoryId, ShortsStatus.PUBLISHED, userId, pageable);
-        return mergeRealTimeViewCounts(results.map(this::toShortsResponse));
+        Page<ShortsResponse> responses = shortsRepository.findResponsesByCategoryIdAndStatus(categoryId, ShortsStatus.PUBLISHED, userId, pageable);
+        return mergeRealTimeViewCounts(responses);
     }
 
     /**
@@ -68,27 +70,36 @@ public class ShortsQueryService {
     public Page<ShortsResponse> getPopularShorts(Integer days, Pageable pageable, Long userId) {
         if (days == null || days <= 0) days = 30;
         LocalDateTime since = LocalDateTime.now().minusDays(days);
-        Page<Object[]> results = shortsRepository.findPopularWithCounts(since, userId, pageable);
-        return mergeRealTimeViewCounts(results.map(this::toShortsResponse));
+        Page<ShortsResponse> responses = shortsRepository.findPopularResponses(since, userId, pageable);
+        return mergeRealTimeViewCounts(responses);
     }
 
     /**
      * 내 쇼츠 조회 - 내가 작성한 숏츠 목록을 집계 데이터와 함께 조회합니다.
      */
     public Page<ShortsResponse> getMyShorts(Long userId, Pageable pageable) {
-        Page<Object[]> results = shortsRepository.findMyShortsWithCounts(userId, pageable);
-        return mergeRealTimeViewCounts(results.map(this::toShortsResponse));
+        Page<ShortsResponse> responses = shortsRepository.findMyResponses(userId, pageable);
+        return mergeRealTimeViewCounts(responses);
     }
 
     /**
-     * Repository의 Object[] 결과를 ShortsResponse DTO로 변환합니다.
+     * DTO의 키워드 목록을 채워줍니다. (Batch Fetch 활용을 위해 엔티티에서 추출)
      */
-    private ShortsResponse toShortsResponse(Object[] result) {
-        Shorts shorts = (Shorts) result[0];
-        Long commentCount = (Long) result[1];
-        Boolean isLiked = (Boolean) result[2];
-        return ShortsResponse.of(shorts, commentCount, shorts.getViewCount(), isLiked);
+    private ShortsResponse fillKeywords(ShortsResponse original, Long shortsId) {
+        // 상세 조회 시에만 키워드가 필수적이므로 단건 조회 시 엔티티를 활용해 키워드를 채움
+        // Batch Size 설정 덕분에 이 조회는 매우 효율적임
+        return shortsRepository.findWithDetailsAndKeywordsById(shortsId)
+                .map(shorts -> new ShortsResponse(
+                        original.shortsId(), original.title(), original.description(),
+                        original.videoUrl(), original.thumbnailUrl(), original.durationSec(),
+                        original.status(), original.userId(), original.userNickname(),
+                        original.userProfileUrl(), original.categoryId(), original.categoryName(),
+                        shorts.getKeywords().stream().map(k -> k.getDisplayName()).toList(),
+                        original.viewCount(), original.likeCount(), original.commentCount(),
+                        original.createdAt(), original.updatedAt(), original.isLiked()
+                )).orElse(original);
     }
+
 
     /**
      * 페이지 단위로 실시간 정보(조회수, 프로필 URL 등)를 통합합니다.

@@ -1,5 +1,7 @@
 package com.example.shortudy.domain.shorts.repository;
 
+import com.example.shortudy.domain.comment.entity.Comment;
+import com.example.shortudy.domain.like.entity.ShortsLike;
 import com.example.shortudy.domain.shorts.dto.ShortsResponse;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
@@ -19,18 +21,129 @@ import java.util.Collection;
 import java.util.Optional;
 
 @Repository
-public interface ShortsRepository extends JpaRepository<Shorts, Long>, ShortsRepositoryCustom {
+public interface ShortsRepository extends JpaRepository<Shorts, Long> {
 
+    /**
+     * [조회수 일괄 업데이트]
+     */
     @Modifying
     @Query("UPDATE Shorts s SET s.viewCount = s.viewCount + :count WHERE s.id = :id")
     void updateViewCount(@Param("id") Long id, @Param("count") Long count);
 
-    // ============================================
-    // 상세 조회 - 기본 (ID 기반)
-    // ============================================
+    /**
+     * [상세 조회 통합 쿼리 상세 분석]
+     * JPQL의 'new' 생성자 방식에서는 반드시 클래스의 전체 패키지 경로(FQN)를 적어야 합니다.
+     * 
+     * 생성자 파라미터 매핑:
+     * 1. s.id           -> 숏츠 ID
+     * 2. s.title        -> 제목
+     * 3. s.description  -> 설명
+     * 4. s.videoUrl     -> 영상 URL
+     * 5. s.thumbnailUrl -> 썸네일 URL
+     * 6. s.durationSec  -> 재생 시간
+     * 7. s.status       -> 상태
+     * 8. u.id           -> 작성자 ID
+     * 9. u.nickname     -> 작성자 닉네임
+     * 10. u.profileUrl  -> 작성자 프로필 URL
+     * 11. c.id          -> 카테고리 ID
+     * 12. c.name        -> 카테고리명
+     * 13. null          -> 키워드 목록 (JPQL 생성자 내 컬렉션 주입 불가로 인한 placeholder)
+     * 14. s.viewCount   -> 조회수
+     * 15. s.likeCount   -> 좋아요수
+     * 16. (Subquery 1)  -> 댓글 총 개수
+     * 17. s.createdAt   -> 생성 일시
+     * 18. s.updatedAt   -> 수정 일시
+     * 19. (Subquery 2)  -> 로그인 유저의 좋아요 여부
+     */
+    @Query("SELECT new com.example.shortudy.domain.shorts.dto.ShortsResponse(" +
+            "s.id, s.title, s.description, s.videoUrl, s.thumbnailUrl, s.durationSec, s.status, " +
+            "u.id, u.nickname, u.profileUrl, " +
+            "c.id, c.name, " +
+            "null, " + 
+            "s.viewCount, s.likeCount, " +
+            "(SELECT count(cm) FROM Comment cm WHERE cm.shorts = s), " +
+            "s.createdAt, s.updatedAt, " +
+            "(SELECT count(l) > 0 FROM ShortsLike l WHERE l.shorts = s AND l.user.id = :userId)) " +
+            "FROM Shorts s " +
+            "JOIN s.user u " +
+            "JOIN s.category c " +
+            "WHERE s.id = :id")
+    Optional<ShortsResponse> findResponseById(@Param("id") Long id, @Param("userId") Long userId);
 
     /**
-     * 상세 조회 - Keyword 포함
+     * [전체 목록 조회 쿼리]
+     */
+    @Query("SELECT new com.example.shortudy.domain.shorts.dto.ShortsResponse(" +
+            "s.id, s.title, s.description, s.videoUrl, s.thumbnailUrl, s.durationSec, s.status, " +
+            "u.id, u.nickname, u.profileUrl, " +
+            "c.id, c.name, " +
+            "null, " + 
+            "s.viewCount, s.likeCount, " +
+            "(SELECT count(cm) FROM Comment cm WHERE cm.shorts = s), " +
+            "s.createdAt, s.updatedAt, " +
+            "(SELECT count(l) > 0 FROM ShortsLike l WHERE l.shorts = s AND l.user.id = :userId)) " +
+            "FROM Shorts s " +
+            "JOIN s.user u " +
+            "JOIN s.category c " +
+            "WHERE s.status = :status")
+    Page<ShortsResponse> findResponsesByStatus(@Param("status") ShortsStatus status, @Param("userId") Long userId, Pageable pageable);
+
+    /**
+     * [카테고리별 필터링 조회]
+     */
+    @Query("SELECT new com.example.shortudy.domain.shorts.dto.ShortsResponse(" +
+            "s.id, s.title, s.description, s.videoUrl, s.thumbnailUrl, s.durationSec, s.status, " +
+            "u.id, u.nickname, u.profileUrl, " +
+            "c.id, c.name, " +
+            "null, " + 
+            "s.viewCount, s.likeCount, " +
+            "(SELECT count(cm) FROM Comment cm WHERE cm.shorts = s), " +
+            "s.createdAt, s.updatedAt, " +
+            "(SELECT count(l) > 0 FROM ShortsLike l WHERE l.shorts = s AND l.user.id = :userId)) " +
+            "FROM Shorts s " +
+            "JOIN s.user u " +
+            "JOIN s.category c " +
+            "WHERE s.category.id = :categoryId AND s.status = :status")
+    Page<ShortsResponse> findResponsesByCategoryIdAndStatus(@Param("categoryId") Long categoryId, @Param("status") ShortsStatus status, @Param("userId") Long userId, Pageable pageable);
+
+    /**
+     * [인기 숏츠 조회]
+     */
+    @Query("SELECT new com.example.shortudy.domain.shorts.dto.ShortsResponse(" +
+            "s.id, s.title, s.description, s.videoUrl, s.thumbnailUrl, s.durationSec, s.status, " +
+            "u.id, u.nickname, u.profileUrl, " +
+            "c.id, c.name, " +
+            "null, " + 
+            "s.viewCount, s.likeCount, " +
+            "(SELECT count(cm) FROM Comment cm WHERE cm.shorts = s), " +
+            "s.createdAt, s.updatedAt, " +
+            "(SELECT count(l) > 0 FROM ShortsLike l WHERE l.shorts = s AND l.user.id = :userId)) " +
+            "FROM Shorts s " +
+            "JOIN s.user u " +
+            "JOIN s.category c " +
+            "WHERE s.status = 'PUBLISHED' AND s.createdAt >= :since")
+    Page<ShortsResponse> findPopularResponses(@Param("since") LocalDateTime since, @Param("userId") Long userId, Pageable pageable);
+
+    /**
+     * [내 숏츠 조회]
+     */
+    @Query("SELECT new com.example.shortudy.domain.shorts.dto.ShortsResponse(" +
+            "s.id, s.title, s.description, s.videoUrl, s.thumbnailUrl, s.durationSec, s.status, " +
+            "u.id, u.nickname, u.profileUrl, " +
+            "c.id, c.name, " +
+            "null, " + 
+            "s.viewCount, s.likeCount, " +
+            "(SELECT count(cm) FROM Comment cm WHERE cm.shorts = s), " +
+            "s.createdAt, s.updatedAt, " +
+            "(SELECT count(l) > 0 FROM ShortsLike l WHERE l.shorts = s AND l.user.id = :userId)) " +
+            "FROM Shorts s " +
+            "JOIN s.user u " +
+            "JOIN s.category c " +
+            "WHERE s.user.id = :userId")
+    Page<ShortsResponse> findMyResponses(@Param("userId") Long userId, Pageable pageable);
+
+    /**
+     * [엔티티 상세 조회 - Keywords 포함]
      */
     @Query("SELECT DISTINCT s FROM Shorts s " +
             "JOIN FETCH s.user " +
@@ -56,12 +169,9 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long>, ShortsRep
 
     /**
      * [랜덤 쇼츠 조회]
-     * 1. 목적: 사용자에게 무작위 컨텐츠를 제공하여 탐색 경험 증대.
-     * 2. 로직: rand() 함수를 활용하여 발행된 숏츠 중 무작위로 페이징 조회합니다. (DB 방언에 따라 자동 번역)
      */
     @Query("SELECT s FROM Shorts s WHERE s.status = 'PUBLISHED' ORDER BY rand()")
     Page<Shorts> findRandomPublishedShorts(Pageable pageable);
-
 
     @EntityGraph(attributePaths = {"user", "category"})
     Page<Shorts> findByUserId(Long userId, Pageable pageable);
@@ -95,10 +205,9 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long>, ShortsRep
 
     List<Shorts> findByIdNot(Long shortsId);
 
-    /**
-     * [전체 랜덤 조회]
-     */
-    @Query("SELECT s FROM Shorts s ORDER BY rand()")
+    @Query(value = "SELECT s.* FROM shorts s ORDER BY RAND()",
+            countQuery = "SELECT COUNT(*) FROM shorts",
+            nativeQuery = true)
     Page<Shorts> findAllRandom(Pageable pageable);
 
     /**
@@ -110,11 +219,9 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long>, ShortsRep
     @Query("SELECT s FROM Shorts s " +
             "WHERE s.id != :shortsId " +
             "AND s.status = :status " +
-            "AND s.visibility = 'PUBLIC' " +
-            "ORDER BY rand()")
-    List<Shorts> findRecommendationCandidates(
-            @Param("shortsId") Long shortsId,
-            @Param("status") ShortsStatus status,
-            Pageable pageable);
+            "ORDER BY RAND() " +
+            "LIMIT 10", nativeQuery = true)
+    List<Shorts> findRecommendationCandidates
+            (@Param("shortsId") Long shortsId,
+             @Param("status") String status);
 }
-
