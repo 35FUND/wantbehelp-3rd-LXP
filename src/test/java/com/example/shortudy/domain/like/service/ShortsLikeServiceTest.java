@@ -2,6 +2,8 @@ package com.example.shortudy.domain.like.service;
 
 import com.example.shortudy.domain.category.entity.Category;
 import com.example.shortudy.domain.like.dto.LikeToggleResponse;
+import com.example.shortudy.domain.like.dto.MyLikedShortsResponse;
+import com.example.shortudy.domain.like.dto.SortStandard;
 import com.example.shortudy.domain.like.entity.ShortsLike;
 import com.example.shortudy.domain.like.repository.ShortsLikeRepository;
 import com.example.shortudy.domain.shorts.entity.Shorts;
@@ -23,8 +25,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -51,20 +57,25 @@ class ShortsLikeServiceTest {
     @Autowired
     private TestEntityManager em;
 
-    private User user;
-    private Shorts shorts;
+    private User user, user2;
+    private Shorts shorts, shorts2;
 
     @BeforeEach
     void setUp() {
         user = User.create("test@example.com", "password", "nickname", UserRole.USER, "");
+        user2 = User.create("test2@example.com", "password", "nickname2", UserRole.USER, "");
         userRepository.save(user);
+        userRepository.save(user2);
 
         Category category = new Category("category");
         em.persist(category);
 
         shorts = new Shorts(user, category, "title", "description",
                 "http://video.url", "http://thumbnail.url", 500, ShortsStatus.PUBLISHED);
+        shorts2 = new Shorts(user2, category, "title2", "description2",
+                "http://video2.url", "http://thumbnail2.url", 5700, ShortsStatus.PUBLISHED);
         shortsRepository.save(shorts);
+        shortsRepository.save(shorts2);
         em.flush();
         em.clear();
     }
@@ -140,4 +151,25 @@ class ShortsLikeServiceTest {
                 "존재하지 않는 숏츠에 좋아요를 할 수 없습니다");
     }
 
+    @Test
+    @DisplayName("TC-SLS-005: 인기순 정렬 요청 시 Repository의 인기순 조회 메서드를 호출한다")
+    void getMyLikedShorts_Popular_Success() {
+        // given
+        shortsLikeService.toggleLike(user.getId(), shorts.getId());
+        shortsLikeService.toggleLike(user.getId(), shorts2.getId());
+        shortsLikeService.toggleLike(user2.getId(), shorts2.getId());
+
+        em.flush();
+        em.clear();
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        //when
+        MyLikedShortsResponse response = shortsLikeService.getMyLikedShorts(user.getId(), SortStandard.POPULAR.getValue(), pageable);
+
+        // then
+        assertEquals(2, response.content().size(), "인기순 조회 시 요청에 맞는 결과가 나와야 합니다");
+        assertEquals("title2", response.content().get(0).title(), "인기순 조회 시 조건에 맞는 숏츠의 제목이어야 합니다");
+        assertEquals(pageable.getPageNumber(), response.pageable().getPageNumber());
+    }
 }

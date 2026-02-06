@@ -1,6 +1,8 @@
 package com.example.shortudy.domain.like.repository;
 
 import com.example.shortudy.domain.like.entity.ShortsLike;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -24,6 +26,32 @@ public interface ShortsLikeRepository extends JpaRepository<ShortsLike, Long> {
             "AND shorts_id = :shortsId",
             nativeQuery = true)
     Optional<ShortsLike> findWithDeleted(Long userId, Long shortsId);
+
+    /**
+     * 좋아요에 관련된 모든 정보 받아오기(shorts, user, category) - 최신순
+     * @param userId 사용자 ID
+     * @return 좋아요와 관련된 최신순 정보 리스트
+     */
+    @Query("SELECT sl FROM ShortsLike sl " +
+            "JOIN FETCH sl.shorts s " +
+            "JOIN FETCH s.user u " +
+            "JOIN FETCH s.category c " +
+            "WHERE sl.user.id = :userId " +
+            "ORDER BY sl.createdAt DESC")
+    Page<ShortsLike> findAllByUserIdWithDetailsLatest(@Param("userId") Long userId, Pageable pageable);
+
+    /**
+     * 좋아요에 관련된 모든 정보 받아오기(shorts, user, category) - 인기순(like count)
+     * @param userId 사용자 ID
+     * @return 좋아요와 관련된 인기순 정보 리스트
+     */
+    @Query("SELECT sl FROM ShortsLike sl " +
+            "JOIN FETCH sl.shorts s " +
+            "JOIN FETCH s.user u " +
+            "JOIN FETCH s.category c " +
+            "WHERE sl.user.id = :userId " +
+            "ORDER BY s.likeCount DESC, sl.createdAt DESC")
+    Page<ShortsLike> findAllByUserIdWithDetailsPopular(@Param("userId") Long userId, Pageable pageable);
 
     Optional<ShortsLike> findByUserIdAndShortsId(Long userId, Long shortsId);
 
