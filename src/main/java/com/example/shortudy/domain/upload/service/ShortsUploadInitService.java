@@ -101,7 +101,7 @@ public class ShortsUploadInitService {
         String thumbnailUploadUrl = null;
         if (thumbnailKey != null) {
             PresignedUrlResponse thumbnailPresigned = s3Service.getPresignedUrl(thumbnailKey, body.thumbnailContentType(), body.thumbnailFileSize());
-            thumbnailUploadUrl = thumbnailPresigned.presignedUrl();
+            thumbnailUploadUrl = thumbnailPresigned.url();
         }
 
         String keywords = joinKeywords(body.keywords());
@@ -126,7 +126,7 @@ public class ShortsUploadInitService {
 
         return new ShortsUploadInitResponse(
                 shortId,
-                videoPresigned.presignedUrl(),
+                videoPresigned.url(),
                 thumbnailUploadUrl,
                 uploadId,
                 EXPIRES_IN_SECONDS,
@@ -245,4 +245,4 @@ public class ShortsUploadInitService {
 }
 
 
-}
+
