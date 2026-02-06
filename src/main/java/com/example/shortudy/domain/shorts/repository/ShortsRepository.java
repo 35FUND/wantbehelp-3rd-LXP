@@ -200,8 +200,9 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
 
     /**
      * [추천 후보 숏츠 조회]
-     * 1. 목적: 추천 알고리즘을 위해 현재 보고 있는 영상(shortsId)을 제외한 나머지 중 무작위 10건을 추출합니다.
-     * 2. 로직: JPQL을 사용하여 타입 안정성을 확보하고, DB 함수를 통해 무작위 정렬을 수행합니다.
+     * 1. 목적: 추천 알고리즘을 수행할 대상 후보군을 추출합니다.
+     * 2. 로직: 현재 보고 있는 영상을 제외하고 발행된 영상들을 무작위로 가져옵니다.
+     * 3. 제한: 대량 조회를 방지하기 위해 Pageable을 통해 후보군 크기를 제한합니다.
      */
     @Query("SELECT s FROM Shorts s " +
             "WHERE s.id != :shortsId " +
@@ -209,6 +210,7 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
             "ORDER BY function('RAND')")
     List<Shorts> findRecommendationCandidates(
             @Param("shortsId") Long shortsId,
-            @Param("status") ShortsStatus status);
+            @Param("status") ShortsStatus status,
+            Pageable pageable);
 }
 

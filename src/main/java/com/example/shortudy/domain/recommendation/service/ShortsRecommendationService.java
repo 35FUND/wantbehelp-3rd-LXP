@@ -28,8 +28,8 @@ import static com.example.shortudy.global.error.ErrorCode.SHORTS_NOT_FOUND;
 @Transactional(readOnly = true)
 public class ShortsRecommendationService {
 
-    private static final int MAX_CANDIDATES = 60;
-    private static final int BATCH_SIZE = 60;
+    private static final int CANDIDATE_POOL_SIZE = 100; // 자카드 유사도를 계산할 후보군 크기
+    private final ShortsRepository shortsRepository;
 
     private final ShortsRepository shortsRepository;
     private final EntityManager entityManager;
@@ -62,10 +62,11 @@ public class ShortsRecommendationService {
                 .map(sk -> sk.getKeyword().getDisplayName())
                 .collect(Collectors.toSet());
 
-        // 2. 후보 Shorts 조회 (기준 제외, PUBLISHED 상태만)
+        // 2. 후보 Shorts 조회 (기준 제외, PUBLISHED 상태만, 최대 100개 후보군)
         List<Shorts> candidates = shortsRepository.findRecommendationCandidates(
                 shortsId,
-                ShortsStatus.PUBLISHED);
+                ShortsStatus.PUBLISHED,
+                PageRequest.of(0, CANDIDATE_POOL_SIZE));
 
         // 3. 모든 유사도 계산
         List<JaccardSimilarityCalculator.SimilarityResult> allResults =
