@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 @Service
-@Transactional
 @Slf4j
 public class UserService {
 
@@ -38,6 +37,7 @@ public class UserService {
         this.s3Service = s3Service;
     }
 
+    @Transactional
     public void signup(SignUpRequest request) {
 
         //TODO 정책 확정 필요(email, nickname 중복에 관해)
@@ -55,6 +55,7 @@ public class UserService {
         ));
     }
 
+    @Transactional
     public void updateProfile(Long userId, UpdateProfileRequest request) {
 
         User user = userRepository.findById(userId).orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
@@ -80,6 +81,7 @@ public class UserService {
         if (!changed) throw new BaseException(ErrorCode.INVALID_INPUT);
     }
 
+    @Transactional
     public void changePassword(Long userId, PasswordChangeRequest request) {
         User user = userRepository.findById(userId).orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
 
@@ -96,6 +98,7 @@ public class UserService {
 
     // DB 상태 변화를 일으키지 않기 때문에 Transactional 사용하지 않았음
     // TODO 전체적인 flow를 분할시켰습니다. 추후 병합할 수 있는 부분 병합 예정
+    // TODO 파일의 메타데이터를 FE가 보내줄 수 있다면 (Content-Type, FileSize) Content Type을 정의하는 로직 삭제 및 Max size보다 낮은 파일을 막는 검증 로직 추가 예정
     public PresignedUrlResponse prepareProfileUpload(Long userId, String uploadFileName) {
 
         // 1. 파일 확장자 추출
@@ -115,6 +118,7 @@ public class UserService {
     }
 
     // Content-Type 고정 값 및 제한
+    // TODO FE에서 메타데이터가 넘어오면 삭제할거임
     private String determineContentType(String extension) {
         return switch (extension.toLowerCase()) {
             case ".png" -> "image/png";
@@ -124,8 +128,9 @@ public class UserService {
         };
     }
 
+    // TODO [검증로직] 업로드 완료 신호가 들어왔을 때 서버에 있는 파일의 바이트(헤더)를 읽어 실제 형식을 확인
     @Transactional
-    public void completeProfileUpdate(Long userId, String newImageKey) {
+    public void updateProfile(Long userId, String newImageKey) {
 
         // 보안 체크 (본인의 프로필이 아닌 것을 수정하려고 할 경우)
         String expectedPrefix = "profiles/" + userId + "/";
@@ -157,6 +162,7 @@ public class UserService {
     }
 
     //TODO ADMIN(백오피스) 정책 의논 필요 -> FE분들이 ADMIN을 직접 DB에 넣는 작업을 하지 않기 위한 임시 서비스
+    @Transactional
     public void changeAdmin(Long userId) {
 
         User user = userRepository.findById(userId).orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
@@ -164,12 +170,14 @@ public class UserService {
         user.changeRole();
     }
 
+    @Transactional(readOnly = true)
     public InfoResponse getUserInfo(Long userId) {
 
         return InfoResponse.from(userRepository.findById(userId).orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND)));
     }
 
     //TODO User도 SoftDelete 해야할 것 같음 수정 예정
+    @Transactional
     public void deleteUser(Long userId) {
         userRepository.findById(userId).ifPresent(userRepository::delete);
     }
