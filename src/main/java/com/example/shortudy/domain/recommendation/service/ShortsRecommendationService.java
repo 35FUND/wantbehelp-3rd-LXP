@@ -37,7 +37,7 @@ public class ShortsRecommendationService {
         // 2. 후보 Shorts 조회 (기준 제외, PUBLISHED 상태만)
         List<Shorts> candidates = shortsRepository.findRecommendationCandidates(
                 shortsId,
-                ShortsStatus.PUBLISHED.name());
+                ShortsStatus.PUBLISHED);
 
         // 3. 모든 유사도 계산 (한 번만!)
         List<JaccardSimilarityCalculator.SimilarityResult> allResults =
