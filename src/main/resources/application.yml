@@ -16,6 +16,8 @@ spring:
       hibernate:
         format_sql: false
         dialect: org.hibernate.dialect.MySQLDialect
+        default_batch_fetch_size: 100 # Batch fetch size 추가 (N+1 방지)
+
 
         jdbc:
           time_zone: Asia/Seoul
