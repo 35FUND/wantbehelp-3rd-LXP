@@ -105,7 +105,7 @@ public class PlaylistController {
      * - 페이지 단위로 나눠서 조회 (예: 1페이지에 20개씩)
      * [@PageableDefault]
      * - 페이지 기본값 설정
-     * - size = 20: 한 페이지에 20개
+     * - size = 10: 한 페이지에 10개
      * - sort = "createdAt": 생성일 기준 정렬
      * - direction = DESC: 내림차순 (최신순)
      */
@@ -113,7 +113,7 @@ public class PlaylistController {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Page<PlaylistResponse>> getMyPlaylists(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PageableDefault(size = 20, sort = "createdAt", direction = DESC) Pageable pageable
+            @PageableDefault(size = 10, sort = "createdAt", direction = DESC) Pageable pageable
     ) {
         Page<PlaylistResponse> response = playlistService.getMyPlaylists(
                 userDetails.getId(),
@@ -122,22 +122,7 @@ public class PlaylistController {
         return ApiResponse.success(response);
     }
 
-    /**
-     * 특정 사용자의 공개 플레이리스트 목록 조회 API
-     * - 다른 사용자의 공개 플레이리스트만 볼 수 있음
-     */
-    @GetMapping("/users/{userId}")
-    @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<Page<PlaylistResponse>> getUserPublicPlaylists(
-            @PathVariable Long userId,
-            @PageableDefault(size = 20, sort = "createdAt", direction = DESC) Pageable pageable
-    ) {
-        Page<PlaylistResponse> response = playlistService.getUserPublicPlaylists(
-                userId,
-                pageable
-        );
-        return ApiResponse.success(response);
-    }
+
 
     /**
      * 전체 공개 플레이리스트 목록 조회 API
@@ -147,7 +132,7 @@ public class PlaylistController {
     @GetMapping("/public")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Page<PlaylistResponse>> getPublicPlaylists(
-            @PageableDefault(size = 20, sort = "createdAt", direction = DESC) Pageable pageable
+            @PageableDefault(size = 10, sort = "createdAt", direction = DESC) Pageable pageable
     ) {
         Page<PlaylistResponse> response = playlistService.getPublicPlaylists(pageable);
         return ApiResponse.success(response);
@@ -157,7 +142,7 @@ public class PlaylistController {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<Page<PlaylistResponse>> searchPublicPlaylists(
             @RequestParam String query,
-            @PageableDefault(size = 20, sort = "createdAt", direction = DESC) Pageable pageable
+            @PageableDefault(size = 10, sort = "createdAt", direction = DESC) Pageable pageable
     ) {
         Page<PlaylistResponse> response = playlistService.searchPublicPlaylists(query, pageable);
         return ApiResponse.success(response);
@@ -191,7 +176,7 @@ public class PlaylistController {
      * - "플레이리스트의 아이템 중 특정 숏츠를 제거한다"
      */
     @DeleteMapping("/{playlistId}/items/{shortsId}")
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public ApiResponse<Void> removeShortsFromPlaylist(
             @PathVariable Long playlistId,
             @PathVariable Long shortsId,

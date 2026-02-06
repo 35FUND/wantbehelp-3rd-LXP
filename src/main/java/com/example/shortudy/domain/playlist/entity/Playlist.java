@@ -28,6 +28,7 @@ import java.util.Optional;
 public class Playlist {
     private static final int MAX_TITLE_LENGTH = 100;
     private static final int MAX_DESCRIPTION_LENGTH = 500;
+    private static final int MAX_THUMBNAIL_URL_LENGTH = 500; // @Column length 참조용
 
 
     @Id
@@ -57,7 +58,7 @@ public class Playlist {
     /**
      * 플레이리스트 썸네일 이미지 URL
      */
-    @Column(name = "thumbnail_url", length = 500)
+    @Column(name = "thumbnail_url", length = MAX_THUMBNAIL_URL_LENGTH)
     private String thumbnailUrl;
 
     /**
@@ -154,26 +155,29 @@ public class Playlist {
     }
 
     /**
-     * 플레이리스트의 썸네일 URL 업데이트
+     * 플레이리스트 내 특정 숏츠의 썸네일을 플레이리스트 썸네일로 지정
+     * - 해당 숏츠가 플레이리스트에 포함되어 있어야 함
+     *
+     * @param shortsId 썸네일로 사용할 숏츠 ID
      */
-    public void updateThumbnailUrl(String thumbnailUrl) {
-        this.thumbnailUrl = thumbnailUrl;
-    }
+    public void selectThumbnailFromShorts(Long shortsId) {
+        String selectedUrl = playlistShorts.stream()
+                .filter(ps -> ps.getShorts().getId().equals(shortsId))
+                .map(ps -> ps.getShorts().getThumbnailUrl())
+                .findFirst()
+                .orElseThrow(() -> new BaseException(ErrorCode.PLAYLIST_ITEM_NOT_FOUND,
+                        "플레이리스트에 포함된 숏츠만 썸네일로 지정할 수 있습니다."));
 
-    /**
-     * 사용자 지정 썸네일 설정
-     */
-    public void setCustomThumbnail(String thumbnailUrl) {
-        this.thumbnailUrl = thumbnailUrl;
+        this.thumbnailUrl = selectedUrl;
         this.thumbnailCustom = true;
     }
 
     /**
-     * 사용자 지정 썸네일 해제 (자동 썸네일 사용)
+     * 사용자 지정 썸네일 해제 (자동 썸네일 사용 - 첫 번째 숏츠 썸네일)
      */
     public void clearCustomThumbnail() {
-        this.thumbnailUrl = null;
         this.thumbnailCustom = false;
+        this.thumbnailUrl = getFirstShortsThumbnail();
     }
 
     /**
@@ -351,4 +355,5 @@ public class Playlist {
                     "플레이리스트 설명은 " + MAX_DESCRIPTION_LENGTH + "자를 초과할 수 없습니다.");
         }
     }
+
 }
