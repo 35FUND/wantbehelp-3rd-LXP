@@ -112,6 +112,9 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
     @EntityGraph(attributePaths = {"user", "category"})
     Page<Shorts> findByStatus(ShortsStatus status, Pageable pageable);
 
+    /**
+     * [랜덤 쇼츠 조회]
+     */
     @Query("SELECT s FROM Shorts s WHERE s.status = 'PUBLISHED' ORDER BY rand()")
     Page<Shorts> findRandomPublishedShorts(Pageable pageable);
 
@@ -142,9 +145,15 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
 
     List<Shorts> findByIdNot(Long shortsId);
 
+    /**
+     * [전체 랜덤 조회]
+     */
     @Query("SELECT s FROM Shorts s ORDER BY rand()")
     Page<Shorts> findAllRandom(Pageable pageable);
 
+    /**
+     * [추천 후보 숏츠 조회]
+     */
     @Query("SELECT s FROM Shorts s " +
             "WHERE s.id != :shortsId " +
             "AND s.status = :status " +

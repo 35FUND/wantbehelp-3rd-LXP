@@ -58,19 +58,14 @@ public class ShortsRecommendationService {
         Shorts baseShorts = shortsRepository.findWithDetailsAndKeywordsById(shortsId)
                 .orElseThrow(() -> new BaseException(SHORTS_NOT_FOUND, "해당 숏츠를 찾을 수 없습니다."));
 
-        Set<String> baseKeywordNames = extractKeywordNames(baseShorts);
+        Set<String> baseKeywords = baseShorts.getShortsKeywords().stream()
+                .map(sk -> sk.getKeyword().getDisplayName())
+                .collect(Collectors.toSet());
 
         // 2. 2단계 fallback으로 후보 ID 수집
         List<Long> candidateIds = collectCandidateIds(baseShorts);
 
-        if (candidateIds.isEmpty()) {
-            return RecommendationResponse.of(List.of(), offset, limit, 0);
-        }
-
-        // 3. 후보 상세 조회 (개별 fetch join)
-        List<Shorts> candidateShortsList = loadCandidatesWithKeywords(candidateIds);
-
-        // 4. 자카드 유사도 계산
+        // 3. 모든 유사도 계산
         List<JaccardSimilarityCalculator.SimilarityResult> allResults =
                 calculateAllSimilarities(baseKeywordNames, candidateShortsList);
 
@@ -97,7 +92,7 @@ public class ShortsRecommendationService {
                 .limit(limit)
                 .toList();
 
-        // 7. Response 생성 (페이징된 결과만 Map 조회)
+        // 6. Shorts Map 생성
         Set<Long> pagedShortsIds = pagedResults.stream()
                 .map(JaccardSimilarityCalculator.SimilarityResult::shortsId)
                 .collect(Collectors.toSet());
@@ -200,26 +195,15 @@ public class ShortsRecommendationService {
             Set<String> baseKeywordNames,
             List<Shorts> candidateShortsList
     ) {
-        List<JaccardSimilarityCalculator.SimilarityInput> inputs = candidateShortsList.stream()
-                .map(candidate -> new JaccardSimilarityCalculator.SimilarityInput(
-                        candidate.getId(),
-                        extractKeywordNames(candidate)
+        List<JaccardSimilarityCalculator.SimilarityInput> inputs = candidates.stream()
+                .map(shorts -> new JaccardSimilarityCalculator.SimilarityInput(
+                        shorts.getId(),
+                        shorts.getShortsKeywords().stream()
+                                .map(sk -> sk.getKeyword().getDisplayName())
+                                .collect(Collectors.toSet())
                 ))
                 .toList();
 
         return JaccardSimilarityCalculator.calculateMultiple(baseKeywordNames, inputs);
-    }
-
-    /**
-     * 숏츠의 키워드 displayName을 Set으로 추출
-     * - fetch join으로 shortsKeywords → keyword가 이미 로딩된 상태 전제
-     *
-     * @param shorts 대상 숏츠
-     * @return 키워드 displayName의 Set
-     */
-    private Set<String> extractKeywordNames(Shorts shorts) {
-        return shorts.getShortsKeywords().stream()
-                .map(sk -> sk.getKeyword().getDisplayName())
-                .collect(Collectors.toSet());
     }
 }
