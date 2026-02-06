@@ -1,1 +1,0 @@
-C:/Users/user/Desktop/PROJECT/Workspace_LXP/wantbehelp-3rd-LXP/gradle/wrapper/gradle-wrapper.jar에 기본 Manifest 속성이 없습니다.
