@@ -92,7 +92,7 @@ public class ShortsUploadInitService {
         String uploadId = "upload-" + UUID.randomUUID();
 
         // 1. 비디오 Presigned URL 발급 (글로벌 S3Service 활용)
-        String videoKey = "videos/" + shortId + ".mp4";
+        String videoKey = resolveVideoKey(shortId);
         PresignedUrlResponse videoPresigned = s3Service.getPresignedUrl(videoKey, body.contentType(), body.fileSize());
 
         // 2. 썸네일 Presigned URL 발급
@@ -227,6 +227,3 @@ public class ShortsUploadInitService {
     }
 
 }
-
-
-
