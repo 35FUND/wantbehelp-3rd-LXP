@@ -73,19 +73,14 @@ public class ShortsRecommendationService {
         Shorts baseShorts = shortsRepository.findWithDetailsAndKeywordsById(shortsId)
                 .orElseThrow(() -> new BaseException(SHORTS_NOT_FOUND, "해당 숏츠를 찾을 수 없습니다."));
 
-        Set<String> baseKeywordNames = extractKeywordNames(baseShorts);
+        Set<String> baseKeywords = baseShorts.getShortsKeywords().stream()
+                .map(sk -> sk.getKeyword().getDisplayName())
+                .collect(Collectors.toSet());
 
         // 2. 2단계 fallback으로 후보 ID 수집
         List<Long> candidateIds = collectCandidateIds(baseShorts);
 
-        if (candidateIds.isEmpty()) {
-            return RecommendationResponse.of(List.of(), offset, limit, 0);
-        }
-
-        // 3. 후보 상세 조회 (개별 fetch join)
-        List<Shorts> candidateShortsList = loadCandidatesWithKeywords(candidateIds);
-
-        // 4. 자카드 유사도 계산
+        // 3. 모든 유사도 계산
         List<JaccardSimilarityCalculator.SimilarityResult> allResults =
                 calculateAllSimilarities(baseKeywordNames, candidateShortsList);
 
@@ -112,7 +107,7 @@ public class ShortsRecommendationService {
                 .limit(limit)
                 .toList();
 
-        // 7. 페이징된 결과의 Shorts 엔티티 추출
+        // 6. Shorts Map 생성
         Set<Long> pagedShortsIds = pagedResults.stream()
                 .map(JaccardSimilarityCalculator.SimilarityResult::shortsId)
                 .collect(Collectors.toSet());
@@ -237,64 +232,15 @@ public class ShortsRecommendationService {
             Set<String> baseKeywordNames,
             List<Shorts> candidateShortsList
     ) {
-        List<JaccardSimilarityCalculator.SimilarityInput> inputs = candidateShortsList.stream()
-                .map(candidate -> new JaccardSimilarityCalculator.SimilarityInput(
-                        candidate.getId(),
-                        extractKeywordNames(candidate)
+        List<JaccardSimilarityCalculator.SimilarityInput> inputs = candidates.stream()
+                .map(shorts -> new JaccardSimilarityCalculator.SimilarityInput(
+                        shorts.getId(),
+                        shorts.getShortsKeywords().stream()
+                                .map(sk -> sk.getKeyword().getDisplayName())
+                                .collect(Collectors.toSet())
                 ))
                 .toList();
 
         return JaccardSimilarityCalculator.calculateMultiple(baseKeywordNames, inputs);
-    }
-
-    /**
-     * 숏츠의 키워드 displayName을 Set으로 추출
-     * - fetch join으로 shortsKeywords → keyword가 이미 로딩된 상태 전제
-     *
-     * @param shorts 대상 숏츠
-     * @return 키워드 displayName의 Set
-     */
-    private Set<String> extractKeywordNames(Shorts shorts) {
-        return shorts.getShortsKeywords().stream()
-                .map(sk -> sk.getKeyword().getDisplayName())
-                .collect(Collectors.toSet());
-    }
-
-    // ==================== 배치 조회 헬퍼 메서드 ====================
-
-    /**
-     * 숏츠별 댓글 수 배치 조회
-     * - N+1 방지: 숏츠 개수만큼 COUNT 쿼리 실행 대신, 한 번의 쿼리로 모두 조회
-     *
-     * @param shortsIds 조회 대상 숏츠 ID 목록
-     * @return 숏츠 ID → 댓글 수 맵
-     */
-    private Map<Long, Long> getCommentCounts(List<Long> shortsIds) {
-        if (shortsIds.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        return commentRepository.countAllCommentsByShortsIds(shortsIds).stream()
-                .collect(Collectors.toMap(
-                        p -> p.getShortsId(),
-                        p -> p.getCnt()
-                ));
-    }
-
-    /**
-     * 현재 사용자가 좋아요한 숏츠 ID Set 조회
-     * - 비로그인 사용자는 빈 Set 반환
-     * - N+1 방지: 한 번의 쿼리로 모든 좋아요 상태 확인
-     *
-     * @param currentUserId 현재 사용자 ID (null이면 비로그인)
-     * @param shortsIds     조회 대상 숏츠 ID 목록
-     * @return 좋아요한 숏츠 ID Set
-     */
-    private Set<Long> getLikedShortsIds(Long currentUserId, List<Long> shortsIds) {
-        if (currentUserId == null || shortsIds.isEmpty()) {
-            return Collections.emptySet();
-        }
-        return shortsLikeRepository.findByUserIdAndShortsIdIn(currentUserId, shortsIds).stream()
-                .map(like -> like.getShorts().getId())
-                .collect(Collectors.toSet());
     }
 }
