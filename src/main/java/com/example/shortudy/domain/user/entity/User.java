@@ -40,6 +40,7 @@ public class User {
     @Column(nullable = false)
     private UserRole role;
 
+    // 전체 url이 아닌 profile image key 값만 저장
     @Column
     private String profileUrl;
 
