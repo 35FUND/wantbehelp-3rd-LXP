@@ -153,6 +153,9 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
 
     /**
      * [추천 후보 숏츠 조회]
+     * 1. 목적: 추천 알고리즘을 수행할 대상 후보군을 추출합니다.
+     * 2. 로직: 현재 보고 있는 영상을 제외하고 발행된 영상들을 무작위로 가져옵니다.
+     * 3. 제한: 대량 조회를 방지하기 위해 Pageable을 통해 후보군 크기를 제한합니다.
      */
     @Query("SELECT s FROM Shorts s " +
             "WHERE s.id != :shortsId " +
@@ -163,3 +166,4 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
             @Param("status") ShortsStatus status,
             Pageable pageable);
 }
+
