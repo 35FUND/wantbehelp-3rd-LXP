@@ -21,18 +21,26 @@ public class KeywordController {
     }
 
 
+    // 키워드 전체 조회. (FE에서는 이 API만 사용중)
     @GetMapping
     public ResponseEntity<ApiResponse<List<KeywordResponse>>> getAllKeywords() {
         List<KeywordResponse> response = keywordService.getAllKeywords();
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<KeywordResponse>> getById(@PathVariable Long id) {
-        KeywordResponse response = keywordService.getKeyword(id);
-        return ResponseEntity.ok(ApiResponse.success(response));
-    }
+    //  키워드 ID로 조회 ?..
+    /*
+    * TODO : 해당 API가 실제로 필요한지 검토 필요.
+    *  필요 없으면 삭제 예정.
+    * */
+//    @GetMapping("/{id}")
+//    public ResponseEntity<ApiResponse<KeywordResponse>> getById(@PathVariable Long id) {
+//        KeywordResponse response = keywordService.getKeyword(id);
+//        return ResponseEntity.ok(ApiResponse.success(response));
+//    }
 
+    // 키워드 검색 기능
+    @Deprecated(since = "해당 API는 제거될 가능성이 있습니다.")
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<List<KeywordResponse>>> search(
             @RequestParam(value = "q", required = false) String q) {
@@ -40,6 +48,7 @@ public class KeywordController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    // 키워드 생성 (Admin)
     @PostMapping
     public ResponseEntity<ApiResponse<KeywordResponse>> create(@RequestBody KeywordRequest req) {
         // [수정] req.displayName() 대신 req.name() 사용 (KeywordRequest 레코드 규격)
@@ -48,6 +57,7 @@ public class KeywordController {
                 .body(ApiResponse.success(created));
     }
 
+    // 키워드 업데이트 (Admin) - 필요한가 ?
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<KeywordResponse>> update(
             @PathVariable Long id,
@@ -57,6 +67,7 @@ public class KeywordController {
         return ResponseEntity.ok(ApiResponse.success(updated));
     }
 
+    // 키워드 삭제 (Admin) - 필요한가 ?
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         keywordService.deleteKeyword(id);
