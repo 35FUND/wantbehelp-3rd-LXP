@@ -92,7 +92,7 @@ public class ShortsUploadInitService {
         String uploadId = "upload-" + UUID.randomUUID();
 
         // 1. 비디오 Presigned URL 발급 (글로벌 S3Service 활용)
-        String videoKey = "videos/" + shortId + ".mp4";
+        String videoKey = resolveVideoKey(shortId);
         PresignedUrlResponse videoPresigned = s3Service.getPresignedUrl(videoKey, body.contentType(), body.fileSize());
 
         // 2. 썸네일 Presigned URL 발급
@@ -178,6 +178,9 @@ public class ShortsUploadInitService {
         if (!(normalizedFileName.endsWith(".jpg") || normalizedFileName.endsWith(".jpeg") || normalizedFileName.endsWith(".png"))) {
             throw new BaseException(ErrorCode.SHORTS_UNSUPPORTED_FILE_TYPE, "thumbnail: 확장자가 올바르지 않습니다.");
         }
+        if (normalizedFileName.contains("/") || normalizedFileName.contains("\\")) {
+            throw new BaseException(ErrorCode.INVALID_INPUT, "thumbnail: 파일명에 경로 구분자는 허용되지 않습니다.");
+        }
     }
 
     // 키워드 목록 정리
@@ -200,17 +203,13 @@ public class ShortsUploadInitService {
         if (!hasText(thumbnailFileName)) {
             return null;
         }
-        String extension = resolveExtension(thumbnailFileName);
-        return "thumbnails/" + shortId + extension;
+        String normalizedFileName = thumbnailFileName.trim();
+        return "thumbnails/" + shortId + "/" + normalizedFileName;
     }
 
-    // 파일 확장자 추출
-    private String resolveExtension(String fileName) {
-        int lastDot = fileName.lastIndexOf('.');
-        if (lastDot < 0) {
-            return "";
-        }
-        return fileName.substring(lastDot).toLowerCase(Locale.ROOT);
+    // 비디오 키 생성
+    private String resolveVideoKey(Long shortId) {
+        return "videos/" + shortId + ".mp4";
     }
 
     // 문자열 유효성 검사
@@ -228,6 +227,3 @@ public class ShortsUploadInitService {
     }
 
 }
-
-
-

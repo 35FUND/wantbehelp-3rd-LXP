@@ -62,8 +62,17 @@ public class ShortsUploadCompleteService {
 
         // 클라이언트가 준 URL을 믿지 않고, 서버가 직접 경로 생성
         // (Init 단계에서 정한 규칙대로 URL을 다시 조립)
-        String videoUrl = generateS3Url("videos", shortId, "mp4"); // 확장자는 mp4 고정 가정
-        String thumbnailUrl = generateS3Url("thumbnails", shortId, "jpg"); // 썸네일은 jpg 고정 가정
+        String videoKey = resolveVideoKey(shortId);
+        String videoUrl = generateS3UrlByKey(videoKey);
+
+        String thumbnailUrl;
+        if (hasText(session.getThumbnailFileName())) {
+            String customThumbnailKey = resolveCustomThumbnailKey(shortId, session.getThumbnailFileName());
+            thumbnailUrl = generateS3UrlByKey(customThumbnailKey);
+        } else {
+            String defaultThumbnailKey = resolveDefaultThumbnailKey(shortId);
+            thumbnailUrl = generateS3UrlByKey(defaultThumbnailKey);
+        }
 
         // 5. 엔티티 및 세션 업데이트
         shorts.updateVideoUrl(videoUrl);
@@ -73,14 +82,26 @@ public class ShortsUploadCompleteService {
         session.markUploaded();
     }
 
-    /**
-     * URL 생성 로직 분리 (S3 버킷 URL 조합)
-     */
-    private String generateS3Url(String folder, Long id, String extension) {
+    private String generateS3UrlByKey(String key) {
         String bucket = awsProperties.getS3().getBucket();
         String region = awsProperties.getRegion();
-        // 예: https://my-bucket.s3.ap-northeast-2.amazonaws.com/shorts/100.mp4
-        return String.format("https://%s.s3.%s.amazonaws.com/%s/%d.%s", bucket, region, folder, id, extension);
+        return String.format("https://%s.s3.%s.amazonaws.com/%s", bucket, region, key);
+    }
+
+    private String resolveVideoKey(Long shortId) {
+        return "videos/" + shortId + ".mp4";
+    }
+
+    private String resolveCustomThumbnailKey(Long shortId, String thumbnailFileName) {
+        return "thumbnails/" + shortId + "/" + thumbnailFileName.trim();
+    }
+
+    private String resolveDefaultThumbnailKey(Long shortId) {
+        return "thumbnails/" + shortId + ".jpg";
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.trim().isBlank();
     }
 
     /**
