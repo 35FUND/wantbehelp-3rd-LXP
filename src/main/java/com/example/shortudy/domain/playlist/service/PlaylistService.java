@@ -7,6 +7,7 @@ import com.example.shortudy.domain.playlist.dto.request.PlaylistUpdateRequest;
 import com.example.shortudy.domain.playlist.dto.response.PlaylistDetailResponse;
 import com.example.shortudy.domain.playlist.dto.response.PlaylistResponse;
 import com.example.shortudy.domain.playlist.entity.Playlist;
+import com.example.shortudy.domain.playlist.entity.PlaylistShorts;
 import com.example.shortudy.domain.playlist.entity.PlaylistVisibility;
 import com.example.shortudy.domain.playlist.repository.PlaylistRepository;
 import com.example.shortudy.domain.playlist.repository.PlaylistShortsRepository;
@@ -254,6 +255,9 @@ public class PlaylistService {
 
     /**
      * 플레이리스트에서 숏츠 제거
+     * [벌크 연산 적용]
+     * - 기존: 엔티티에서 삭제 후 뒤쪽 아이템들을 하나씩 position -1 (N번 UPDATE)
+     * - 개선: 삭제 후 벌크 쿼리로 한 번에 position 재정렬 (1번 UPDATE)
      */
     @Transactional
     public void removeShortsFromPlaylist(
@@ -261,14 +265,32 @@ public class PlaylistService {
             Long userId,
             Long shortsId
     ) {
-        Playlist playlist = findPlaylistWithDetails(playlistId);
+        Playlist playlist = findPlaylistWithUser(playlistId);
         validateOwnership(playlist, userId);
 
-        playlist.removeShorts(shortsId);  // 엔티티 메서드 호출
+        // 1. 삭제 대상 조회
+        PlaylistShorts target = playlistShortsRepository
+                .findByPlaylistIdAndShortsId(playlistId, shortsId)
+                .orElseThrow(() -> new BaseException(ErrorCode.PLAYLIST_ITEM_NOT_FOUND));
+
+        int removedPosition = target.getPosition();
+
+        // 2. 삭제
+        playlistShortsRepository.delete(target);
+        playlistShortsRepository.flush();
+
+        // 3. 삭제된 위치 뒤의 항목들 position 일괄 감소 (벌크 연산)
+        playlistShortsRepository.bulkDecrementPositionAfter(playlistId, removedPosition);
+
+        // 4. 자동 썸네일 갱신 (커스텀 썸네일이 아닌 경우)
+        refreshThumbnailIfAuto(playlist);
     }
 
     /**
      * 플레이리스트 내 숏츠 순서 변경
+     * [벌크 연산 적용]
+     * - 기존: 엔티티에서 사이 항목들을 하나씩 position ±1 (N번 UPDATE)
+     * - 개선: 벌크 쿼리로 한 번에 범위 내 position 업데이트 (2번 UPDATE: 범위 시프트 + 대상 이동)
      */
     @Transactional
     public PlaylistDetailResponse reorderShorts(
@@ -276,12 +298,47 @@ public class PlaylistService {
             Long userId,
             PlaylistShortsReorderRequest request
     ) {
-        Playlist playlist = findPlaylistWithDetails(playlistId);
+        Playlist playlist = findPlaylistWithUser(playlistId);
         validateOwnership(playlist, userId);
 
-        playlist.reorderShorts(request.shortsId(), request.newIndex());  // 엔티티 메서드 호출
+        int newIndex = request.newIndex();
+        Long shortsId = request.shortsId();
 
-        return PlaylistDetailResponse.from(playlist);
+        // 1. 대상 아이템 조회
+        PlaylistShorts target = playlistShortsRepository
+                .findByPlaylistIdAndShortsId(playlistId, shortsId)
+                .orElseThrow(() -> new BaseException(ErrorCode.PLAYLIST_ITEM_NOT_FOUND));
+
+        int currentPosition = target.getPosition();
+
+        // 2. 유효 범위 검증
+        int maxPosition = playlistShortsRepository.findMaxPositionByPlaylistId(playlistId);
+        if (newIndex < 0 || newIndex > maxPosition) {
+            throw new BaseException(ErrorCode.INVALID_INPUT);
+        }
+
+        // 3. 같은 위치면 아무것도 안 함
+        if (currentPosition == newIndex) {
+            return PlaylistDetailResponse.from(findPlaylistWithDetails(playlistId));
+        }
+
+        // 4. 벌크 연산으로 사이 항목들 position 일괄 시프트
+        if (currentPosition < newIndex) {
+            // 아래로 이동: 사이 항목들 position -1
+            playlistShortsRepository.bulkDecrementPositionBetween(playlistId, currentPosition, newIndex);
+        } else {
+            // 위로 이동: 사이 항목들 position +1
+            playlistShortsRepository.bulkIncrementPositionBetween(playlistId, newIndex, currentPosition);
+        }
+
+        // 5. 대상 아이템의 position을 새 위치로 벌크 업데이트
+        playlistShortsRepository.bulkUpdatePosition(playlistId, shortsId, newIndex);
+
+        // 6. 자동 썸네일 갱신
+        Playlist refreshedPlaylist = findPlaylistWithDetails(playlistId);
+        refreshThumbnailIfAuto(refreshedPlaylist);
+
+        return PlaylistDetailResponse.from(refreshedPlaylist);
     }
 
     // ========== private 헬퍼 메서드들 ==========
@@ -348,5 +405,16 @@ public class PlaylistService {
             return true;
         }
         return currentUserId != null && playlist.isOwner(currentUserId);
+    }
+
+    /**
+     * 자동 썸네일 갱신 (서비스 레이어용)
+     * - 커스텀 썸네일이 아닌 경우, 첫 번째 숏츠의 썸네일로 갱신
+     * - 벌크 연산 후 영속성 컨텍스트가 초기화되므로 서비스에서 직접 처리
+     */
+    private void refreshThumbnailIfAuto(Playlist playlist) {
+        if (!playlist.isThumbnailCustom()) {
+            playlist.clearCustomThumbnail();
+        }
     }
 }

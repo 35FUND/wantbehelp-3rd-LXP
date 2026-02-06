@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.jpa.repository.Modifying;
+
 import java.util.Optional;
 
 /**
@@ -62,4 +64,76 @@ public interface PlaylistShortsRepository extends JpaRepository<PlaylistShorts, 
     Page<PlaylistShorts> findByPlaylistIdWithShorts(@Param("playlistId") Long playlistId, Pageable pageable);
 
     void deleteByShortsId(Long shortsId);
+
+    // ========== 벌크 연산 (position 일괄 업데이트) ==========
+
+    /**
+     * 삭제 후 position 재정렬 — 벌크 연산
+     * 삭제된 위치(removedPosition) 뒤의 항목들의 position을 1씩 감소
+     * [기존 방식 대비 개선점]
+     * - 기존: N개 항목 각각 dirty checking → N번 UPDATE
+     * - 개선: 1번의 벌크 UPDATE로 처리
+     *
+     * @param playlistId      대상 플레이리스트 ID
+     * @param removedPosition 삭제된 항목의 position
+     * @return 업데이트된 행 수
+     */
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE PlaylistShorts ps SET ps.position = ps.position - 1 " +
+            "WHERE ps.playlist.id = :playlistId AND ps.position > :removedPosition")
+    int bulkDecrementPositionAfter(@Param("playlistId") Long playlistId,
+                                   @Param("removedPosition") int removedPosition);
+
+    /**
+     * 순서 변경 시 아래로 이동 — 벌크 연산
+     * 아이템을 아래(뒤)로 이동할 때, 사이 항목들의 position을 1씩 감소
+     * 예: [A:0, B:1, C:2, D:3] 에서 B(1)를 3으로 이동
+     *     → C(2→1), D(3→2) position -1 처리
+     *
+     * @param playlistId   대상 플레이리스트 ID
+     * @param oldPosition  이동 대상의 현재 position (exclusive)
+     * @param newPosition  이동 대상의 새 position (inclusive)
+     * @return 업데이트된 행 수
+     */
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE PlaylistShorts ps SET ps.position = ps.position - 1 " +
+            "WHERE ps.playlist.id = :playlistId " +
+            "AND ps.position > :oldPosition AND ps.position <= :newPosition")
+    int bulkDecrementPositionBetween(@Param("playlistId") Long playlistId,
+                                     @Param("oldPosition") int oldPosition,
+                                     @Param("newPosition") int newPosition);
+
+    /**
+     * 순서 변경 시 위로 이동 — 벌크 연산
+     * 아이템을 위(앞)로 이동할 때, 사이 항목들의 position을 1씩 증가
+     * 예: [A:0, B:1, C:2, D:3] 에서 D(3)를 1로 이동
+     *     → B(1→2), C(2→3) position +1 처리
+     *
+     * @param playlistId   대상 플레이리스트 ID
+     * @param newPosition  이동 대상의 새 position (inclusive)
+     * @param oldPosition  이동 대상의 현재 position (exclusive)
+     * @return 업데이트된 행 수
+     */
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE PlaylistShorts ps SET ps.position = ps.position + 1 " +
+            "WHERE ps.playlist.id = :playlistId " +
+            "AND ps.position >= :newPosition AND ps.position < :oldPosition")
+    int bulkIncrementPositionBetween(@Param("playlistId") Long playlistId,
+                                     @Param("newPosition") int newPosition,
+                                     @Param("oldPosition") int oldPosition);
+
+    /**
+     * 특정 아이템의 position을 직접 변경 — 벌크 연산
+     *
+     * @param playlistId  대상 플레이리스트 ID
+     * @param shortsId    대상 숏츠 ID
+     * @param newPosition 새로운 position
+     * @return 업데이트된 행 수
+     */
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE PlaylistShorts ps SET ps.position = :newPosition " +
+            "WHERE ps.playlist.id = :playlistId AND ps.shorts.id = :shortsId")
+    int bulkUpdatePosition(@Param("playlistId") Long playlistId,
+                           @Param("shortsId") Long shortsId,
+                           @Param("newPosition") int newPosition);
 }
