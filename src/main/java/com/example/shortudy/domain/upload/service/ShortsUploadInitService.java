@@ -28,54 +28,7 @@ import java.util.UUID;
 @Service
 @Transactional(readOnly = true)
 public class ShortsUploadInitService {
-
-    private static final long MAX_FILE_SIZE_BYTES = 104_857_600L; // 100MB
-    private static final long MAX_THUMBNAIL_SIZE_BYTES = 10_485_760L; // 10MB
-    private static final int EXPIRES_IN_SECONDS = 3600;
-    private static final String ALLOWED_CONTENT_TYPE = "video/mp4";
-    private static final List<String> ALLOWED_THUMBNAIL_CONTENT_TYPES = List.of("image/jpeg", "image/png");
-
-
-    private final UserRepository userRepository;
-    private final CategoryRepository categoryRepository;
-    private final ShortsRepository shortsRepository;
-    private final ShortsUploadSessionRepository uploadSessionRepository;
-    private final ShortsService shortsService;
-    private final KeywordService keywordService;
-    private final S3Service s3Service;
-
-    public ShortsUploadInitService(
-            UserRepository userRepository,
-            CategoryRepository categoryRepository,
-            ShortsRepository shortsRepository,
-            ShortsUploadSessionRepository uploadSessionRepository,
-            ShortsService shortsService,
-            KeywordService keywordService,
-            S3Service s3Service
-    ) {
-        this.userRepository = userRepository;
-        this.categoryRepository = categoryRepository;
-        this.shortsRepository = shortsRepository;
-        this.uploadSessionRepository = uploadSessionRepository;
-        this.shortsService = shortsService;
-        this.keywordService = keywordService;
-        this.s3Service = s3Service;
-    }
-
-    @Transactional
-    public ShortsUploadInitResponse init(Long userId, ShortsUploadInitRequest.Body body) {
-        validateFile(body.fileName(), body.fileSize(), body.contentType());
-        validateThumbnail(body);
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
-
-        // 같은 사용자의 기존 미완료 업로드는 재시도 시점에 즉시 정리한다.
-        cleanupPreviousInitiatedUploads(userId);
-
-        Category category = categoryRepository.findById(body.categoryId())
-                .orElseThrow(() -> new BaseException(ErrorCode.CATEGORY_NOT_FOUND));
-
+...
         // 프론트가 추출한 메타데이터(durationSec 등)를 그대로 저장한다.
         Shorts shorts = new Shorts(
                 user,
