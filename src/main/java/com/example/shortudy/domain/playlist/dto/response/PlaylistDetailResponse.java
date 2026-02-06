@@ -22,6 +22,7 @@ public record PlaylistDetailResponse(
         String description,               // 설명
         PlaylistVisibility visibility,    // 공개 여부
         String thumbnailUrl,              // 썸네일 이미지 URL
+        boolean thumbnailCustom,          // 사용자 지정 썸네일 여부 (false면 자동 썸네일)
         int shortsCount,                  // 담긴 숏츠 개수
         OwnerInfo owner,                  // 플레이리스트 소유자 정보
         List<PlaylistShortsItem> items,   // 담긴 숏츠 목록 (순서대로)
@@ -51,26 +52,13 @@ public record PlaylistDetailResponse(
                 playlist.getDescription(),
                 playlist.getVisibility(),
                 playlist.getThumbnailUrl(),
+                playlist.isThumbnailCustom(),
                 playlist.getShortsCount(),
-                new OwnerInfo(
-                        playlist.getUser().getId(),
-                        playlist.getUser().getNickname(),
-                        playlist.getUser().getProfileUrl()
-                ),
+                OwnerInfo.from(playlist.getUser()),
                 items,
                 playlist.getCreatedAt(),
                 playlist.getUpdatedAt()
         );
-    }
-
-    /**
-     * 플레이리스트 소유자 정보
-     */
-    public record OwnerInfo(
-            Long id,            // 소유자 ID
-            String nickname,    // 닉네임
-            String profileUrl   // 프로필 이미지 URL
-    ) {
     }
 
     /**

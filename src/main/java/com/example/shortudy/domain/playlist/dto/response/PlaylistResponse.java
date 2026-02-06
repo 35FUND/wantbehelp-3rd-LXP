@@ -11,22 +11,6 @@ import java.time.LocalDateTime;
  * - 플레이리스트 목록 조회 시 반환 (내 플레이리스트, 공개 플레이리스트 등)
  * - 플레이리스트 생성/수정 후 결과 반환
  * - 상세 조회가 아니므로 담긴 숏츠 목록은 포함하지 않음
- * [JSON 응답 예시]
- * {
- *   "id": 1,
- *   "title": "자바 학습 플레이리스트",
- *   "description": "자바 기초부터 심화까지",
- *   "visibility": "PUBLIC",
- *   "thumbnailUrl": "https://example.com/thumb.jpg",
- *   "shortsCount": 5,
- *   "owner": {
- *     "id": 10,
- *     "nickname": "홍길동",
- *     "profileUrl": "https://example.com/profile.jpg"
- *   },
- *   "createdAt": "2024-01-15T10:30:00",
- *   "updatedAt": "2024-01-20T14:00:00"
- * }
  */
 public record PlaylistResponse(
         Long id,                        // 플레이리스트 ID
@@ -34,6 +18,7 @@ public record PlaylistResponse(
         String description,             // 설명
         PlaylistVisibility visibility,  // 공개 여부
         String thumbnailUrl,            // 썸네일 이미지 URL
+        boolean thumbnailCustom,        // 사용자 지정 썸네일 여부 (false면 자동 썸네일)
         int shortsCount,                // 담긴 숏츠 개수
         OwnerInfo owner,                // 소유자 정보
         LocalDateTime createdAt,        // 생성 일시
@@ -58,28 +43,11 @@ public record PlaylistResponse(
                 playlist.getDescription(),
                 playlist.getVisibility(),
                 playlist.getThumbnailUrl(),
+                playlist.isThumbnailCustom(),
                 playlist.getShortsCount(),
-                new OwnerInfo(
-                        playlist.getUser().getId(),
-                        playlist.getUser().getNickname(),
-                        playlist.getUser().getProfileUrl()
-                ),
+                OwnerInfo.from(playlist.getUser()),
                 playlist.getCreatedAt(),
                 playlist.getUpdatedAt()
         );
-    }
-
-    /**
-     * 플레이리스트 소유자 정보 (중첩 record)
-     * [중첩(Nested) record란?]
-     * - 외부 클래스 안에 정의된 record
-     * - 관련된 데이터를 그룹화하여 구조적으로 표현
-     * - 별도 파일 없이 간단하게 정의 가능
-     */
-    public record OwnerInfo(
-            Long id,            // 소유자 ID
-            String nickname,    // 닉네임
-            String profileUrl   // 프로필 이미지 URL
-    ) {
     }
 }

@@ -71,15 +71,21 @@ public class PlaylistService {
                 visibility
         );
 
-        if (request.thumbnailUrl() != null) {
-            if (request.thumbnailUrl().isBlank()) {
-                playlist.clearCustomThumbnail();
-            } else {
-                playlist.setCustomThumbnail(request.thumbnailUrl());
+        // 4. 숏츠 추가 (요청에 shortsIds가 있으면)
+        if (request.shortsIds() != null && !request.shortsIds().isEmpty()) {
+            for (Long shortsId : request.shortsIds()) {
+                Shorts shorts = findShortsById(shortsId);
+                playlist.addShorts(shorts);
             }
         }
 
-        // 4. DB에 저장하고 응답 DTO로 변환하여 반환
+        // 5. 썸네일 숏츠 지정 (요청에 thumbnailShortsId가 있으면)
+        //    - 지정하지 않으면 자동으로 첫 번째 숏츠의 썸네일 사용
+        if (request.thumbnailShortsId() != null) {
+            playlist.selectThumbnailFromShorts(request.thumbnailShortsId());
+        }
+
+        // 6. DB에 저장하고 응답 DTO로 변환하여 반환
         Playlist saved = playlistRepository.save(playlist);
         return PlaylistResponse.from(saved);
     }
@@ -124,16 +130,20 @@ public class PlaylistService {
             Long userId,
             PlaylistUpdateRequest request
     ) {
-        Playlist playlist = findPlaylistWithUser(playlistId);
+        // 썸네일 숏츠 선택을 위해 숏츠 목록까지 함께 조회
+        Playlist playlist = findPlaylistWithDetails(playlistId);
         validateOwnership(playlist, userId);  // 소유자 검증
 
         // 엔티티 수정 (더티 체킹으로 자동 UPDATE)
         playlist.update(request.title(), request.description(), request.visibility());
-        if (request.thumbnailUrl() != null) {
-            if (request.thumbnailUrl().isBlank()) {
+
+        // 썸네일 숏츠 지정: 플레이리스트 내 숏츠 중 선택
+        if (request.thumbnailShortsId() != null) {
+            if (request.thumbnailShortsId().equals(0L)) {
+                // 0을 보내면 자동 썸네일로 초기화
                 playlist.clearCustomThumbnail();
             } else {
-                playlist.setCustomThumbnail(request.thumbnailUrl());
+                playlist.selectThumbnailFromShorts(request.thumbnailShortsId());
             }
         }
 
