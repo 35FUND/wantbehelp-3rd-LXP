@@ -55,7 +55,7 @@ public class UserController {
     @PatchMapping("/me/profile/image")
     public ResponseEntity<ApiResponse<Void>> updateProfileImage(@AuthenticationPrincipal CustomUserDetails userDetails,
                                                                 @RequestBody @Valid ProfileImageUpdateRequest request) {
-        userService.completeProfileUpdate(userDetails.getId(), request.newImageKey());
+        userService.updateProfile(userDetails.getId(), request.newImageKey());
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
