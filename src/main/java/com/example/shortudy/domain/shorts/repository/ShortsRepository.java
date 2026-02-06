@@ -170,9 +170,9 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
     /**
      * [랜덤 쇼츠 조회]
      * 1. 목적: 사용자에게 무작위 컨텐츠를 제공하여 탐색 경험 증대.
-     * 2. 로직: DB의 RAND() 함수를 활용하여 발행된 숏츠 중 무작위로 페이징 조회합니다.
+     * 2. 로직: rand() 함수를 활용하여 발행된 숏츠 중 무작위로 페이징 조회합니다. (DB 방언에 따라 자동 번역)
      */
-    @Query("SELECT s FROM Shorts s WHERE s.status = 'PUBLISHED' ORDER BY function('RAND')")
+    @Query("SELECT s FROM Shorts s WHERE s.status = 'PUBLISHED' ORDER BY rand()")
     Page<Shorts> findRandomPublishedShorts(Pageable pageable);
 
     @EntityGraph(attributePaths = {"user", "category"})
@@ -210,19 +210,19 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
     /**
      * [전체 랜덤 조회]
      */
-    @Query("SELECT s FROM Shorts s ORDER BY function('RAND')")
+    @Query("SELECT s FROM Shorts s ORDER BY rand()")
     Page<Shorts> findAllRandom(Pageable pageable);
 
     /**
      * [추천 후보 숏츠 조회]
      * 1. 목적: 추천 알고리즘을 수행할 대상 후보군을 추출합니다.
-     * 2. 로직: 현재 보고 있는 영상을 제외하고 발행된 영상들을 무작위로 가져옵니다.
+     * 2. 로직: 현재 보고 있는 영상을 제외하고 발행된 영상들을 무작위로 가져옵니다. (DB 독립적인 rand() 함수 사용)
      * 3. 제한: 대량 조회를 방지하기 위해 Pageable을 통해 후보군 크기를 제한합니다.
      */
     @Query("SELECT s FROM Shorts s " +
             "WHERE s.id != :shortsId " +
             "AND s.status = :status " +
-            "ORDER BY function('RAND')")
+            "ORDER BY rand()")
     List<Shorts> findRecommendationCandidates(
             @Param("shortsId") Long shortsId,
             @Param("status") ShortsStatus status,
