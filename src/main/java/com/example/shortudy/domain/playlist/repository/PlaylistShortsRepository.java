@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import org.springframework.data.jpa.repository.Modifying;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -46,22 +47,25 @@ public interface PlaylistShortsRepository extends JpaRepository<PlaylistShorts, 
     int findMaxPositionByPlaylistId(@Param("playlistId") Long playlistId);
 
     /**
-     * 플레이리스트의 숏츠 목록 조회 (페이지네이션 + fetch join)
-     * [조회 결과 구조]
-     * PlaylistShorts
-     *   └─ shorts (Shorts)
-     *        └─ user (User) - 숏츠 작성자
-     * [주의사항]
-     * - fetch join과 Pageable을 함께 사용하면 Hibernate가 경고를 발생시킬 수 있음
-     * - "HHH90003004: firstResult/maxResults specified with collection fetch"
-     * - 이 경우 메모리에서 페이징이 이루어져 데이터가 많으면 성능 저하 가능
+     * [1단계] 플레이리스트의 숏츠 ID 목록 조회 (페이지네이션)
+     * - DB에서 페이징 처리 (메모리 페이징 없음)
+     * - fetch join 없이 ID만 조회하므로 HHH90003004 경고 발생하지 않음
+     */
+    @Query("SELECT ps.id FROM PlaylistShorts ps " +
+            "WHERE ps.playlist.id = :playlistId")
+    Page<Long> findIdsByPlaylistId(@Param("playlistId") Long playlistId, Pageable pageable);
+
+    /**
+     * [2단계] ID 목록으로 PlaylistShorts + Shorts + User fetch join 조회
+     * - 1단계에서 페이징된 ID만 대상으로 fetch join → 메모리 페이징 없음
+     * - N+1 문제 방지
      */
     @Query("SELECT ps FROM PlaylistShorts ps " +
             "JOIN FETCH ps.shorts s " +
             "JOIN FETCH s.user " +
-            "WHERE ps.playlist.id = :playlistId")
-
-    Page<PlaylistShorts> findByPlaylistIdWithShorts(@Param("playlistId") Long playlistId, Pageable pageable);
+            "WHERE ps.id IN :ids " +
+            "ORDER BY ps.position ASC")
+    List<PlaylistShorts> findByIdsWithShorts(@Param("ids") List<Long> ids);
 
     void deleteByShortsId(Long shortsId);
 
