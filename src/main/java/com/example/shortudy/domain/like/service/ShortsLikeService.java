@@ -1,6 +1,9 @@
 package com.example.shortudy.domain.like.service;
 
+import com.example.shortudy.domain.keyword.entity.Keyword;
 import com.example.shortudy.domain.like.dto.LikeToggleResponse;
+import com.example.shortudy.domain.like.dto.MyLikedShortsResponse;
+import com.example.shortudy.domain.like.dto.SortStandard;
 import com.example.shortudy.domain.like.entity.ShortsLike;
 import com.example.shortudy.domain.like.repository.ShortsLikeRepository;
 import com.example.shortudy.domain.shorts.entity.Shorts;
@@ -10,9 +13,12 @@ import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.domain.user.repository.UserRepository;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -53,6 +59,30 @@ public class ShortsLikeService {
         }
 
         return createNewLike(userId, shorts);
+    }
+
+    /**
+     * 임의의 사용자가 누른 좋아요 숏츠 목록 처리
+     * @param userId 사용자 ID
+     * @return 해당하는 좋아요 숏츠 목록 리스트
+     */
+    @Transactional(readOnly = true)
+    public MyLikedShortsResponse getMyLikedShorts(Long userId, String sort, Pageable pageable) {
+
+        Page<ShortsLike> likes = switch(SortStandard.fromValue(sort)) {
+            case LATEST -> shortsLikeRepository.findAllByUserIdWithDetailsLatest(userId, pageable);
+            case POPULAR -> shortsLikeRepository.findAllByUserIdWithDetailsPopular(userId, pageable);
+        };
+
+        return MyLikedShortsResponse.from(
+            likes.map(
+                like -> MyLikedShortsResponse.MyLikedShorts.from(
+                        like.getShorts(),
+                        like.getShorts().getLikeCount(),
+                        like.getShorts().getKeywords().stream().map(Keyword::getDisplayName).toList()
+                )).stream().toList(),
+            likes.getPageable()
+        );
     }
 
     /**
