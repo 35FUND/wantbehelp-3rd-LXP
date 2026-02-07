@@ -10,11 +10,13 @@ import com.example.shortudy.domain.user.entity.UserRole;
 import com.example.shortudy.domain.user.repository.UserRepository;
 import com.example.shortudy.global.config.S3Service;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.unit.DataSize;
 
 import java.util.UUID;
 
@@ -26,8 +28,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final S3Service s3Service;
 
-    //TODO application.yaml에 빼야하나?
-    private final long UPLOAD_PROFILE_MAX_FILE_SIZE = 5 * 1024 * 1024;  // 5MB 제한
+    @Value("${app.upload.profile.max-file-size}")
+    private DataSize maxProfileFileSize;
 
     public UserService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
@@ -114,7 +116,7 @@ public class UserService {
         String key = "profiles/" + userId + "/" + fileName;
 
         // 5. S3Service를 통해 임시 URL 발급, FE에게 "url에 올리고, 나중에 성공하면 이 key값을 나한테 다시 알려줘"라고 응답
-        return s3Service.getPresignedUrl(key, contentType, UPLOAD_PROFILE_MAX_FILE_SIZE);
+        return s3Service.getPresignedUrl(key, contentType, maxProfileFileSize.toBytes());
     }
 
     // Content-Type 고정 값 및 제한
