@@ -56,14 +56,21 @@ public interface PlaylistRepository extends JpaRepository<Playlist, Long> {
     /**
      * 제목으로 플레이리스트 검색 (특정 공개범위)
      * [LIKE 검색]
-     * - %:query%: query를 포함하는 모든 문자열
+     * - CONCAT('%', :query, '%'): query를 포함하는 모든 문자열
      * - 예: query가 "자바"면 "자바 기초", "고급 자바", "자바" 모두 매칭
-     * - 최적화 고민중인 부분.
+     * [countQuery 분리]
+     * - 메인 쿼리에 JOIN FETCH가 포함되어 있으므로 count 쿼리를 분리
+     * - count 쿼리에서 불필요한 fetch join을 제거하여 성능 개선
+     * [참고] 대규모 데이터에서 LIKE '%keyword%'는 인덱스를 타지 못함
+     * - 추후 MySQL Full-Text Index 도입 시 MATCH AGAINST로 전환 권장
      */
-    @Query("SELECT p FROM Playlist p " +
+    @Query(value = "SELECT p FROM Playlist p " +
             "JOIN FETCH p.user " +
             "WHERE p.visibility = :visibility " +
-            "AND p.title LIKE %:query%")
+            "AND p.title LIKE CONCAT('%', :query, '%')",
+            countQuery = "SELECT COUNT(p) FROM Playlist p " +
+                    "WHERE p.visibility = :visibility " +
+                    "AND p.title LIKE CONCAT('%', :query, '%')")
     Page<Playlist> searchByTitleAndVisibility(
             @Param("query") String query,
             @Param("visibility") PlaylistVisibility visibility,

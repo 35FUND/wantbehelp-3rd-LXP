@@ -119,6 +119,9 @@ public class PlaylistService {
      * - JPA는 트랜잭션 내에서 엔티티 변경을 자동 감지
      * - playlist.update() 호출만으로 DB 업데이트 됨
      * - 별도로 save() 호출할 필요 없음!
+     * [조회 최적화]
+     * - 썸네일 변경이 없으면 User만 fetch join (가벼운 쿼리)
+     * - 썸네일 변경이 있으면 전체 fetch join (숏츠 목록 필요)
      *
      * @param playlistId 수정할 플레이리스트 ID
      * @param userId     요청한 사용자 ID
@@ -131,15 +134,19 @@ public class PlaylistService {
             Long userId,
             PlaylistUpdateRequest request
     ) {
-        // 썸네일 숏츠 선택을 위해 숏츠 목록까지 함께 조회
-        Playlist playlist = findPlaylistWithDetails(playlistId);
-        validateOwnership(playlist, userId);  // 소유자 검증
+        boolean needsThumbnailChange = request.thumbnailShortsId() != null;
+
+        // 썸네일 변경이 필요하면 숏츠 목록까지, 아니면 User만 조회
+        Playlist playlist = needsThumbnailChange
+                ? findPlaylistWithDetails(playlistId)
+                : findPlaylistWithUser(playlistId);
+        validateOwnership(playlist, userId);
 
         // 엔티티 수정 (더티 체킹으로 자동 UPDATE)
         playlist.update(request.title(), request.description(), request.visibility());
 
         // 썸네일 숏츠 지정: 플레이리스트 내 숏츠 중 선택
-        if (request.thumbnailShortsId() != null) {
+        if (needsThumbnailChange) {
             if (request.thumbnailShortsId().equals(0L)) {
                 // 0을 보내면 자동 썸네일로 초기화
                 playlist.clearCustomThumbnail();
@@ -213,6 +220,10 @@ public class PlaylistService {
      * - getPlaylistDetail: 플레이리스트 정보 + 전체 숏츠 목록
      * - getPlaylistItems: 숏츠 목록만 페이지네이션으로 조회
      * - 숏츠가 많을 때 성능 최적화를 위해 사용
+     * [2단계 쿼리 전략]
+     * - 1단계: ID만 페이징 조회 (DB 페이징, 메모리 페이징 없음)
+     * - 2단계: ID 목록으로 fetch join 조회 (N+1 방지)
+     * - fetch join + Pageable 동시 사용 시 발생하는 HHH90003004 경고 해결
      */
     public Page<PlaylistDetailResponse.PlaylistShortsItem> getPlaylistItems(
             Long playlistId,
@@ -226,9 +237,22 @@ public class PlaylistService {
             throw new BaseException(ErrorCode.PLAYLIST_FORBIDDEN);
         }
 
-        // fetch join으로 숏츠와 작성자 정보를 함께 조회
-        return playlistShortsRepository.findByPlaylistIdWithShorts(playlistId, pageable)
-                .map(PlaylistDetailResponse.PlaylistShortsItem::from);
+        // 1단계: ID만 페이징 조회
+        Page<Long> idPage = playlistShortsRepository.findIdsByPlaylistId(playlistId, pageable);
+
+        if (idPage.isEmpty()) {
+            return idPage.map(id -> null);
+        }
+
+        // 2단계: ID 목록으로 fetch join 조회
+        java.util.List<PlaylistShorts> items = playlistShortsRepository.findByIdsWithShorts(idPage.getContent());
+
+        // Page 구조를 유지하면서 DTO 변환
+        return idPage.map(id -> items.stream()
+                .filter(ps -> ps.getId().equals(id))
+                .findFirst()
+                .map(PlaylistDetailResponse.PlaylistShortsItem::from)
+                .orElse(null));
     }
 
     /**
@@ -282,8 +306,9 @@ public class PlaylistService {
         // 3. 삭제된 위치 뒤의 항목들 position 일괄 감소 (벌크 연산)
         playlistShortsRepository.bulkDecrementPositionAfter(playlistId, removedPosition);
 
-        // 4. 자동 썸네일 갱신 (커스텀 썸네일이 아닌 경우)
-        refreshThumbnailIfAuto(playlist);
+        // 4. 자동 썸네일 갱신 — 벌크 연산 후 영속성 컨텍스트가 초기화되므로 다시 조회
+        Playlist refreshedPlaylist = findPlaylistWithDetails(playlistId);
+        refreshThumbnailIfAuto(refreshedPlaylist);
     }
 
     /**

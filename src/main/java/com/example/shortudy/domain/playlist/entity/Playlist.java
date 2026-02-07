@@ -7,6 +7,7 @@ import com.example.shortudy.global.error.ErrorCode;
 import jakarta.persistence.*;
 import lombok.Getter;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.Formula;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -14,7 +15,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * [이 클래스의 역할]
@@ -82,6 +82,16 @@ public class Playlist {
     @OneToMany(mappedBy = "playlist", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position ASC")
     private List<PlaylistShorts> playlistShorts = new ArrayList<>();
+
+    /**
+     * 플레이리스트에 담긴 숏츠 개수 (DB 서브쿼리로 계산)
+     * [N+1 방지]
+     * - 기존: playlistShorts.size() → LAZY 컬렉션 전체 로딩 발생
+     * - 개선: @Formula로 DB에서 직접 COUNT → 컬렉션 로딩 없이 개수만 조회
+     * - 목록 조회 API에서 각 플레이리스트의 shortsCount를 구할 때 추가 쿼리 없음
+     */
+    @Formula("(SELECT COUNT(*) FROM playlist_shorts ps WHERE ps.playlist_id = id)")
+    private int shortsCount;
 
     /**
      * 생성 일시
@@ -210,86 +220,6 @@ public class Playlist {
     }
 
     /**
-     * 플레이리스트에서 숏츠 제거
-     * [로직 설명]
-     * 1. 제거할 숏츠 찾기
-     * 2. 목록에서 제거
-     * 3. 제거된 위치보다 뒤에 있던 항목들의 순서를 1씩 당김
-     *    예: [A:0, B:1, C:2, D:3]에서 B 제거 → [A:0, C:1, D:2]
-     *
-     * @param shortsId 제거할 숏츠 ID
-     */
-    public void removeShorts(Long shortsId) {
-        // findFirst(): 조건에 맞는 첫 번째 항목을 Optional로 반환
-        Optional<PlaylistShorts> target = playlistShorts.stream()
-                .filter(ps -> ps.getShorts().getId().equals(shortsId))
-                .findFirst();
-
-        if (target.isEmpty()) {
-            throw new BaseException(ErrorCode.PLAYLIST_ITEM_NOT_FOUND);
-        }
-
-        int removedPosition = target.get().getPosition();
-        playlistShorts.remove(target.get());
-
-        // 삭제된 위치 뒤의 항목들 순서 재조정 (-1씩)
-        playlistShorts.stream()
-                .filter(ps -> ps.getPosition() > removedPosition)
-                .forEach(ps -> ps.updatePosition(ps.getPosition() - 1));
-
-        refreshThumbnailIfAuto();
-    }
-
-    /**
-     * 플레이리스트 내 숏츠 순서 변경
-     * [순서 변경 알고리즘]
-     * 예시: [A:0, B:1, C:2, D:3, E:4]에서 B(index 1)를 index 3으로 이동
-     * 1. 아래로 이동하는 경우 (currentIndex < newIndex):
-     *    - B와 새 위치 사이의 항목들(C, D)을 위로 당김 (-1)
-     *    - [A:0, B:1, C:1, D:2, E:4] → [A:0, C:1, D:2, B:3, E:4]
-     * 2. 위로 이동하는 경우 (currentIndex > newIndex):
-     *    - 새 위치와 D 사이의 항목들을 아래로 밀어냄 (+1)
-     *
-     * @param shortsId 이동할 숏츠 ID
-     * @param newIndex 새로운 위치 (0부터 시작)
-     */
-    public void reorderShorts(Long shortsId, int newIndex) {
-        // 유효한 인덱스 범위인지 확인
-        if (newIndex < 0 || newIndex >= playlistShorts.size()) {
-            throw new BaseException(ErrorCode.INVALID_INPUT);
-        }
-
-        Optional<PlaylistShorts> target = playlistShorts.stream()
-                .filter(ps -> ps.getShorts().getId().equals(shortsId))
-                .findFirst();
-
-        if (target.isEmpty()) {
-            throw new BaseException(ErrorCode.PLAYLIST_ITEM_NOT_FOUND);
-        }
-
-        int currentPosition = target.get().getPosition();
-        if (currentPosition == newIndex) {
-            return;  // 같은 위치면 아무것도 안 함
-        }
-
-        if (currentPosition < newIndex) {
-            // 아래로 이동: 사이 항목들을 위로 당김
-            playlistShorts.stream()
-                    .filter(ps -> ps.getPosition() > currentPosition && ps.getPosition() <= newIndex)
-                    .forEach(ps -> ps.updatePosition(ps.getPosition() - 1));
-        } else {
-            // 위로 이동: 사이 항목들을 아래로 밀어냄
-            playlistShorts.stream()
-                    .filter(ps -> ps.getPosition() >= newIndex && ps.getPosition() < currentPosition)
-                    .forEach(ps -> ps.updatePosition(ps.getPosition() + 1));
-        }
-
-        target.get().updatePosition(newIndex);
-
-        refreshThumbnailIfAuto();
-    }
-
-    /**
      * 공개 플레이리스트인지 확인
      */
     public boolean isPublic() {
@@ -311,9 +241,14 @@ public class Playlist {
 
     /**
      * 플레이리스트에 담긴 숏츠 개수 반환
+     * - DB에서 조회된 경우: @Formula로 계산된 값 반환 (N+1 방지)
+     * - 새로 생성된 엔티티(아직 persist 전): 컬렉션 size 반환
      */
     public int getShortsCount() {
-        return playlistShorts.size();
+        if (id == null) {
+            return playlistShorts.size();
+        }
+        return shortsCount;
     }
 
     private void refreshThumbnailIfAuto() {
