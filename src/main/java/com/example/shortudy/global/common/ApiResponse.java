@@ -57,7 +57,7 @@ public class ApiResponse<T> {
      * 에러 응답
      * - 기존 시그니처 유지: (message, code, request)
      */
-    public static <T> ApiResponse<T> error(String message, String code, String request) {
+    public static <T> ApiResponse<T> error(String code, String message, String request) {
         return new ApiResponse<>(false, code, message, request, null);
     }
 }
