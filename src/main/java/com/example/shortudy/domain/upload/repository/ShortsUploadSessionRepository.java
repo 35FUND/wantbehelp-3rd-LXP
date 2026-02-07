@@ -1,6 +1,6 @@
-package com.example.shortudy.domain.shorts.upload.repository;
+package com.example.shortudy.domain.upload.repository;
 
-import com.example.shortudy.domain.shorts.upload.entity.ShortsUploadSession;
+import com.example.shortudy.domain.upload.entity.ShortsUploadSession;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

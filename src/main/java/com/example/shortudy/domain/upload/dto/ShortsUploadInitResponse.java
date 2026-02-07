@@ -1,4 +1,4 @@
-package com.example.shortudy.domain.shorts.upload.dto;
+package com.example.shortudy.domain.upload.dto;
 
 public record ShortsUploadInitResponse(
         Long shortId,
