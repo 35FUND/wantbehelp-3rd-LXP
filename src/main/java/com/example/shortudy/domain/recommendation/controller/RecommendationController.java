@@ -24,9 +24,8 @@ public class RecommendationController {
             @PathVariable Long shortsId,
             @Valid RecommendationRequest request
     ) {
-        Long seedShortsId = request.lastShortsId() != null ? request.lastShortsId() : shortsId;
         RecommendationResponse response = recommendationService.getRecommendations(
-                seedShortsId,
+                shortsId,
                 request.offset(),
                 request.limit()
         );
