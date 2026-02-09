@@ -12,5 +12,7 @@ import java.util.Optional;
 public interface ShortsUploadSessionRepository extends JpaRepository<ShortsUploadSession, Long> {
     Optional<ShortsUploadSession> findByShortId(Long shortId);
 
+    List<ShortsUploadSession> findByUserIdAndStatus(Long userId, UploadStatus status);
+
     List<ShortsUploadSession> findByStatusAndCreatedAtBefore(UploadStatus status, LocalDateTime cutoff);
 }
