@@ -40,6 +40,7 @@ public class User {
     @Column(nullable = false)
     private UserRole role;
 
+    // 전체 url이 아닌 profile image key 값만 저장
     @Column
     private String profileUrl;
 
@@ -57,18 +58,17 @@ public class User {
 
     protected User() {}
 
-    private User(String email, String password, String nickname, UserRole role, String profileUrl) {
+    private User(String email, String password, String nickname, UserRole role) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
         this.role = role;
-        this.profileUrl = profileUrl;
         this.status = UserStatus.ACTIVE;
         this.createdAt = LocalDateTime.now();
     }
 
-    public static User create(String email, String password, String nickname, UserRole role, String profileUrl) {
-        return new User(email, password, nickname, role, profileUrl);
+    public static User create(String email, String password, String nickname, UserRole role) {
+        return new User(email, password, nickname, role);
     }
 
     public void changeEmail(String email) {

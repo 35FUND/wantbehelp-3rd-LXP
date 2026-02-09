@@ -1,9 +1,9 @@
-package com.example.shortudy.domain.shorts.upload.service;
+package com.example.shortudy.domain.upload.service;
 
-import com.example.shortudy.domain.shorts.upload.dto.ShortsUploadStatusResponse;
-import com.example.shortudy.domain.shorts.upload.entity.ShortsUploadSession;
-import com.example.shortudy.domain.shorts.upload.entity.ShortsUploadSession.UploadStatus;
-import com.example.shortudy.domain.shorts.upload.repository.ShortsUploadSessionRepository;
+import com.example.shortudy.domain.upload.dto.ShortsUploadStatusResponse;
+import com.example.shortudy.domain.upload.entity.ShortsUploadSession;
+import com.example.shortudy.domain.upload.entity.ShortsUploadSession.UploadStatus;
+import com.example.shortudy.domain.upload.repository.ShortsUploadSessionRepository;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
 import org.springframework.stereotype.Service;

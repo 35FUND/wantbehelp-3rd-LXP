@@ -21,7 +21,9 @@ public enum ErrorCode {
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "USER_401", "유효하지 않은 토큰정보입니다."),
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "USER_401", "토큰이 만료되었습니다."),
     SAME_PASSWORD(HttpStatus.BAD_REQUEST, "USER_401", "변경할 비밀번호가 현재 비밀번호와 같습니다."),
-    DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "USER_409", "이미 사용중인 별명입니다."),
+    UnsupportedImageFormatException(HttpStatus.BAD_REQUEST, "USER_400", "유저 프로필 이미지에 적합하지 않은 파일 유형입니다."),
+    AccessDeniedException(HttpStatus.FORBIDDEN, "USER_403", "본인의 프로필 이미지만 설정할 수 있습니다."),
+    UserDeleteNotAllowedException(HttpStatus.CONFLICT, "USER_409", "회원 탈퇴가 불가능한 회원입니다."),
 
 
     // category

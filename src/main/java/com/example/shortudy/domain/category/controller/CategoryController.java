@@ -4,7 +4,7 @@ import com.example.shortudy.domain.category.dto.request.CategoryRequest;
 import com.example.shortudy.domain.category.dto.response.CategoryResponse;
 import com.example.shortudy.domain.category.service.CategoryService;
 import com.example.shortudy.domain.shorts.dto.ShortsResponse;
-import com.example.shortudy.domain.shorts.facade.ShortsQueryFacade;
+import com.example.shortudy.domain.shorts.service.ShortsQueryService;
 import com.example.shortudy.global.common.ApiResponse;
 import com.example.shortudy.global.security.principal.CustomUserDetails;
 import jakarta.validation.Valid;
@@ -15,9 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.net.URI;
 import java.util.List;
 
 import static org.springframework.data.domain.Sort.Direction.DESC;
@@ -27,13 +25,12 @@ import static org.springframework.data.domain.Sort.Direction.DESC;
 public class CategoryController {
 
     private final CategoryService categoryService;
-    private final ShortsQueryFacade shortsQueryFacade; // TODO : 이 부분 shortsQueryService로 이름 변경됨.
+    private final ShortsQueryService shortsQueryService;
 
-    public CategoryController(CategoryService categoryService, ShortsQueryFacade shortsQueryFacade) {
+    public CategoryController(CategoryService categoryService, ShortsQueryService shortsQueryService) {
         this.categoryService = categoryService;
-        this.shortsQueryFacade = shortsQueryFacade;
+        this.shortsQueryService = shortsQueryService;
     }
-
 
     // 카테고리 생성.
     @PostMapping
@@ -41,12 +38,6 @@ public class CategoryController {
         CategoryResponse created = categoryService.createCategory(request);
 
         // TODO : 카테고리 단일 조회 API가 필요한지 모르겠음.
-//        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-//                .path("/{categoryId}")
-//                .buildAndExpand(created.id())
-//                .toUri();
-//        return ResponseEntity.created(location).body(ApiResponse.success(created));
-
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(created));
     }
 
@@ -56,25 +47,6 @@ public class CategoryController {
         List<CategoryResponse> list = categoryService.readAllCategories();
         return ResponseEntity.ok(ApiResponse.success(list));
     }
-
-    // 카테고리 단일 조회.
-    // TODO : 카테고리 단일 조회 API가 필요한지 모르겠음. 추가적으로 현재 FE에서 사용하고 있지 않는 API
-//    @GetMapping("/{categoryId}")
-//    public ResponseEntity<ApiResponse<CategoryResponse>> readCategory(
-//            @PathVariable Long categoryId) {
-//        CategoryResponse resp = categoryService.readCategory(categoryId);
-//        return ResponseEntity.ok(ApiResponse.success(resp));
-//    }
-
-    // 카테고리 업데이트.
-    // TODO : 카테고리 업데이트는 필요 없을 것 같음.
-    // TODO : "백엔드"라는 카테고리를 생성했다가 "poo"로 변경이 되면 안될 것 같음.
-//    @PutMapping("/{categoryId}")
-//    public ResponseEntity<ApiResponse<CategoryResponse>> updateCategory(@PathVariable Long categoryId,
-//                                                                        @RequestBody @Valid CategoryRequest request) {
-//        CategoryResponse updated = categoryService.updateCategory(categoryId, request);
-//        return ResponseEntity.ok(ApiResponse.success(updated));
-//    }
 
     @DeleteMapping("/{categoryId}")
     public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable Long categoryId) {
@@ -99,7 +71,7 @@ public class CategoryController {
             @AuthenticationPrincipal CustomUserDetails me
     ) {
         Long userId = (me != null) ? me.getId() : null;
-        Page<ShortsResponse> response = shortsQueryFacade.getShortsByCategory(categoryId, pageable, userId);
+        Page<ShortsResponse> response = shortsQueryService.getShortsByCategory(categoryId, pageable, userId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }
