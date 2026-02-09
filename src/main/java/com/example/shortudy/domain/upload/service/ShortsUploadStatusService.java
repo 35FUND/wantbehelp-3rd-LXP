@@ -1,5 +1,7 @@
 package com.example.shortudy.domain.upload.service;
 
+import com.example.shortudy.domain.shorts.entity.Shorts;
+import com.example.shortudy.domain.shorts.repository.ShortsRepository;
 import com.example.shortudy.domain.upload.dto.ShortsUploadStatusResponse;
 import com.example.shortudy.domain.upload.entity.ShortsUploadSession;
 import com.example.shortudy.domain.upload.entity.ShortsUploadSession.UploadStatus;
@@ -8,8 +10,6 @@ import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
 
 /**
  * 숏츠 업로드 상태 조회 서비스
@@ -22,9 +22,14 @@ import java.time.LocalDateTime;
 public class ShortsUploadStatusService {
 
     private final ShortsUploadSessionRepository uploadSessionRepository;
+    private final ShortsRepository shortsRepository;
 
-    public ShortsUploadStatusService(ShortsUploadSessionRepository uploadSessionRepository) {
+    public ShortsUploadStatusService(
+            ShortsUploadSessionRepository uploadSessionRepository,
+            ShortsRepository shortsRepository
+    ) {
         this.uploadSessionRepository = uploadSessionRepository;
+        this.shortsRepository = shortsRepository;
     }
 
     public ShortsUploadStatusResponse getStatus(Long shortId, Long requesterUserId) {
@@ -32,7 +37,7 @@ public class ShortsUploadStatusService {
             throw new BaseException(ErrorCode.INVALID_INPUT, "shortId: 값이 올바르지 않습니다.");
         }
 
-        ShortsUploadSession session = uploadSessionRepository.findById(shortId)
+        ShortsUploadSession session = uploadSessionRepository.findByShortId(shortId)
                 .orElseThrow(() -> new BaseException(ErrorCode.SHORTS_UPLOAD_SESSION_NOT_FOUND));
 
         if (requesterUserId != null && session.getUserId() != null && !session.getUserId().equals(requesterUserId)) {
@@ -42,14 +47,15 @@ public class ShortsUploadStatusService {
         if (session.getCreatedAt() == null || session.getExpiresIn() == null) {
             throw new BaseException(ErrorCode.INTERNAL_ERROR, "업로드 세션의 시간 정보가 누락되었습니다.");
         }
-        LocalDateTime expiresAt = session.getCreatedAt().plusSeconds(session.getExpiresIn());
+        Shorts shorts = shortsRepository.findById(shortId)
+                .orElseThrow(() -> new BaseException(ErrorCode.SHORTS_NOT_FOUND));
 
-        String status = mapStatus(session.getStatus());
-        int progress = "COMPLETED".equals(status) ? 100 : 0;
+        String uploadStatus = mapUploadStatus(session.getStatus());
 
         return new ShortsUploadStatusResponse(
                 shortId,
-                status,
+                uploadStatus,
+                shorts.getStatus(),
                 session.getVideoUrl(),
                 session.getThumbnailUrl(),
                 session.getDurationSec(),
@@ -60,15 +66,10 @@ public class ShortsUploadStatusService {
     }
 
 
-    private String mapStatus(UploadStatus rawStatus) {
+    private String mapUploadStatus(UploadStatus rawStatus) {
         if (rawStatus == null) {
-            return "PENDING";
+            return UploadStatus.INITIATED.name();
         }
-
-        if (UploadStatus.COMPLETED == rawStatus) {
-            return "COMPLETED";
-        }
-
-        return "PENDING";
+        return rawStatus.name();
     }
 }
