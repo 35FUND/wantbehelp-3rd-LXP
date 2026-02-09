@@ -50,6 +50,8 @@ public record ShortsResponse(
         Boolean isLiked
 ) {
 
+    private static final String UNKNOWN_UPLOADER_NICKNAME = "알 수 없음";
+
     /**
      * Shorts 엔티티와 집계된 카운트 정보를 ShortsResponse DTO로 변환합니다.
      */
@@ -57,12 +59,15 @@ public record ShortsResponse(
         if (shorts == null) {
             throw new BaseException(ErrorCode.SHORTS_NOT_FOUND);
         }
-        if (shorts.getUser() == null) {
-            throw new BaseException(ErrorCode.SHORTS_UPLOADER_NOT_FOUND);
-        }
         if (shorts.getCategory() == null) {
             throw new BaseException(ErrorCode.SHORTS_CATEGORY_NOT_FOUND);
         }
+
+        Long uploaderId = shorts.getUser() != null ? shorts.getUser().getId() : null;
+        String uploaderNickname = shorts.getUser() != null
+                ? shorts.getUser().getNickname()
+                : UNKNOWN_UPLOADER_NICKNAME;
+        String uploaderProfileUrl = shorts.getUser() != null ? shorts.getUser().getProfileUrl() : null;
 
         return new ShortsResponse(
                 shorts.getId(),
@@ -72,9 +77,9 @@ public record ShortsResponse(
                 shorts.getThumbnailUrl(),
                 shorts.getDurationSec(),
                 shorts.getStatus(),
-                shorts.getUser().getId(),
-                shorts.getUser().getNickname(),
-                shorts.getUser().getProfileUrl(),
+                uploaderId,
+                uploaderNickname,
+                uploaderProfileUrl,
                 shorts.getCategory().getId(),
                 shorts.getCategory().getName(),
                 shorts.getKeywords().stream()

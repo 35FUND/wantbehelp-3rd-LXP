@@ -3,6 +3,7 @@ package com.example.shortudy.domain.upload.service;
 import com.example.shortudy.domain.category.entity.Category;
 import com.example.shortudy.domain.category.repository.CategoryRepository;
 import com.example.shortudy.domain.keyword.service.KeywordService;
+import com.example.shortudy.domain.shorts.entity.ShortsStatus;
 import com.example.shortudy.domain.upload.dto.ShortsUploadInitRequest;
 import com.example.shortudy.domain.upload.dto.ShortsUploadInitResponse;
 import com.example.shortudy.domain.shorts.entity.Shorts;
@@ -21,8 +22,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
-
-import static com.example.shortudy.domain.shorts.entity.ShortsStatus.DRAFT;
 
 @Service
 @Transactional(readOnly = true)
@@ -78,7 +77,7 @@ public class ShortsUploadInitService {
                 null,
                 null,
                 body.durationSec(),
-                DRAFT
+                ShortsStatus.PENDING
         );
 
         // 키워드 저장
