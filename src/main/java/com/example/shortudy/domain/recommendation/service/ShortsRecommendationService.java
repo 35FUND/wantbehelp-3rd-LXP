@@ -28,8 +28,8 @@ import static com.example.shortudy.global.error.ErrorCode.SHORTS_NOT_FOUND;
 @Transactional(readOnly = true)
 public class ShortsRecommendationService {
 
-    private static final int CANDIDATE_POOL_SIZE = 100; // 자카드 유사도를 계산할 후보군 크기
-    private final ShortsRepository shortsRepository;
+    private static final int MAX_CANDIDATES = 60;
+    private static final int BATCH_SIZE = 60;
 
     private final ShortsRepository shortsRepository;
     private final EntityManager entityManager;
@@ -58,17 +58,19 @@ public class ShortsRecommendationService {
         Shorts baseShorts = shortsRepository.findWithDetailsAndKeywordsById(shortsId)
                 .orElseThrow(() -> new BaseException(SHORTS_NOT_FOUND, "해당 숏츠를 찾을 수 없습니다."));
 
-        Set<String> baseKeywords = baseShorts.getShortsKeywords().stream()
-                .map(sk -> sk.getKeyword().getDisplayName())
-                .collect(Collectors.toSet());
+        Set<String> baseKeywordNames = extractKeywordNames(baseShorts);
 
-        // 2. 후보 Shorts 조회 (기준 제외, PUBLISHED 상태만, 최대 100개 후보군)
-        List<Shorts> candidates = shortsRepository.findRecommendationCandidates(
-                shortsId,
-                ShortsStatus.PUBLISHED,
-                PageRequest.of(0, CANDIDATE_POOL_SIZE));
+        // 2. 2단계 fallback으로 후보 ID 수집
+        List<Long> candidateIds = collectCandidateIds(baseShorts);
 
-        // 3. 모든 유사도 계산
+        if (candidateIds.isEmpty()) {
+            return RecommendationResponse.of(List.of(), offset, limit, 0);
+        }
+
+        // 3. 후보 상세 조회 (개별 fetch join)
+        List<Shorts> candidateShortsList = loadCandidatesWithKeywords(candidateIds);
+
+        // 4. 자카드 유사도 계산
         List<JaccardSimilarityCalculator.SimilarityResult> allResults =
                 calculateAllSimilarities(baseKeywordNames, candidateShortsList);
 
@@ -95,7 +97,7 @@ public class ShortsRecommendationService {
                 .limit(limit)
                 .toList();
 
-        // 6. Shorts Map 생성
+        // 7. Response 생성 (페이징된 결과만 Map 조회)
         Set<Long> pagedShortsIds = pagedResults.stream()
                 .map(JaccardSimilarityCalculator.SimilarityResult::shortsId)
                 .collect(Collectors.toSet());
@@ -198,15 +200,26 @@ public class ShortsRecommendationService {
             Set<String> baseKeywordNames,
             List<Shorts> candidateShortsList
     ) {
-        List<JaccardSimilarityCalculator.SimilarityInput> inputs = candidates.stream()
-                .map(shorts -> new JaccardSimilarityCalculator.SimilarityInput(
-                        shorts.getId(),
-                        shorts.getShortsKeywords().stream()
-                                .map(sk -> sk.getKeyword().getDisplayName())
-                                .collect(Collectors.toSet())
+        List<JaccardSimilarityCalculator.SimilarityInput> inputs = candidateShortsList.stream()
+                .map(candidate -> new JaccardSimilarityCalculator.SimilarityInput(
+                        candidate.getId(),
+                        extractKeywordNames(candidate)
                 ))
                 .toList();
 
         return JaccardSimilarityCalculator.calculateMultiple(baseKeywordNames, inputs);
+    }
+
+    /**
+     * 숏츠의 키워드 displayName을 Set으로 추출
+     * - fetch join으로 shortsKeywords → keyword가 이미 로딩된 상태 전제
+     *
+     * @param shorts 대상 숏츠
+     * @return 키워드 displayName의 Set
+     */
+    private Set<String> extractKeywordNames(Shorts shorts) {
+        return shorts.getShortsKeywords().stream()
+                .map(sk -> sk.getKeyword().getDisplayName())
+                .collect(Collectors.toSet());
     }
 }
