@@ -71,7 +71,7 @@ public class SecurityConfig {
                                 "/api/v1/categories/**",
                                 "/api/v1/comments/**",
                                 "/api/v1/keywords/**",
-                                "/api/v1/playlist/**").permitAll()
+                                "/api/v1/playlists/**").permitAll()
 
                         // 아래 요청에는 ADMIN이라는 역할이 필요하다.
                         .requestMatchers(HttpMethod.POST, "/api/v1/categories/**", "/api/v1/keywords/**").hasRole("ADMIN")
