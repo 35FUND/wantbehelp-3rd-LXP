@@ -4,6 +4,7 @@ import com.example.shortudy.domain.category.entity.Category;
 import com.example.shortudy.domain.category.repository.CategoryRepository;
 import com.example.shortudy.domain.keyword.service.KeywordService;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
+import com.example.shortudy.domain.shorts.service.ShortsService;
 import com.example.shortudy.domain.upload.dto.ShortsUploadInitRequest;
 import com.example.shortudy.domain.upload.dto.ShortsUploadInitResponse;
 import com.example.shortudy.domain.shorts.entity.Shorts;
@@ -39,6 +40,7 @@ public class ShortsUploadInitService {
     private final CategoryRepository categoryRepository;
     private final ShortsRepository shortsRepository;
     private final ShortsUploadSessionRepository uploadSessionRepository;
+    private final ShortsService shortsService;
     private final KeywordService keywordService;
     private final S3Service s3Service;
 
@@ -47,6 +49,7 @@ public class ShortsUploadInitService {
             CategoryRepository categoryRepository,
             ShortsRepository shortsRepository,
             ShortsUploadSessionRepository uploadSessionRepository,
+            ShortsService shortsService,
             KeywordService keywordService,
             S3Service s3Service
     ) {
@@ -54,6 +57,7 @@ public class ShortsUploadInitService {
         this.categoryRepository = categoryRepository;
         this.shortsRepository = shortsRepository;
         this.uploadSessionRepository = uploadSessionRepository;
+        this.shortsService = shortsService;
         this.keywordService = keywordService;
         this.s3Service = s3Service;
     }
@@ -65,6 +69,9 @@ public class ShortsUploadInitService {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
+
+        // 같은 사용자의 기존 미완료 업로드는 재시도 시점에 즉시 정리한다.
+        cleanupPreviousInitiatedUploads(userId);
 
         Category category = categoryRepository.findById(body.categoryId())
                 .orElseThrow(() -> new BaseException(ErrorCode.CATEGORY_NOT_FOUND));
@@ -134,8 +141,7 @@ public class ShortsUploadInitService {
         );
     }
 
-    // 재업로드 시 이전 INITIATED 세션과 연관된 고아 쇼츠를 즉시 정리한다.
-    // 정상 UX에서는 단건이 대부분이지만, 중복 클릭/재시도 등 예외 상황을 고려해 목록 기반으로 처리한다.
+    // 재업로드 시 이전 INITIATED 세션과 연관된 고아 쇼츠를 정리한다.
     private void cleanupPreviousInitiatedUploads(Long userId) {
         List<ShortsUploadSession> previousSessions =
                 uploadSessionRepository.findByUserIdAndStatus(userId, UploadStatus.INITIATED);
