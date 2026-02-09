@@ -53,15 +53,6 @@ public record ShortsResponse(
         Boolean isLiked
 ) {
 
-    public ShortsResponse {
-        keywords = keywords != null ? keywords : List.of();
-        viewCount = viewCount != null ? viewCount : 0L;
-        likeCount = likeCount != null ? likeCount : 0;
-        commentCount = commentCount != null ? commentCount : 0L;
-        isLiked = isLiked != null ? isLiked : false;
-        visibility = visibility != null ? visibility : ShortsVisibility.PUBLIC;
-    }
-
     private static final String UNKNOWN_UPLOADER_NICKNAME = "알 수 없음";
 
     /**
@@ -87,6 +78,7 @@ public record ShortsResponse(
         String uploaderNickname = shorts.getUser() != null
                 ? shorts.getUser().getNickname()
                 : UNKNOWN_UPLOADER_NICKNAME;
+        String uploaderProfileUrl = shorts.getUser() != null ? shorts.getUser().getProfileUrl() : null;
 
         return new ShortsResponse(
                 shorts.getId(),
@@ -96,10 +88,9 @@ public record ShortsResponse(
                 shorts.getThumbnailUrl(),
                 shorts.getDurationSec(),
                 shorts.getStatus(),
-                shorts.getVisibility(),
                 uploaderId,
                 uploaderNickname,
-                fullProfileUrl,
+                uploaderProfileUrl,
                 shorts.getCategory().getId(),
                 shorts.getCategory().getName(),
                 shorts.getKeywords().stream()

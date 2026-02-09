@@ -4,7 +4,6 @@ import com.example.shortudy.domain.category.entity.Category;
 import com.example.shortudy.domain.category.repository.CategoryRepository;
 import com.example.shortudy.domain.keyword.service.KeywordService;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
-import com.example.shortudy.domain.shorts.service.ShortsService;
 import com.example.shortudy.domain.upload.dto.ShortsUploadInitRequest;
 import com.example.shortudy.domain.upload.dto.ShortsUploadInitResponse;
 import com.example.shortudy.domain.shorts.entity.Shorts;
