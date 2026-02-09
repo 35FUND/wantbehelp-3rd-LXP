@@ -12,7 +12,9 @@ import java.util.Optional;
 public interface ShortsUploadSessionRepository extends JpaRepository<ShortsUploadSession, Long> {
     Optional<ShortsUploadSession> findByShortId(Long shortId);
 
+    // 재업로드 시 기존 미완료(INITIATED) 세션을 즉시 정리하기 위한 조회
     List<ShortsUploadSession> findByUserIdAndStatus(Long userId, UploadStatus status);
 
+    // 배치 정리 시점에 7일 이상 누적된 미완료 세션을 조회
     List<ShortsUploadSession> findByStatusAndCreatedAtBefore(UploadStatus status, LocalDateTime cutoff);
 }
