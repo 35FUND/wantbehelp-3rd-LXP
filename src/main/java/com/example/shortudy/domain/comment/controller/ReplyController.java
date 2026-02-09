@@ -60,7 +60,7 @@ public class ReplyController {
             @PathVariable Long replyId,
             @Valid @RequestBody CommentRequest request
     ) {
-        // NOTE : 대댓글을 삭제하는 메서드 추가
+        // NOTE : 대댓글을 업데이트하는 메서드 추가
         commentService.updateCommentReply(me.getId(), replyId, request);
 
         return ResponseEntity.ok(ApiResponse.success(null)
