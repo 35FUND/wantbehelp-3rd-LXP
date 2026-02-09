@@ -53,6 +53,14 @@ public record ShortsResponse(
         Boolean isLiked
 ) {
 
+    public ShortsResponse {
+        keywords = keywords != null ? keywords : List.of();
+        viewCount = viewCount != null ? viewCount : 0L;
+        likeCount = likeCount != null ? likeCount : 0;
+        commentCount = commentCount != null ? commentCount : 0L;
+        isLiked = isLiked != null ? isLiked : false;
+    }
+
     private static final String UNKNOWN_UPLOADER_NICKNAME = "알 수 없음";
 
     /**

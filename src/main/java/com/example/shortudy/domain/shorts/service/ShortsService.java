@@ -161,26 +161,9 @@ public class ShortsService {
     }
 
     private void deleteShortsCascade(Long shortsId) {
-        shortsLikeRepository.hardDeleteAllByShortsId(shortsId);
-        commentRepository.deleteByShortsId(shortsId);
-        shortsRepository.deleteById(shortsId);
-    }
-
-    @Transactional
-    public boolean deleteOrphanPendingShorts(Long shortsId) {
-        // 고아 정리 경로에서는 예외를 던지지 않고 삭제 여부만 반환해 호출측 흐름을 단순화한다.
-        Shorts shorts = shortsRepository.findById(shortsId).orElse(null);
-        if (shorts == null) {
-            return false;
-        }
-        if (!shorts.canBeDeletedAsUploadOrphan()) {
-            return false;
-        }
-
         shortsLikeRepository.deleteByShortsId(shortsId);
         commentRepository.deleteByShortsId(shortsId);
         shortsRepository.deleteById(shortsId);
-        return true;
     }
 
     private void validateShortsExists(Long shortsId) {

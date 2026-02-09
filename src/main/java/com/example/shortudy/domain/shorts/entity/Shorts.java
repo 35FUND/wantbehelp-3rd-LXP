@@ -195,17 +195,7 @@ public class Shorts {
         if (!isValidStatusTransition(this.status, nextStatus)) {
             throw new BaseException(ErrorCode.INVALID_INPUT, "허용되지 않는 숏츠 상태 전이입니다.");
         }
-        if (nextStatus == ShortsStatus.PUBLISHED && this.publishedAt == null) {
-            this.publishedAt = LocalDateTime.now();
-        }
         this.status = nextStatus;
-    }
-
-    public void changeVisibility(ShortsVisibility nextVisibility) {
-        if (nextVisibility == null || this.visibility == nextVisibility) {
-            return;
-        }
-        this.visibility = nextVisibility;
     }
 
     private boolean isValidStatusTransition(ShortsStatus currentStatus, ShortsStatus nextStatus) {
