@@ -140,7 +140,8 @@ public class ShortsUploadInitService {
         );
     }
 
-    // 재업로드 시 이전 INITIATED 세션과 연관된 고아 쇼츠를 정리한다.
+    // 재업로드 시 이전 INITIATED 세션과 연관된 고아 쇼츠를 즉시 정리한다.
+    // 정상 UX에서는 단건이 대부분이지만, 중복 클릭/재시도 등 예외 상황을 고려해 목록 기반으로 처리한다.
     private void cleanupPreviousInitiatedUploads(Long userId) {
         List<ShortsUploadSession> previousSessions =
                 uploadSessionRepository.findByUserIdAndStatus(userId, UploadStatus.INITIATED);

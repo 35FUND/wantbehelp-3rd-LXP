@@ -148,6 +148,8 @@ public class ShortsUploadCompleteService {
 
     @Transactional
     public long deleteExpiredInitiatedSessions() {
+        // 세션 생성 시각(createdAt) 기준으로 7일이 지난 INITIATED 세션을 배치 정리한다.
+        // 즉시 정리에서 누락된 건을 후처리하기 위한 안전망 역할이다.
         LocalDateTime cutoff = LocalDateTime.now().minusDays(FAILED_SESSION_RETENTION_DAYS);
         List<ShortsUploadSession> expiredSessions =
                 uploadSessionRepository.findByStatusAndCreatedAtBefore(UploadStatus.INITIATED, cutoff);
@@ -156,6 +158,7 @@ public class ShortsUploadCompleteService {
         for (ShortsUploadSession session : expiredSessions) {
             Long shortId = session.getShortId();
             if (shortId != null) {
+                // PENDING 고아 쇼츠만 도메인 규칙을 통과해 삭제된다.
                 shortsService.deleteOrphanPendingShorts(shortId);
             }
             uploadSessionRepository.delete(session);
