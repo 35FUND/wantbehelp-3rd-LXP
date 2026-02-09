@@ -4,7 +4,6 @@ import com.example.shortudy.domain.upload.entity.ShortsUploadSession.UploadStatu
 import com.example.shortudy.domain.upload.entity.ShortsUploadSession;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import java.util.Optional;
@@ -14,7 +13,4 @@ public interface ShortsUploadSessionRepository extends JpaRepository<ShortsUploa
 
     // 재업로드 시 기존 미완료(INITIATED) 세션을 즉시 정리하기 위한 조회
     List<ShortsUploadSession> findByUserIdAndStatus(Long userId, UploadStatus status);
-
-    // 배치 정리 시점에 7일 이상 누적된 미완료 세션을 조회
-    List<ShortsUploadSession> findByStatusAndCreatedAtBefore(UploadStatus status, LocalDateTime cutoff);
 }
