@@ -44,8 +44,7 @@ public class ShortsQueryService {
                 .orElseThrow(() -> new BaseException(ErrorCode.SHORTS_NOT_FOUND));
         
         // Keywords는 별도로 채워주거나, 엔티티 조회가 필요할 시 별도 로직 수행
-        // 현재 Response DTO는 생성자 프로젝션으로 인해 keywords가 null인 상태임
-        return mergeRealTimeViewCount(fillKeywords(response, shortsId));
+        return enrich(fillKeywords(response, shortsId));
     }
 
     /**
@@ -53,7 +52,7 @@ public class ShortsQueryService {
      */
     public Page<ShortsResponse> getShortsList(Pageable pageable, Long userId) {
         Page<ShortsResponse> responses = shortsRepository.findResponsesByStatus(ShortsStatus.PUBLISHED, userId, pageable);
-        return mergeRealTimeViewCounts(responses);
+        return enrichAll(responses);
     }
 
     /**
@@ -61,7 +60,7 @@ public class ShortsQueryService {
      */
     public Page<ShortsResponse> getShortsByCategory(Long categoryId, Pageable pageable, Long userId) {
         Page<ShortsResponse> responses = shortsRepository.findResponsesByCategoryIdAndStatus(categoryId, ShortsStatus.PUBLISHED, userId, pageable);
-        return mergeRealTimeViewCounts(responses);
+        return enrichAll(responses);
     }
 
     /**
@@ -71,7 +70,7 @@ public class ShortsQueryService {
         if (days == null || days <= 0) days = 30;
         LocalDateTime since = LocalDateTime.now().minusDays(days);
         Page<ShortsResponse> responses = shortsRepository.findPopularResponses(since, userId, pageable);
-        return mergeRealTimeViewCounts(responses);
+        return enrichAll(responses);
     }
 
     /**
@@ -79,15 +78,13 @@ public class ShortsQueryService {
      */
     public Page<ShortsResponse> getMyShorts(Long userId, Pageable pageable) {
         Page<ShortsResponse> responses = shortsRepository.findMyResponses(userId, pageable);
-        return mergeRealTimeViewCounts(responses);
+        return enrichAll(responses);
     }
 
     /**
      * DTO의 키워드 목록을 채워줍니다. (Batch Fetch 활용을 위해 엔티티에서 추출)
      */
     private ShortsResponse fillKeywords(ShortsResponse original, Long shortsId) {
-        // 상세 조회 시에만 키워드가 필수적이므로 단건 조회 시 엔티티를 활용해 키워드를 채움
-        // Batch Size 설정 덕분에 이 조회는 매우 효율적임
         return shortsRepository.findWithDetailsAndKeywordsById(shortsId)
                 .map(shorts -> new ShortsResponse(
                         original.shortsId(), original.title(), original.description(),
@@ -99,7 +96,6 @@ public class ShortsQueryService {
                         original.createdAt(), original.updatedAt(), original.isLiked()
                 )).orElse(original);
     }
-
 
     /**
      * 페이지 단위로 실시간 정보(조회수, 프로필 URL 등)를 통합합니다.
@@ -130,7 +126,7 @@ public class ShortsQueryService {
         return new ShortsResponse(
                 original.shortsId(), original.title(), original.description(),
                 original.videoUrl(), original.thumbnailUrl(), original.durationSec(),
-                original.status(), original.visibility(), original.userId(), original.userNickname(),
+                original.status(), original.userId(), original.userNickname(),
                 fullProfileUrl, original.categoryId(), original.categoryName(),
                 original.keywords(), realTimeViewCount, original.likeCount(),
                 original.commentCount(), original.createdAt(), original.updatedAt(),

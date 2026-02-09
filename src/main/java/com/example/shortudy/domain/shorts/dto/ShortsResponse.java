@@ -86,7 +86,6 @@ public record ShortsResponse(
         String uploaderNickname = shorts.getUser() != null
                 ? shorts.getUser().getNickname()
                 : UNKNOWN_UPLOADER_NICKNAME;
-        String uploaderProfileUrl = shorts.getUser() != null ? shorts.getUser().getProfileUrl() : null;
 
         return new ShortsResponse(
                 shorts.getId(),
@@ -98,7 +97,7 @@ public record ShortsResponse(
                 shorts.getStatus(),
                 uploaderId,
                 uploaderNickname,
-                uploaderProfileUrl,
+                fullProfileUrl,
                 shorts.getCategory().getId(),
                 shorts.getCategory().getName(),
                 shorts.getKeywords().stream()
