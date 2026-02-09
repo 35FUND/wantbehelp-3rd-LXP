@@ -1,5 +1,7 @@
 package com.example.shortudy.domain.playlist.service;
 
+import com.example.shortudy.domain.comment.repository.CommentRepository;
+import com.example.shortudy.domain.like.repository.ShortsLikeRepository;
 import com.example.shortudy.domain.playlist.dto.request.PlaylistCreateRequest;
 import com.example.shortudy.domain.playlist.dto.request.PlaylistShortsAddRequest;
 import com.example.shortudy.domain.playlist.dto.request.PlaylistShortsReorderRequest;
@@ -17,10 +19,14 @@ import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.domain.user.repository.UserRepository;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
+import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -30,18 +36,24 @@ public class PlaylistService {
     private final PlaylistShortsRepository playlistShortsRepository;
     private final ShortsRepository shortsRepository;
     private final UserRepository userRepository;
+    private final CommentRepository commentRepository;
+    private final ShortsLikeRepository shortsLikeRepository;
 
 
     public PlaylistService(
             PlaylistRepository playlistRepository,
             PlaylistShortsRepository playlistShortsRepository,
             ShortsRepository shortsRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            CommentRepository commentRepository,
+            ShortsLikeRepository shortsLikeRepository
     ) {
         this.playlistRepository = playlistRepository;
         this.playlistShortsRepository = playlistShortsRepository;
         this.shortsRepository = shortsRepository;
         this.userRepository = userRepository;
+        this.commentRepository = commentRepository;
+        this.shortsLikeRepository = shortsLikeRepository;
     }
 
     /**
@@ -110,7 +122,7 @@ public class PlaylistService {
             throw new BaseException(ErrorCode.PLAYLIST_FORBIDDEN);
         }
 
-        return PlaylistDetailResponse.from(playlist);
+        return buildDetailResponse(playlist, currentUserId);
     }
 
     /**
@@ -245,13 +257,25 @@ public class PlaylistService {
         }
 
         // 2단계: ID 목록으로 fetch join 조회
-        java.util.List<PlaylistShorts> items = playlistShortsRepository.findByIdsWithShorts(idPage.getContent());
+        List<PlaylistShorts> items = playlistShortsRepository.findByIdsWithShorts(idPage.getContent());
+
+        // 키워드 초기화 (LAZY 컬렉션)
+        initializeKeywords(items);
+
+        // 숏츠 ID 목록 추출
+        List<Long> shortsIds = items.stream()
+                .map(ps -> ps.getShorts().getId())
+                .toList();
+
+        // 댓글 수, 좋아요 여부 배치 조회
+        Map<Long, Long> commentCounts = getCommentCounts(shortsIds);
+        Set<Long> likedShortsIds = getLikedShortsIds(currentUserId, shortsIds);
 
         // Page 구조를 유지하면서 DTO 변환
         return idPage.map(id -> items.stream()
                 .filter(ps -> ps.getId().equals(id))
                 .findFirst()
-                .map(PlaylistDetailResponse.PlaylistShortsItem::from)
+                .map(ps -> PlaylistDetailResponse.PlaylistShortsItem.from(ps, commentCounts, likedShortsIds))
                 .orElse(null));
     }
 
@@ -274,7 +298,7 @@ public class PlaylistService {
         Shorts shorts = findShortsById(request.shortsId());
         playlist.addShorts(shorts);  // 엔티티 메서드 호출
 
-        return PlaylistDetailResponse.from(playlist);
+        return buildDetailResponse(playlist, userId);
     }
 
     /**
@@ -344,7 +368,8 @@ public class PlaylistService {
 
         // 3. 같은 위치면 아무것도 안 함
         if (currentPosition == newIndex) {
-            return PlaylistDetailResponse.from(findPlaylistWithDetails(playlistId));
+            Playlist refreshed = findPlaylistWithDetails(playlistId);
+            return buildDetailResponse(refreshed, userId);
         }
 
         // 4. 벌크 연산으로 사이 항목들 position 일괄 시프트
@@ -363,7 +388,7 @@ public class PlaylistService {
         Playlist refreshedPlaylist = findPlaylistWithDetails(playlistId);
         refreshThumbnailIfAuto(refreshedPlaylist);
 
-        return PlaylistDetailResponse.from(refreshedPlaylist);
+        return buildDetailResponse(refreshedPlaylist, userId);
     }
 
     // ========== private 헬퍼 메서드들 ==========
@@ -398,7 +423,7 @@ public class PlaylistService {
     }
 
     /**
-     * 플레이리스트 조회 (User + PlaylistShorts + Shorts 모두 fetch join)
+     * 플레이리스트 조회 (User + PlaylistShorts + Shorts + Category 모두 fetch join)
      * - 상세 정보가 필요할 때 사용
      * [N+1 문제와 fetch join]
      * - N+1 문제: 1번의 쿼리 후 연관 데이터 조회를 위해 N번 추가 쿼리 발생
@@ -441,5 +466,83 @@ public class PlaylistService {
         if (!playlist.isThumbnailCustom()) {
             playlist.clearCustomThumbnail();
         }
+    }
+
+    // ========== 상세 응답 빌드 헬퍼 메서드들 ==========
+
+    /**
+     * PlaylistDetailResponse 빌드 헬퍼
+     * - 키워드 초기화, 댓글 수 배치 조회, 좋아요 배치 조회를 수행 후 DTO 변환
+     *
+     * @param playlist      Playlist 엔티티 (fetch join으로 조회된 상태)
+     * @param currentUserId 현재 로그인 사용자 ID (비로그인 시 null)
+     * @return PlaylistDetailResponse DTO
+     */
+    private PlaylistDetailResponse buildDetailResponse(Playlist playlist, Long currentUserId) {
+        List<PlaylistShorts> playlistShorts = playlist.getPlaylistShorts();
+
+        // 키워드 LAZY 컬렉션 초기화 (fetch join 불가 — MultipleBagFetchException 방지)
+        initializeKeywords(playlistShorts);
+
+        // 숏츠 ID 목록 추출
+        List<Long> shortsIds = playlistShorts.stream()
+                .map(ps -> ps.getShorts().getId())
+                .toList();
+
+        // 댓글 수, 좋아요 여부 배치 조회
+        Map<Long, Long> commentCounts = getCommentCounts(shortsIds);
+        Set<Long> likedShortsIds = getLikedShortsIds(currentUserId, shortsIds);
+
+        return PlaylistDetailResponse.from(playlist, commentCounts, likedShortsIds);
+    }
+
+    /**
+     * 키워드 LAZY 컬렉션 초기화
+     * [Hibernate.initialize 사용 이유]
+     * - shortsKeywords는 LAZY 로딩으로 설정됨
+     * - fetch join으로 가져올 수 없음 (이미 playlistShorts → shorts 컬렉션 fetch join 중)
+     * - 다중 컬렉션 fetch join은 MultipleBagFetchException 발생
+     * - 따라서 Hibernate.initialize()로 개별 초기화
+     */
+    private void initializeKeywords(List<PlaylistShorts> playlistShorts) {
+        for (PlaylistShorts ps : playlistShorts) {
+            Hibernate.initialize(ps.getShorts().getShortsKeywords());
+        }
+    }
+
+    /**
+     * 숏츠별 댓글 수 배치 조회
+     * - N+1 방지: 숏츠 개수만큼 COUNT 쿼리 실행 대신, 한 번의 쿼리로 모두 조회
+     *
+     * @param shortsIds 조회 대상 숏츠 ID 목록
+     * @return 숏츠 ID → 댓글 수 맵
+     */
+    private Map<Long, Long> getCommentCounts(List<Long> shortsIds) {
+        if (shortsIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return commentRepository.countAllCommentsByShortsIds(shortsIds).stream()
+                .collect(Collectors.toMap(
+                        p -> p.getShortsId(),
+                        p -> p.getCnt()
+                ));
+    }
+
+    /**
+     * 현재 사용자가 좋아요한 숏츠 ID Set 조회
+     * - 비로그인 사용자는 빈 Set 반환
+     * - N+1 방지: 한 번의 쿼리로 모든 좋아요 상태 확인
+     *
+     * @param currentUserId 현재 사용자 ID (null이면 비로그인)
+     * @param shortsIds     조회 대상 숏츠 ID 목록
+     * @return 좋아요한 숏츠 ID Set
+     */
+    private Set<Long> getLikedShortsIds(Long currentUserId, List<Long> shortsIds) {
+        if (currentUserId == null || shortsIds.isEmpty()) {
+            return Collections.emptySet();
+        }
+        return shortsLikeRepository.findByUserIdAndShortsIdIn(currentUserId, shortsIds).stream()
+                .map(like -> like.getShorts().getId())
+                .collect(Collectors.toSet());
     }
 }

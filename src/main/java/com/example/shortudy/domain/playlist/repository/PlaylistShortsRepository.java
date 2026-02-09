@@ -63,6 +63,7 @@ public interface PlaylistShortsRepository extends JpaRepository<PlaylistShorts, 
     @Query("SELECT ps FROM PlaylistShorts ps " +
             "JOIN FETCH ps.shorts s " +
             "JOIN FETCH s.user " +
+            "LEFT JOIN FETCH s.category " +
             "WHERE ps.id IN :ids " +
             "ORDER BY ps.position ASC")
     List<PlaylistShorts> findByIdsWithShorts(@Param("ids") List<Long> ids);

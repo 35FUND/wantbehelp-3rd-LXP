@@ -25,6 +25,7 @@ public interface PlaylistRepository extends JpaRepository<Playlist, Long> {
             "LEFT JOIN FETCH p.playlistShorts ps " +
             "LEFT JOIN FETCH ps.shorts s " +
             "LEFT JOIN FETCH s.user " +
+            "LEFT JOIN FETCH s.category " +
             "WHERE p.id = :id")
     Optional<Playlist> findWithDetailsById(@Param("id") Long id);
 
