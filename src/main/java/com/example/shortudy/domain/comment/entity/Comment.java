@@ -116,6 +116,7 @@ public class Comment {
             throw new BaseException(ErrorCode.COMMENT_FORBIDDEN);
         }
 
+        // NOTE : 멱등성을 위해서 return을 해줘도 되긴 함 !
         if (this.status == CommentStatus.DELETED) {
             return; // 이미 삭제된 경우 아무 작업도 수행하지 않음
         }

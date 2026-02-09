@@ -72,7 +72,8 @@ public class ReplyController {
             @AuthenticationPrincipal CustomUserDetails me,
             @PathVariable Long replyId
     ) {
-        commentService.deleteComment(me.getId(), replyId);
+        // NOTE : 대댓글을 삭제하는 메서드 추가
+        commentService.deleteCommentReply(me.getId(), replyId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResponse.success(null));
     }
 }

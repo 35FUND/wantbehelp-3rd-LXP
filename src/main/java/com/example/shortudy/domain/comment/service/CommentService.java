@@ -105,7 +105,7 @@ public class CommentService {
         }
     }
 
-    // 댓글, 대댓글 삭제
+    // 댓글 삭제
     @Transactional
     public void deleteComment(Long userId, Long commentId) {
 
@@ -123,6 +123,28 @@ public class CommentService {
                 reply.softDelete(reply.getUser().getId()); // 대댓글 작성자 권한으로 삭제 처리 (혹은 강제 삭제)
             }
         }
+
+        comment.softDelete(userId);
+    }
+
+    // TODO : 대댓글 삭제 메서드 분리
+    @Transactional
+    public void deleteCommentReply(Long userId, Long commentId) {
+
+        // 대댓글 ID가 없으면 예외 처리
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() ->
+            new BaseException(ErrorCode.COMMENT_NOT_FOUND));
+
+        // 내가 쓴 대댓글이 아니면 오류 처리
+        if (!comment.isWrittenBy(userId)) {
+            throw new BaseException(ErrorCode.COMMENT_FORBIDDEN);
+        }
+
+        // 대댓글이 아닌 경우 예외 처리
+        if (comment.getParent() == null) {
+            throw new BaseException(ErrorCode.COMMENT_NOT_FOUND);
+        }
+
 
         comment.softDelete(userId);
     }
