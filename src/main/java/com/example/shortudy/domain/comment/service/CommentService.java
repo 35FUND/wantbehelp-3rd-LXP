@@ -70,13 +70,34 @@ public class CommentService {
         return new CommentListResponse(totalCount, commentResponses);
     }
 
-    // 댓글, 대댓글 수정
+    // 댓글 수정
     @Transactional
     public void updateComment(Long userId, Long commentId, CommentRequest request) {
 
         Comment comment = commentRepository.findById(commentId).orElseThrow(() ->
                 new BaseException(ErrorCode.COMMENT_NOT_FOUND));
 
+        if (!comment.isWrittenBy(userId)) {
+            throw new BaseException(ErrorCode.COMMENT_FORBIDDEN);
+        } else {
+            comment.updateContent(request.content());
+        }
+    }
+
+    // TODO : 대댓글 업데이트 로직 분리를 위한 메서드 추가
+    @Transactional
+    public void updateCommentReply(Long userId, Long commentId, CommentRequest request) {
+
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() ->
+            new BaseException(ErrorCode.COMMENT_NOT_FOUND));
+
+
+        // 대댓글이 아닌 경우 예외 처리
+        if (comment.getParent() == null) {
+            throw new BaseException(ErrorCode.COMMENT_NOT_FOUND);
+        }
+
+        // 작성자 검증
         if (!comment.isWrittenBy(userId)) {
             throw new BaseException(ErrorCode.COMMENT_FORBIDDEN);
         } else {
