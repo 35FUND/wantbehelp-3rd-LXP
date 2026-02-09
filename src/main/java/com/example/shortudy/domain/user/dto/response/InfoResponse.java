@@ -8,12 +8,4 @@ public record InfoResponse(
         String nickName,
         String profileUrl
 ) {
-
-    public static InfoResponse from(User user) {
-        return new InfoResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getNickname(),
-                user.getProfileUrl());
-    }
 }

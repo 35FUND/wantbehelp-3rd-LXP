@@ -1,6 +1,8 @@
 package com.example.shortudy.global.config;
 
 import com.example.shortudy.domain.user.dto.request.PresignedUrlResponse;
+import com.example.shortudy.global.error.BaseException;
+import com.example.shortudy.global.error.ErrorCode;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
@@ -27,16 +29,14 @@ public class S3Service {
     /**
      * @param key: S3에 저장될 파일의 전체 경로 (ex: profile/1/image.png)
      * @param contentType: 파일 형식(ex: image/png)이 다르면 S3가 업로드를 거부
-     * @param contentLength: 제한할 파일 크기(Byte 단위)가 넘으면 S3가 업로드 거부
      */
-    public PresignedUrlResponse getPresignedUrl(String key, String contentType, long contentLength) {
+    public PresignedUrlResponse getPresignedUrl(String key, String contentType) {
 
         // S3에게 아래 조건의 업로드를 허가해주는 요청서를 만듭니다.
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(awsProperties.getS3().getBucket())
                 .key(key)   // URL 경로에 자동으로 포함
                 .contentType(contentType)   // [검증] 이 타입이 아니면 업로드 거부됨
-                .contentLength(contentLength)   // [검증] 이 크기보다 크면 업로드 거부
                 .build();
 
         // 위 요청서에 서명을 입혀 임시 URL로 변환
@@ -55,6 +55,14 @@ public class S3Service {
     }
 
     //TODO S3내 파일을 조회하는 로직 필요?
+
+    // Key -> URL로
+    public String getFileUrl(String key) {
+        // 유저가 프로필을 등록하지 않았을 때
+        if (key == null) return null;
+
+        return String.format("https://%s.s3.%s.amazonaws.com/%s", awsProperties.getS3().getBucket(), awsProperties.getRegion(), key);
+    }
 
     /**
      * @param key: 삭제할 파일의 경로
