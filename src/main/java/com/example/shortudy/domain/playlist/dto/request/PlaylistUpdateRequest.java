@@ -11,7 +11,7 @@ public record PlaylistUpdateRequest(
         @Size(max = 500, message = "설명은 500자를 초과할 수 없습니다.")
         String description,
 
-        /**
+        /*
          * 플레이리스트 썸네일로 사용할 숏츠 ID
          * - 플레이리스트 내 숏츠의 썸네일 중 선택
          * - null이면 기존 썸네일 유지
