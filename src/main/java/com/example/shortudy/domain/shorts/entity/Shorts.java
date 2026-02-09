@@ -252,5 +252,4 @@ public class Shorts {
     public boolean canBeDeletedAsUploadOrphan() {
         return this.status == ShortsStatus.PENDING;
     }
-
 }
