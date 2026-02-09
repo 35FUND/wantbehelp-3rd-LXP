@@ -101,6 +101,12 @@ public class Comment {
 
     // 대댓글
     public static Comment reply(User user, Comment parent, String content) {
+
+        // Comment parent가 대댓글인 경우 예외 처리
+        if (parent.getParent() != null) {
+            throw new BaseException(ErrorCode.COMMENT_NOT_FOUND);
+        }
+
         return new Comment(user, parent.getShorts(), parent, content);
     }
 
