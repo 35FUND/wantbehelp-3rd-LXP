@@ -76,7 +76,7 @@ public class ShortsUploadCompleteService {
 
         // 5. 엔티티 및 세션 업데이트
         shorts.updateVideoUrl(videoUrl);
-        shorts.updateShorts(null, null, thumbnailUrl, null, ShortsStatus.PUBLISHED);
+        shorts.updateShorts(null, null, thumbnailUrl, null, null, ShortsStatus.PUBLISHED);
 
         session.updateUploadedUrls(videoUrl, thumbnailUrl);
         session.markUploaded();

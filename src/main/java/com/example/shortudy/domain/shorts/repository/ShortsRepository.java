@@ -65,7 +65,8 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
             "FROM Shorts s " +
             "JOIN s.user u " +
             "JOIN s.category c " +
-            "WHERE s.id = :id")
+            "WHERE s.id = :id " +
+            "AND (s.status = 'PUBLISHED' OR s.user.id = :userId)")
     Optional<ShortsResponse> findResponseById(@Param("id") Long id, @Param("userId") Long userId);
 
     /**

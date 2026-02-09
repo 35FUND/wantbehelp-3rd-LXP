@@ -104,6 +104,7 @@ public class ShortsService {
             request.description(),
             request.thumbnailUrl(),
             category,
+            request.durationSec(),
             request.status()
         );
 
@@ -128,9 +129,7 @@ public class ShortsService {
             throw new BaseException(ErrorCode.SHORTS_FORBIDDEN);
         }
 
-        shortsLikeRepository.deleteByShortsId(shortsId); // 자식(좋아요 먼저 삭제)
-        commentRepository.deleteByShortsId(shortsId);    // 자식(댓글 삭제)
-        shortsRepository.deleteById(shortsId);
+        deleteShortsCascade(shortsId);
     }
 
     @Transactional
@@ -144,10 +143,14 @@ public class ShortsService {
             return false;
         }
 
+        deleteShortsCascade(shortsId);
+        return true;
+    }
+
+    private void deleteShortsCascade(Long shortsId) {
         shortsLikeRepository.deleteByShortsId(shortsId);
         commentRepository.deleteByShortsId(shortsId);
         shortsRepository.deleteById(shortsId);
-        return true;
     }
 
     private void validateShortsExists(Long shortsId) {
