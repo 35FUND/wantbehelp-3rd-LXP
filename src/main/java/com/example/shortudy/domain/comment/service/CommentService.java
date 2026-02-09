@@ -123,6 +123,14 @@ public class CommentService {
     @Transactional(readOnly = true)
     public List<ReplyResponse> findReplies(Long parentId, Long myIdOrNull) {
 
+        // NOTE: 부모 댓글이 대댓글인 경우 예외 처리
+        Comment parentComment = commentRepository.findById(parentId).orElseThrow(() ->
+                new BaseException(ErrorCode.COMMENT_NOT_FOUND));
+        if (parentComment.getParent() != null) {
+            // 이 경우는 대댓글인 경우
+            throw new BaseException(ErrorCode.COMMENT_NOT_FOUND);
+        }
+
         List<Comment> replies = commentRepository.findRepliesWithUser(parentId);
 
         return replies.stream()
