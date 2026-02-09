@@ -133,6 +133,22 @@ public class ShortsService {
         shortsRepository.deleteById(shortsId);
     }
 
+    @Transactional
+    public boolean deleteOrphanPendingShorts(Long shortsId) {
+        Shorts shorts = shortsRepository.findById(shortsId).orElse(null);
+        if (shorts == null) {
+            return false;
+        }
+        if (!shorts.canBeDeletedAsUploadOrphan()) {
+            return false;
+        }
+
+        shortsLikeRepository.deleteByShortsId(shortsId);
+        commentRepository.deleteByShortsId(shortsId);
+        shortsRepository.deleteById(shortsId);
+        return true;
+    }
+
     private void validateShortsExists(Long shortsId) {
         if (!shortsRepository.existsById(shortsId)) {
             throw new BaseException(ErrorCode.SHORTS_NOT_FOUND);

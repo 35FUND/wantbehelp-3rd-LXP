@@ -4,6 +4,7 @@ import com.example.shortudy.domain.upload.dto.ShortsUploadCompleteRequest;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
+import com.example.shortudy.domain.shorts.service.ShortsService;
 import com.example.shortudy.domain.upload.entity.ShortsUploadSession;
 import com.example.shortudy.domain.upload.entity.ShortsUploadSession.UploadStatus;
 import com.example.shortudy.domain.upload.repository.ShortsUploadSessionRepository;
@@ -14,21 +15,27 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
 public class ShortsUploadCompleteService {
 
+    private static final int FAILED_SESSION_RETENTION_DAYS = 7;
+
     private final ShortsRepository shortsRepository;
+    private final ShortsService shortsService;
     private final ShortsUploadSessionRepository uploadSessionRepository;
     private final AwsProperties awsProperties;
 
     public ShortsUploadCompleteService(
             ShortsRepository shortsRepository,
+            ShortsService shortsService,
             ShortsUploadSessionRepository uploadSessionRepository,
             AwsProperties awsProperties
     ) {
         this.shortsRepository = shortsRepository;
+        this.shortsService = shortsService;
         this.uploadSessionRepository = uploadSessionRepository;
         this.awsProperties = awsProperties;
     }
@@ -138,4 +145,23 @@ public class ShortsUploadCompleteService {
             throw new BaseException(ErrorCode.SHORTS_UPLOAD_SESSION_EXPIRED);
         }
     }
+
+    @Transactional
+    public long deleteExpiredInitiatedSessions() {
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(FAILED_SESSION_RETENTION_DAYS);
+        List<ShortsUploadSession> expiredSessions =
+                uploadSessionRepository.findByStatusAndCreatedAtBefore(UploadStatus.INITIATED, cutoff);
+
+        long deletedCount = 0L;
+        for (ShortsUploadSession session : expiredSessions) {
+            Long shortId = session.getShortId();
+            if (shortId != null) {
+                shortsService.deleteOrphanPendingShorts(shortId);
+            }
+            uploadSessionRepository.delete(session);
+            deletedCount++;
+        }
+        return deletedCount;
+    }
+
 }

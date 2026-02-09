@@ -192,4 +192,9 @@ public class Shorts {
 
         return this.user.getId().equals(userId);
     }
+
+    // 업로드 미완료 세션 정리 시, 고아 숏츠로 삭제 가능한지 판단한다.
+    public boolean canBeDeletedAsUploadOrphan() {
+        return this.status == ShortsStatus.PENDING;
+    }
 }
