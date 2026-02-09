@@ -100,13 +100,13 @@ public class ShortsUploadInitService {
 
         // 1. 비디오 Presigned URL 발급 (글로벌 S3Service 활용)
         String videoKey = resolveVideoKey(shortId);
-        PresignedUrlResponse videoPresigned = s3Service.getPresignedUrl(videoKey, body.contentType(), body.fileSize());
+        PresignedUrlResponse videoPresigned = s3Service.getPresignedUrl(videoKey, body.contentType());
 
         // 2. 썸네일 Presigned URL 발급
         String thumbnailKey = resolveThumbnailKey(shortId, body.thumbnailFileName());
         String thumbnailUploadUrl = null;
         if (thumbnailKey != null) {
-            PresignedUrlResponse thumbnailPresigned = s3Service.getPresignedUrl(thumbnailKey, body.thumbnailContentType(), body.thumbnailFileSize());
+            PresignedUrlResponse thumbnailPresigned = s3Service.getPresignedUrl(thumbnailKey, body.thumbnailContentType());
             thumbnailUploadUrl = thumbnailPresigned.url();
         }
 
