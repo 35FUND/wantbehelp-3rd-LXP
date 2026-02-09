@@ -5,6 +5,7 @@ import com.example.shortudy.domain.comment.dto.response.CommentListResponse;
 import com.example.shortudy.domain.comment.dto.response.CommentResponse;
 import com.example.shortudy.domain.comment.dto.response.ReplyResponse;
 import com.example.shortudy.domain.comment.entity.Comment;
+import com.example.shortudy.domain.comment.entity.CommentStatus;
 import com.example.shortudy.domain.comment.query.CommentCountProvider;
 import com.example.shortudy.domain.comment.repository.CommentRepository;
 import com.example.shortudy.domain.shorts.entity.Shorts;
@@ -84,7 +85,7 @@ public class CommentService {
         }
     }
 
-    // TODO : 대댓글 업데이트 로직 분리를 위한 메서드 추가
+    // NOTE : 대댓글 업데이트 로직 분리를 위한 메서드 추가
     @Transactional
     public void updateCommentReply(Long userId, Long commentId, CommentRequest request) {
 
@@ -95,6 +96,11 @@ public class CommentService {
         // 대댓글이 아닌 경우 예외 처리
         if (comment.getParent() == null) {
             throw new BaseException(ErrorCode.COMMENT_NOT_FOUND);
+        }
+
+        // 댓글이 삭제되어있는 경우 예외 처리
+        if (comment.getStatus() == CommentStatus.DELETED) {
+            throw new BaseException(ErrorCode.COMMENT_DELETED);
         }
 
         // 작성자 검증
