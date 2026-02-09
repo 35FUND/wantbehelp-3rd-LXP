@@ -5,6 +5,7 @@ import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
 import com.example.shortudy.domain.shorts.view.repository.RedisShortsViewCountRepository;
+import com.example.shortudy.global.config.S3Service;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class ShortsQueryService {
 
     private final ShortsRepository shortsRepository;
     private final RedisShortsViewCountRepository redisShortsViewCountRepository;
+    private final S3Service s3Service;
 
     /**
      * 상세 조회 - DB 집계 데이터와 Redis 실시간 조회수를 통합하여 반환합니다.
@@ -36,8 +38,7 @@ public class ShortsQueryService {
                 .orElseThrow(() -> new BaseException(ErrorCode.SHORTS_NOT_FOUND));
         
         // Keywords는 별도로 채워주거나, 엔티티 조회가 필요할 시 별도 로직 수행
-        // 현재 Response DTO는 생성자 프로젝션으로 인해 keywords가 null인 상태임
-        return mergeRealTimeViewCount(fillKeywords(response, shortsId));
+        return enrich(fillKeywords(response, shortsId));
     }
 
     /**
@@ -45,7 +46,7 @@ public class ShortsQueryService {
      */
     public Page<ShortsResponse> getShortsList(Pageable pageable, Long userId) {
         Page<ShortsResponse> responses = shortsRepository.findResponsesByStatus(ShortsStatus.PUBLISHED, userId, pageable);
-        return mergeRealTimeViewCounts(responses);
+        return enrichAll(responses);
     }
 
     /**
@@ -53,7 +54,7 @@ public class ShortsQueryService {
      */
     public Page<ShortsResponse> getShortsByCategory(Long categoryId, Pageable pageable, Long userId) {
         Page<ShortsResponse> responses = shortsRepository.findResponsesByCategoryIdAndStatus(categoryId, ShortsStatus.PUBLISHED, userId, pageable);
-        return mergeRealTimeViewCounts(responses);
+        return enrichAll(responses);
     }
 
     /**
@@ -63,7 +64,7 @@ public class ShortsQueryService {
         if (days == null || days <= 0) days = 30;
         LocalDateTime since = LocalDateTime.now().minusDays(days);
         Page<ShortsResponse> responses = shortsRepository.findPopularResponses(since, userId, pageable);
-        return mergeRealTimeViewCounts(responses);
+        return enrichAll(responses);
     }
 
     /**
@@ -71,15 +72,13 @@ public class ShortsQueryService {
      */
     public Page<ShortsResponse> getMyShorts(Long userId, Pageable pageable) {
         Page<ShortsResponse> responses = shortsRepository.findMyResponses(userId, pageable);
-        return mergeRealTimeViewCounts(responses);
+        return enrichAll(responses);
     }
 
     /**
      * DTO의 키워드 목록을 채워줍니다. (Batch Fetch 활용을 위해 엔티티에서 추출)
      */
     private ShortsResponse fillKeywords(ShortsResponse original, Long shortsId) {
-        // 상세 조회 시에만 키워드가 필수적이므로 단건 조회 시 엔티티를 활용해 키워드를 채움
-        // Batch Size 설정 덕분에 이 조회는 매우 효율적임
         return shortsRepository.findWithDetailsAndKeywordsById(shortsId)
                 .map(shorts -> new ShortsResponse(
                         original.shortsId(), original.title(), original.description(),
@@ -92,36 +91,37 @@ public class ShortsQueryService {
                 )).orElse(original);
     }
 
-
     /**
-     * 페이지 단위로 Redis 실시간 조회수를 통합합니다.
+     * 페이지 단위로 실시간 정보(조회수, 프로필 URL 등)를 통합합니다.
      */
-    private Page<ShortsResponse> mergeRealTimeViewCounts(Page<ShortsResponse> responses) {
+    private Page<ShortsResponse> enrichAll(Page<ShortsResponse> responses) {
         Map<Long, Long> pendingCounts = redisShortsViewCountRepository.findPendingViewCounts();
         return responses.map(resp -> {
             Long pending = pendingCounts.getOrDefault(resp.shortsId(), 0L);
-            return updateViewCount(resp, resp.viewCount() + pending);
+            return enrich(resp, resp.viewCount() + pending);
         });
     }
 
     /**
-     * 단건에 대해 Redis 실시간 조회수를 통합합니다.
+     * 단건에 대해 실시간 정보(조회수, 프로필 URL 등)를 통합합니다.
      */
-    private ShortsResponse mergeRealTimeViewCount(ShortsResponse response) {
+    private ShortsResponse enrich(ShortsResponse response) {
         Map<Long, Long> pendingCounts = redisShortsViewCountRepository.findPendingViewCounts();
         Long pending = pendingCounts.getOrDefault(response.shortsId(), 0L);
-        return updateViewCount(response, response.viewCount() + pending);
+        return enrich(response, response.viewCount() + pending);
     }
 
     /**
-     * 조회수 필드만 업데이트된 새로운 DTO를 생성합니다. (Record 불변성 대응)
+     * 실시간 데이터가 반영된 새로운 DTO를 생성합니다.
      */
-    private ShortsResponse updateViewCount(ShortsResponse original, long realTimeViewCount) {
+    private ShortsResponse enrich(ShortsResponse original, long realTimeViewCount) {
+        String fullProfileUrl = s3Service.getFileUrl(original.userProfileUrl());
+        
         return new ShortsResponse(
                 original.shortsId(), original.title(), original.description(),
                 original.videoUrl(), original.thumbnailUrl(), original.durationSec(),
                 original.status(), original.userId(), original.userNickname(),
-                original.userProfileUrl(), original.categoryId(), original.categoryName(),
+                fullProfileUrl, original.categoryId(), original.categoryName(),
                 original.keywords(), realTimeViewCount, original.likeCount(),
                 original.commentCount(), original.createdAt(), original.updatedAt(),
                 original.isLiked()
