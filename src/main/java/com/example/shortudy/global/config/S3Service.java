@@ -1,8 +1,6 @@
 package com.example.shortudy.global.config;
 
 import com.example.shortudy.domain.user.dto.request.PresignedUrlResponse;
-import com.example.shortudy.global.error.BaseException;
-import com.example.shortudy.global.error.ErrorCode;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
