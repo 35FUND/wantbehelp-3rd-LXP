@@ -70,11 +70,8 @@ public class PlaylistService {
         }
         User user = findUserById(userId);
 
-        // 2. 공개 여부 설정 (기본값: 비공개)
-        // 삼항 연산자: request.visibility()가 null이 아니면 그 값, null이면 PRIVATE
-        PlaylistVisibility visibility = request.visibility() != null
-                ? request.visibility()
-                : PlaylistVisibility.PRIVATE;
+        // 2. 공개 여부 설정 (항상 공개로 고정)
+        PlaylistVisibility visibility = PlaylistVisibility.PUBLIC;
 
         // 3. 플레이리스트 엔티티 생성
         Playlist playlist = Playlist.create(
@@ -116,11 +113,6 @@ public class PlaylistService {
     public PlaylistDetailResponse getPlaylistDetail(Long playlistId, Long currentUserId) {
         // fetch join으로 관련 데이터를 한 번에 조회 (N+1 문제 방지)
         Playlist playlist = findPlaylistWithDetails(playlistId);
-
-        // 권한 체크: 비공개이면서 소유자가 아니면 접근 거부
-        if (!canAccess(playlist, currentUserId)) {
-            throw new BaseException(ErrorCode.PLAYLIST_FORBIDDEN);
-        }
 
         return buildDetailResponse(playlist, currentUserId);
     }
@@ -200,11 +192,8 @@ public class PlaylistService {
      * 특정 사용자의 공개 플레이리스트 목록 조회
      */
     public Page<PlaylistResponse> getUserPublicPlaylists(Long targetUserId, Pageable pageable) {
-        return playlistRepository.findByUserIdAndVisibility(
-                targetUserId,
-                PlaylistVisibility.PUBLIC,
-                pageable
-        ).map(PlaylistResponse::from);
+        return playlistRepository.findByUserId(targetUserId, pageable)
+                .map(PlaylistResponse::from);
     }
 
     /**
@@ -243,11 +232,6 @@ public class PlaylistService {
             Pageable pageable
     ) {
         Playlist playlist = findPlaylistWithUser(playlistId);
-
-        // 권한 체크
-        if (!canAccess(playlist, currentUserId)) {
-            throw new BaseException(ErrorCode.PLAYLIST_FORBIDDEN);
-        }
 
         // 1단계: ID만 페이징 조회
         Page<Long> idPage = playlistShortsRepository.findIdsByPlaylistId(playlistId, pageable);
@@ -448,13 +432,6 @@ public class PlaylistService {
         if (!playlist.isOwner(userId)) {
             throw new BaseException(ErrorCode.PLAYLIST_FORBIDDEN);
         }
-    }
-
-    private boolean canAccess(Playlist playlist, Long currentUserId) {
-        if (playlist.isPublic()) {
-            return true;
-        }
-        return currentUserId != null && playlist.isOwner(currentUserId);
     }
 
     /**

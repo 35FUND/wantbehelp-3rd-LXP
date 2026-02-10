@@ -125,16 +125,17 @@ public class Playlist {
         this.user = user;
         this.title = title;
         this.description = description;
-        this.visibility = visibility;
+        // visibility는 호환성 유지를 위해 파라미터는 유지하되, 항상 PUBLIC으로 고정
+        this.visibility = PlaylistVisibility.PUBLIC;
         this.playlistShorts = new ArrayList<>();
         this.thumbnailCustom = false;
     }
 
     /**
-     * 플레이리스트 생성 (정적 팩토리 메서드) - 기본 비공개
+     * 플레이리스트 생성 (정적 팩토리 메서드) - 기본 공개
      */
     public static Playlist create(User user, String title, String description) {
-        return new Playlist(user, title, description, PlaylistVisibility.PRIVATE);
+        return new Playlist(user, title, description, PlaylistVisibility.PUBLIC);
     }
 
     /**
@@ -160,7 +161,8 @@ public class Playlist {
             this.description = description;
         }
         if (visibility != null) {
-            this.visibility = visibility;
+            // 공개 고정: 들어온 값과 무관하게 PUBLIC 유지
+            this.visibility = PlaylistVisibility.PUBLIC;
         }
     }
 
@@ -223,7 +225,7 @@ public class Playlist {
      * 공개 플레이리스트인지 확인
      */
     public boolean isPublic() {
-        return this.visibility == PlaylistVisibility.PUBLIC;
+        return true;
     }
 
     /**
