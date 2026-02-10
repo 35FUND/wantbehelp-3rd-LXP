@@ -3,11 +3,14 @@ package com.example.shortudy.domain.upload.service;
 import com.example.shortudy.domain.category.entity.Category;
 import com.example.shortudy.domain.category.repository.CategoryRepository;
 import com.example.shortudy.domain.keyword.service.KeywordService;
+import com.example.shortudy.domain.shorts.entity.ShortsStatus;
+import com.example.shortudy.domain.shorts.service.ShortsService;
 import com.example.shortudy.domain.upload.dto.ShortsUploadInitRequest;
 import com.example.shortudy.domain.upload.dto.ShortsUploadInitResponse;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
 import com.example.shortudy.domain.upload.entity.ShortsUploadSession;
+import com.example.shortudy.domain.upload.entity.ShortsUploadSession.UploadStatus;
 import com.example.shortudy.domain.upload.repository.ShortsUploadSessionRepository;
 import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.domain.user.repository.UserRepository;
@@ -21,8 +24,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
-
-import static com.example.shortudy.domain.shorts.entity.ShortsStatus.DRAFT;
 
 @Service
 @Transactional(readOnly = true)
@@ -39,6 +40,7 @@ public class ShortsUploadInitService {
     private final CategoryRepository categoryRepository;
     private final ShortsRepository shortsRepository;
     private final ShortsUploadSessionRepository uploadSessionRepository;
+    private final ShortsService shortsService;
     private final KeywordService keywordService;
     private final S3Service s3Service;
 
@@ -47,6 +49,7 @@ public class ShortsUploadInitService {
             CategoryRepository categoryRepository,
             ShortsRepository shortsRepository,
             ShortsUploadSessionRepository uploadSessionRepository,
+            ShortsService shortsService,
             KeywordService keywordService,
             S3Service s3Service
     ) {
@@ -54,6 +57,7 @@ public class ShortsUploadInitService {
         this.categoryRepository = categoryRepository;
         this.shortsRepository = shortsRepository;
         this.uploadSessionRepository = uploadSessionRepository;
+        this.shortsService = shortsService;
         this.keywordService = keywordService;
         this.s3Service = s3Service;
     }
@@ -65,6 +69,9 @@ public class ShortsUploadInitService {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
+
+        // 같은 사용자의 기존 미완료 업로드는 재시도 시점에 즉시 정리한다.
+        cleanupPreviousInitiatedUploads(userId);
 
         Category category = categoryRepository.findById(body.categoryId())
                 .orElseThrow(() -> new BaseException(ErrorCode.CATEGORY_NOT_FOUND));
@@ -78,7 +85,7 @@ public class ShortsUploadInitService {
                 null,
                 null,
                 body.durationSec(),
-                DRAFT
+                ShortsStatus.PENDING
         );
 
         // 키워드 저장
@@ -93,13 +100,13 @@ public class ShortsUploadInitService {
 
         // 1. 비디오 Presigned URL 발급 (글로벌 S3Service 활용)
         String videoKey = resolveVideoKey(shortId);
-        PresignedUrlResponse videoPresigned = s3Service.getPresignedUrl(videoKey, body.contentType(), body.fileSize());
+        PresignedUrlResponse videoPresigned = s3Service.getPresignedUrl(videoKey, body.contentType());
 
         // 2. 썸네일 Presigned URL 발급
         String thumbnailKey = resolveThumbnailKey(shortId, body.thumbnailFileName());
         String thumbnailUploadUrl = null;
         if (thumbnailKey != null) {
-            PresignedUrlResponse thumbnailPresigned = s3Service.getPresignedUrl(thumbnailKey, body.thumbnailContentType(), body.thumbnailFileSize());
+            PresignedUrlResponse thumbnailPresigned = s3Service.getPresignedUrl(thumbnailKey, body.thumbnailContentType());
             thumbnailUploadUrl = thumbnailPresigned.url();
         }
 
@@ -131,6 +138,21 @@ public class ShortsUploadInitService {
                 EXPIRES_IN_SECONDS,
                 MAX_FILE_SIZE_BYTES
         );
+    }
+
+    // 재업로드 시 이전 INITIATED 세션과 연관된 고아 쇼츠를 즉시 정리한다.
+    // 정상 UX에서는 단건이 대부분이지만, 중복 클릭/재시도 등 예외 상황을 고려해 목록 기반으로 처리한다.
+    private void cleanupPreviousInitiatedUploads(Long userId) {
+        List<ShortsUploadSession> previousSessions =
+                uploadSessionRepository.findByUserIdAndStatus(userId, UploadStatus.INITIATED);
+
+        for (ShortsUploadSession previousSession : previousSessions) {
+            Long previousShortId = previousSession.getShortId();
+            if (previousShortId != null) {
+                shortsService.deleteOrphanPendingShorts(previousShortId);
+            }
+            uploadSessionRepository.delete(previousSession);
+        }
     }
 
 

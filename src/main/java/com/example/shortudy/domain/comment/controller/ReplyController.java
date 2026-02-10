@@ -60,7 +60,8 @@ public class ReplyController {
             @PathVariable Long replyId,
             @Valid @RequestBody CommentRequest request
     ) {
-        commentService.updateComment(me.getId(), replyId, request);
+        // NOTE : 대댓글을 업데이트하는 메서드 추가
+        commentService.updateCommentReply(me.getId(), replyId, request);
 
         return ResponseEntity.ok(ApiResponse.success(null)
         );
@@ -71,7 +72,8 @@ public class ReplyController {
             @AuthenticationPrincipal CustomUserDetails me,
             @PathVariable Long replyId
     ) {
-        commentService.deleteComment(me.getId(), replyId);
+        // NOTE : 대댓글을 삭제하는 메서드 추가
+        commentService.deleteCommentReply(me.getId(), replyId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResponse.success(null));
     }
 }

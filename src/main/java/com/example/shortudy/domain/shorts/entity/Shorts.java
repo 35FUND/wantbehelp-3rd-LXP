@@ -147,7 +147,7 @@ public class Shorts {
     }
 
     public void updateShorts(String title, String description, String thumbnailUrl,
-                             Category category, ShortsStatus status) {
+                             Category category, Integer durationSec, ShortsStatus status) {
         if (title != null && !title.isBlank()) {
             validateTitle(title);
             this.title = title;
@@ -162,9 +162,43 @@ public class Shorts {
         if (category != null) {
             this.category = category;
         }
-        if (status != null) {
-            this.status = status;
+        if (durationSec != null) {
+            updateDurationSec(durationSec);
         }
+        if (status != null) {
+            changeStatus(status);
+        }
+    }
+
+    public void updateDurationSec(Integer durationSec) {
+        if (durationSec == null || durationSec <= 0) {
+            throw new BaseException(ErrorCode.SHORTS_DURATION_INVALID);
+        }
+        this.durationSec = durationSec;
+    }
+
+    public void changeStatus(ShortsStatus nextStatus) {
+        if (nextStatus == null || this.status == nextStatus) {
+            return;
+        }
+        if (!isValidStatusTransition(this.status, nextStatus)) {
+            throw new BaseException(ErrorCode.INVALID_INPUT, "허용되지 않는 숏츠 상태 전이입니다.");
+        }
+        this.status = nextStatus;
+    }
+
+    private boolean isValidStatusTransition(ShortsStatus currentStatus, ShortsStatus nextStatus) {
+        if (currentStatus == null) {
+            return true;
+        }
+        return switch (currentStatus) {
+            case PENDING -> nextStatus == ShortsStatus.AI_CHECK
+                    || nextStatus == ShortsStatus.PUBLISHED
+                    || nextStatus == ShortsStatus.REJECT;
+            case AI_CHECK -> nextStatus == ShortsStatus.PUBLISHED
+                    || nextStatus == ShortsStatus.REJECT;
+            case PUBLISHED, REJECT -> false;
+        };
     }
 
     public void addKeyword(Keyword keyword) {
@@ -191,5 +225,10 @@ public class Shorts {
     public boolean isWrittenBy(Long userId) {
 
         return this.user.getId().equals(userId);
+    }
+
+    // 업로드 미완료 세션 정리 시, 고아 숏츠로 삭제 가능한지 판단한다.
+    public boolean canBeDeletedAsUploadOrphan() {
+        return this.status == ShortsStatus.PENDING;
     }
 }

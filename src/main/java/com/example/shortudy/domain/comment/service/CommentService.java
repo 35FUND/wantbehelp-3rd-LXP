@@ -5,6 +5,7 @@ import com.example.shortudy.domain.comment.dto.response.CommentListResponse;
 import com.example.shortudy.domain.comment.dto.response.CommentResponse;
 import com.example.shortudy.domain.comment.dto.response.ReplyResponse;
 import com.example.shortudy.domain.comment.entity.Comment;
+import com.example.shortudy.domain.comment.entity.CommentStatus;
 import com.example.shortudy.domain.comment.query.CommentCountProvider;
 import com.example.shortudy.domain.comment.repository.CommentRepository;
 import com.example.shortudy.domain.shorts.entity.Shorts;
@@ -70,7 +71,7 @@ public class CommentService {
         return new CommentListResponse(totalCount, commentResponses);
     }
 
-    // 댓글, 대댓글 수정
+    // 댓글 수정
     @Transactional
     public void updateComment(Long userId, Long commentId, CommentRequest request) {
 
@@ -84,7 +85,33 @@ public class CommentService {
         }
     }
 
-    // 댓글, 대댓글 삭제
+    // NOTE : 대댓글 업데이트 로직 분리를 위한 메서드 추가
+    @Transactional
+    public void updateCommentReply(Long userId, Long commentId, CommentRequest request) {
+
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() ->
+            new BaseException(ErrorCode.COMMENT_NOT_FOUND));
+
+
+        // 대댓글이 아닌 경우 예외 처리
+        if (comment.getParent() == null) {
+            throw new BaseException(ErrorCode.COMMENT_NOT_FOUND);
+        }
+
+        // 댓글이 삭제되어있는 경우 예외 처리
+        if (comment.getStatus() == CommentStatus.DELETED) {
+            throw new BaseException(ErrorCode.COMMENT_DELETED);
+        }
+
+        // 작성자 검증
+        if (!comment.isWrittenBy(userId)) {
+            throw new BaseException(ErrorCode.COMMENT_FORBIDDEN);
+        } else {
+            comment.updateContent(request.content());
+        }
+    }
+
+    // 댓글 삭제
     @Transactional
     public void deleteComment(Long userId, Long commentId) {
 
@@ -106,6 +133,28 @@ public class CommentService {
         comment.softDelete(userId);
     }
 
+    // TODO : 대댓글 삭제 메서드 분리
+    @Transactional
+    public void deleteCommentReply(Long userId, Long commentId) {
+
+        // 대댓글 ID가 없으면 예외 처리
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() ->
+            new BaseException(ErrorCode.COMMENT_NOT_FOUND));
+
+        // 내가 쓴 대댓글이 아니면 오류 처리
+        if (!comment.isWrittenBy(userId)) {
+            throw new BaseException(ErrorCode.COMMENT_FORBIDDEN);
+        }
+
+        // 대댓글이 아닌 경우 예외 처리
+        if (comment.getParent() == null) {
+            throw new BaseException(ErrorCode.COMMENT_NOT_FOUND);
+        }
+
+
+        comment.softDelete(userId);
+    }
+
     // 대댓글 생성
     @Transactional
     public void createReply(Long userId, Long parentId, CommentRequest request) {
@@ -122,6 +171,14 @@ public class CommentService {
     // 대댓글 조회
     @Transactional(readOnly = true)
     public List<ReplyResponse> findReplies(Long parentId, Long myIdOrNull) {
+
+        // NOTE: 부모 댓글이 대댓글인 경우 예외 처리
+        Comment parentComment = commentRepository.findById(parentId).orElseThrow(() ->
+                new BaseException(ErrorCode.COMMENT_NOT_FOUND));
+        if (parentComment.getParent() != null) {
+            // 이 경우는 대댓글인 경우
+            throw new BaseException(ErrorCode.COMMENT_NOT_FOUND);
+        }
 
         List<Comment> replies = commentRepository.findRepliesWithUser(parentId);
 

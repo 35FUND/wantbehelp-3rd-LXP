@@ -10,7 +10,9 @@ import com.example.shortudy.domain.shorts.dto.ShortsUpdateRequest;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
+import com.example.shortudy.global.config.S3Service;
 import com.example.shortudy.global.error.BaseException;
+
 import com.example.shortudy.global.error.ErrorCode;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,18 +43,21 @@ public class ShortsService {
     private final ShortsRepository shortsRepository;
     private final CategoryRepository categoryRepository;
     private final KeywordService keywordService;
+    private final S3Service s3Service;
 
     // 숏츠 삭제 시 댓글/좋아요도 다 날리기 위해 추가
     private final CommentRepository commentRepository;
     private final ShortsLikeRepository shortsLikeRepository;
 
-    public ShortsService(ShortsRepository shortsRepository, CategoryRepository categoryRepository, KeywordService keywordService, CommentRepository commentRepository, ShortsLikeRepository shortsLikeRepository) {
+    public ShortsService(ShortsRepository shortsRepository, CategoryRepository categoryRepository, KeywordService keywordService, S3Service s3Service, CommentRepository commentRepository, ShortsLikeRepository shortsLikeRepository) {
         this.shortsRepository = shortsRepository;
         this.categoryRepository = categoryRepository;
         this.keywordService = keywordService;
+        this.s3Service = s3Service;
         this.commentRepository = commentRepository;
         this.shortsLikeRepository = shortsLikeRepository;
     }
+
 
     public Shorts findShortsWithDetails(Long shortsId) {
         return shortsRepository.findWithDetailsAndKeywordsById(shortsId)
@@ -104,6 +109,7 @@ public class ShortsService {
             request.description(),
             request.thumbnailUrl(),
             category,
+            request.durationSec(),
             request.status()
         );
 
@@ -116,8 +122,10 @@ public class ShortsService {
         shortsRepository.saveAndFlush(shorts);
 
         boolean isLiked = shortsLikeRepository.existsByUserIdAndShortsId(userId, shortsId);
-        return ShortsResponse.of(shorts, 0L, shorts.getViewCount(), isLiked);
+        String fullProfileUrl = shorts.getUser() != null ? s3Service.getFileUrl(shorts.getUser().getProfileUrl()) : null;
+        return ShortsResponse.of(shorts, 0L, shorts.getViewCount(), isLiked, fullProfileUrl);
     }
+
 
     @Transactional
     public void deleteShorts(Long shortsId, Long userId) {
@@ -128,8 +136,27 @@ public class ShortsService {
             throw new BaseException(ErrorCode.SHORTS_FORBIDDEN);
         }
 
-        shortsLikeRepository.deleteByShortsId(shortsId); // 자식(좋아요 먼저 삭제)
-        commentRepository.deleteByShortsId(shortsId);    // 자식(댓글 삭제)
+        deleteShortsCascade(shortsId);
+    }
+
+    @Transactional
+    public boolean deleteOrphanPendingShorts(Long shortsId) {
+        // 고아 정리 경로에서는 예외를 던지지 않고 삭제 여부만 반환해 호출측 흐름을 단순화한다.
+        Shorts shorts = shortsRepository.findById(shortsId).orElse(null);
+        if (shorts == null) {
+            return false;
+        }
+        if (!shorts.canBeDeletedAsUploadOrphan()) {
+            return false;
+        }
+
+        deleteShortsCascade(shortsId);
+        return true;
+    }
+
+    private void deleteShortsCascade(Long shortsId) {
+        shortsLikeRepository.deleteByShortsId(shortsId);
+        commentRepository.deleteByShortsId(shortsId);
         shortsRepository.deleteById(shortsId);
     }
 

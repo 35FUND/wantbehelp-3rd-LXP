@@ -3,12 +3,12 @@ package com.example.shortudy.domain.like.service;
 import com.example.shortudy.domain.keyword.entity.Keyword;
 import com.example.shortudy.domain.like.dto.LikeToggleResponse;
 import com.example.shortudy.domain.like.dto.MyLikedShortsResponse;
+import com.example.shortudy.domain.like.dto.ShortsLikeResponse;
 import com.example.shortudy.domain.like.dto.SortStandard;
 import com.example.shortudy.domain.like.entity.ShortsLike;
 import com.example.shortudy.domain.like.repository.ShortsLikeRepository;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
-import com.example.shortudy.domain.shorts.service.ShortsService;
 import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.domain.user.repository.UserRepository;
 import com.example.shortudy.global.error.BaseException;
@@ -116,40 +116,21 @@ public class ShortsLikeService {
         return new LikeToggleResponse(true, shorts.getLikeCount());
     }
 
-    @Deprecated(since = "토글 체크 로직으로 삭제 예정")
-    @Transactional
-    public void like(Long userId, Long shortsId) {
+    /**
+     * 특정 숏츠에 대한 좋아요 상태 조회
+     * @param userId 사용자 ID
+     * @param shortsId 숏츠 ID
+     * @return 좋아요 상태 응답 DTO
+     */
+    @Transactional(readOnly = true)
+    public ShortsLikeResponse getShortsLikeStatus(Long userId, Long shortsId) {
+        boolean existShortsLike = shortsLikeRepository.existsByUserIdAndShortsId(userId, shortsId);
 
-        Shorts shorts = shortsRepository.findById(shortsId).orElseThrow(()
-                -> new BaseException(ErrorCode.SHORTS_NOT_FOUND));
-
-        User user = userRepository.findById(userId).orElseThrow(()
-                -> new BaseException(ErrorCode.USER_NOT_FOUND));
-
-        if (shortsLikeRepository.existsByUserIdAndShortsId(userId, shortsId)) {
-            throw new BaseException(ErrorCode.ALREADY_LIKE);
-        }
-
-        shortsLikeRepository.save(ShortsLike.of(user, shorts));
-        shorts.incrementLikeCount(); // [추가] 카운트 증가
-    }
-
-    @Deprecated(since = "토글 체크 로직으로 삭제 예정")
-    @Transactional
-    public void unlike(Long userId, Long shortsId) {
-
-        Shorts shorts = shortsRepository.findById(shortsId).orElseThrow(()
-                -> new BaseException(ErrorCode.SHORTS_NOT_FOUND));
-
-        User user = userRepository.findById(userId).orElseThrow(()
-                -> new BaseException(ErrorCode.USER_NOT_FOUND));
-
-        ShortsLike like = shortsLikeRepository.
-                findByUserIdAndShortsId(user.getId(), shorts.getId())
-                .orElseThrow(() -> new BaseException(ErrorCode.ALREADY_UNLIKE));
-
-        shortsLikeRepository.delete(like);
-        shorts.decrementLikeCount(); // [추가] 카운트 감소
+        return ShortsLikeResponse.from(
+                shortsId,
+                userId,
+                existShortsLike
+        );
     }
 
 }

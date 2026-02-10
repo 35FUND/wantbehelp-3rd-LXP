@@ -6,7 +6,7 @@ import com.example.shortudy.domain.like.service.ShortsLikeService;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
-import com.example.shortudy.domain.shorts.upload.service.ShortsUploadInitService;
+import com.example.shortudy.domain.upload.service.ShortsUploadInitService;
 import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.domain.user.entity.UserRole;
 import com.example.shortudy.domain.user.repository.UserRepository;
@@ -69,7 +69,7 @@ public class ShortsLikeIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        user = User.create("test@example.com", "password", "nickname", UserRole.USER, "");
+        user = User.create("test@example.com", "password", "nickname", UserRole.USER);
         userRepository.save(user);
         customUserDetails = new CustomUserDetails(user);
 

@@ -29,6 +29,7 @@ import java.util.List;
  * @param keywords        키워드 목록
  */
 public record ShortsResponse(
+
         Long shortsId,
         String title,
         String description,
@@ -50,19 +51,39 @@ public record ShortsResponse(
         Boolean isLiked
 ) {
 
+    public ShortsResponse {
+        keywords = keywords != null ? keywords : List.of();
+        viewCount = viewCount != null ? viewCount : 0L;
+        likeCount = likeCount != null ? likeCount : 0;
+        commentCount = commentCount != null ? commentCount : 0L;
+        isLiked = isLiked != null ? isLiked : false;
+    }
+
+    private static final String UNKNOWN_UPLOADER_NICKNAME = "알 수 없음";
+
     /**
      * Shorts 엔티티와 집계된 카운트 정보를 ShortsResponse DTO로 변환합니다.
+     * 주의: uploaderProfileUrl은 S3 키 값이므로, 서비스 레이어에서 전체 URL로 변환이 필요할 수 있습니다.
      */
     public static ShortsResponse of(Shorts shorts, Long commentCount, Long viewCount, Boolean isLiked) {
+        return of(shorts, commentCount, viewCount, isLiked, shorts.getUser() != null ? shorts.getUser().getProfileUrl() : null);
+    }
+
+    /**
+     * 프로필 URL을 직접 지정하여 DTO를 생성합니다.
+     */
+    public static ShortsResponse of(Shorts shorts, Long commentCount, Long viewCount, Boolean isLiked, String fullProfileUrl) {
         if (shorts == null) {
             throw new BaseException(ErrorCode.SHORTS_NOT_FOUND);
-        }
-        if (shorts.getUser() == null) {
-            throw new BaseException(ErrorCode.SHORTS_UPLOADER_NOT_FOUND);
         }
         if (shorts.getCategory() == null) {
             throw new BaseException(ErrorCode.SHORTS_CATEGORY_NOT_FOUND);
         }
+
+        Long uploaderId = shorts.getUser() != null ? shorts.getUser().getId() : null;
+        String uploaderNickname = shorts.getUser() != null
+                ? shorts.getUser().getNickname()
+                : UNKNOWN_UPLOADER_NICKNAME;
 
         return new ShortsResponse(
                 shorts.getId(),
@@ -72,9 +93,9 @@ public record ShortsResponse(
                 shorts.getThumbnailUrl(),
                 shorts.getDurationSec(),
                 shorts.getStatus(),
-                shorts.getUser().getId(),
-                shorts.getUser().getNickname(),
-                shorts.getUser().getProfileUrl(),
+                uploaderId,
+                uploaderNickname,
+                fullProfileUrl,
                 shorts.getCategory().getId(),
                 shorts.getCategory().getName(),
                 shorts.getKeywords().stream()
@@ -90,6 +111,7 @@ public record ShortsResponse(
     }
 
 }
+
 
 
 

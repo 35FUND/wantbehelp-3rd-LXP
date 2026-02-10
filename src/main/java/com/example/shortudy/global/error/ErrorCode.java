@@ -24,6 +24,7 @@ public enum ErrorCode {
     UnsupportedImageFormatException(HttpStatus.BAD_REQUEST, "USER_400", "유저 프로필 이미지에 적합하지 않은 파일 유형입니다."),
     AccessDeniedException(HttpStatus.FORBIDDEN, "USER_403", "본인의 프로필 이미지만 설정할 수 있습니다."),
     UserDeleteNotAllowedException(HttpStatus.CONFLICT, "USER_409", "회원 탈퇴가 불가능한 회원입니다."),
+    EmailBlankException(HttpStatus.BAD_REQUEST, "USER_400", "이메일은 빈 값을 입력할 수 없습니다."),
 
 
     // category
@@ -50,6 +51,7 @@ public enum ErrorCode {
     // comment
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMENT_404", "해당 댓글을 찾을 수 없습니다."),
     COMMENT_FORBIDDEN(HttpStatus.FORBIDDEN, "COMMENT_403", "해당 댓글에 대한 접근 권한이 없습니다."),
+    COMMENT_DELETED(HttpStatus.BAD_REQUEST, "COMMENT_400", "삭제된 댓글입니다."),
 
     // Keyword
     KEYWORD_NOT_FOUND(HttpStatus.NOT_FOUND, "KEYWORD_404", "해당 키워드를 찾을 수 없습니다."),

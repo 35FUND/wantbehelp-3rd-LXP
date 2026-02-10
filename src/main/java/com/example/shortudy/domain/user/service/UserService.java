@@ -58,6 +58,8 @@ public class UserService {
 
         boolean changed = false;
 
+        if (request.email() != null && request.email().isBlank()) throw new BaseException(ErrorCode.EmailBlankException);
+
         if (request.email() != null) {
             if (userRepository.existsByEmail(request.email())) throw new BaseException(ErrorCode.DUPLICATE_EMAIL);
             user.changeEmail(request.email());

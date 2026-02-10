@@ -42,8 +42,8 @@ class ShortsLikeRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        user = User.create("test@example.com", "password", "nickname", UserRole.USER, "");
-        user2 = User.create("test2@example.com", "password", "nickname", UserRole.USER, "");
+        user = User.create("test@example.com", "password", "nickname", UserRole.USER);
+        user2 = User.create("test2@example.com", "password", "nickname", UserRole.USER);
         em.persist(user);
         em.persist(user2);
 
