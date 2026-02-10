@@ -41,7 +41,7 @@ public record PlaylistResponse(
                 playlist.getId(),
                 playlist.getTitle(),
                 playlist.getDescription(),
-                playlist.getVisibility(),
+                PlaylistVisibility.PUBLIC,
                 playlist.getThumbnailUrl(),
                 playlist.isThumbnailCustom(),
                 playlist.getShortsCount(),

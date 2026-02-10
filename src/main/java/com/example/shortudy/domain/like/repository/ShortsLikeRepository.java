@@ -37,7 +37,7 @@ public interface ShortsLikeRepository extends JpaRepository<ShortsLike, Long> {
             "JOIN FETCH s.user u " +
             "JOIN FETCH s.category c " +
             "WHERE sl.user.id = :userId " +
-            "ORDER BY sl.createdAt DESC")
+            "ORDER BY sl.createdAt DESC, sl.id DESC")
     Page<ShortsLike> findAllByUserIdWithDetailsLatest(@Param("userId") Long userId, Pageable pageable);
 
     /**

@@ -42,23 +42,21 @@ public class ShortsLikeController {
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(response));
     }
 
+    /**
+     * [GET] 내가 좋아요한 숏츠 목록 조회
+     * @param me 로그인 된 유저 정보
+     * @param sort 정렬 기준 (latest: 최신순, popular: 인기순)
+     * @param pageable 페이지 처리 정보
+     * @return 내가 좋아요한 숏츠 목록 DTO
+     */
     @GetMapping("/me/likes/shorts")
-    public ResponseEntity<ApiResponse<MyLikedShortsResponse>> getMyLikeShorts(
+    public ResponseEntity<ApiResponse<Page<MyLikedShortsResponse>>> getMyLikeShorts(
             @AuthenticationPrincipal CustomUserDetails me,
             @RequestParam(value = "sort", defaultValue = "latest") String sort,
             Pageable pageable
     ) {
-        MyLikedShortsResponse response = shortsLikeService.getMyLikedShorts(me.getId(), sort, pageable);
+        Page<MyLikedShortsResponse> response = shortsLikeService.getMyLikedShorts(me.getId(), sort, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(response));
     }
 
-    @Deprecated(since = "토글 형태로 바꿀 예정이므로 삭제 예정")
-    @DeleteMapping("/shorts/{shortsId}/unlikes")
-    public ResponseEntity<ApiResponse<Void>> unlike(
-            @AuthenticationPrincipal CustomUserDetails me,
-            @PathVariable Long shortsId
-    ) {
-        shortsLikeService.unlike(me.getId(), shortsId);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResponse.success(null));
-    }
 }

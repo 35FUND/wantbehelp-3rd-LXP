@@ -1,14 +1,15 @@
 package com.example.shortudy.domain.like.service;
 
+import com.example.shortudy.domain.comment.repository.CommentRepository;
 import com.example.shortudy.domain.keyword.entity.Keyword;
 import com.example.shortudy.domain.like.dto.LikeToggleResponse;
 import com.example.shortudy.domain.like.dto.MyLikedShortsResponse;
+import com.example.shortudy.domain.like.dto.ShortsLikeResponse;
 import com.example.shortudy.domain.like.dto.SortStandard;
 import com.example.shortudy.domain.like.entity.ShortsLike;
 import com.example.shortudy.domain.like.repository.ShortsLikeRepository;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
-import com.example.shortudy.domain.shorts.service.ShortsService;
 import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.domain.user.repository.UserRepository;
 import com.example.shortudy.global.error.BaseException;
@@ -19,7 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * 좋아요 서비스 레이어
@@ -29,15 +32,18 @@ public class ShortsLikeService {
 
     private final ShortsLikeRepository shortsLikeRepository;
     private final ShortsRepository shortsRepository;
+    private final CommentRepository commentRepository;
     private final UserRepository userRepository;
 
     public ShortsLikeService(
             ShortsLikeRepository shortsLikeRepository,
             ShortsRepository shortsRepository,
+            CommentRepository commentRepository,
             UserRepository userRepository) {
         this.shortsRepository = shortsRepository;
         this.userRepository = userRepository;
         this.shortsLikeRepository = shortsLikeRepository;
+        this.commentRepository = commentRepository;
     }
 
     /**
@@ -67,22 +73,28 @@ public class ShortsLikeService {
      * @return 해당하는 좋아요 숏츠 목록 리스트
      */
     @Transactional(readOnly = true)
-    public MyLikedShortsResponse getMyLikedShorts(Long userId, String sort, Pageable pageable) {
+    public Page<MyLikedShortsResponse> getMyLikedShorts(Long userId, String sort, Pageable pageable) {
 
         Page<ShortsLike> likes = switch(SortStandard.fromValue(sort)) {
             case LATEST -> shortsLikeRepository.findAllByUserIdWithDetailsLatest(userId, pageable);
             case POPULAR -> shortsLikeRepository.findAllByUserIdWithDetailsPopular(userId, pageable);
         };
 
-        return MyLikedShortsResponse.from(
-            likes.map(
-                like -> MyLikedShortsResponse.MyLikedShorts.from(
-                        like.getShorts(),
-                        like.getShorts().getLikeCount(),
-                        like.getShorts().getKeywords().stream().map(Keyword::getDisplayName).toList()
-                )).stream().toList(),
-            likes.getPageable()
-        );
+        List<Long> shortsIds = likes.getContent().stream()
+                .map(sl -> sl.getShorts().getId())
+                .toList();
+
+        Map<Long, Long> commentCountMap = commentRepository.countByShortsIds(shortsIds).stream()
+                .collect(Collectors.toMap(
+                        result -> (Long)result[0],
+                        result -> (Long)result[1]
+                ));
+
+        return likes.map(like -> MyLikedShortsResponse.from(
+            like.getShorts(),
+            like.getShorts().getKeywords().stream().map(Keyword::getDisplayName).toList(),
+            commentCountMap.getOrDefault(like.getShorts().getId(), 0L).intValue()
+        ));
     }
 
     /**
@@ -116,40 +128,20 @@ public class ShortsLikeService {
         return new LikeToggleResponse(true, shorts.getLikeCount());
     }
 
-    @Deprecated(since = "토글 체크 로직으로 삭제 예정")
-    @Transactional
-    public void like(Long userId, Long shortsId) {
+    /**
+     * 특정 숏츠에 대한 좋아요 상태 조회
+     * @param userId 사용자 ID
+     * @param shortsId 숏츠 ID
+     * @return 좋아요 상태 응답 DTO
+     */
+    @Transactional(readOnly = true)
+    public ShortsLikeResponse getShortsLikeStatus(Long userId, Long shortsId) {
+        boolean existShortsLike = shortsLikeRepository.existsByUserIdAndShortsId(userId, shortsId);
 
-        Shorts shorts = shortsRepository.findById(shortsId).orElseThrow(()
-                -> new BaseException(ErrorCode.SHORTS_NOT_FOUND));
-
-        User user = userRepository.findById(userId).orElseThrow(()
-                -> new BaseException(ErrorCode.USER_NOT_FOUND));
-
-        if (shortsLikeRepository.existsByUserIdAndShortsId(userId, shortsId)) {
-            throw new BaseException(ErrorCode.ALREADY_LIKE);
-        }
-
-        shortsLikeRepository.save(ShortsLike.of(user, shorts));
-        shorts.incrementLikeCount(); // [추가] 카운트 증가
+        return ShortsLikeResponse.from(
+                shortsId,
+                userId,
+                existShortsLike
+        );
     }
-
-    @Deprecated(since = "토글 체크 로직으로 삭제 예정")
-    @Transactional
-    public void unlike(Long userId, Long shortsId) {
-
-        Shorts shorts = shortsRepository.findById(shortsId).orElseThrow(()
-                -> new BaseException(ErrorCode.SHORTS_NOT_FOUND));
-
-        User user = userRepository.findById(userId).orElseThrow(()
-                -> new BaseException(ErrorCode.USER_NOT_FOUND));
-
-        ShortsLike like = shortsLikeRepository.
-                findByUserIdAndShortsId(user.getId(), shorts.getId())
-                .orElseThrow(() -> new BaseException(ErrorCode.ALREADY_UNLIKE));
-
-        shortsLikeRepository.delete(like);
-        shorts.decrementLikeCount(); // [추가] 카운트 감소
-    }
-
 }

@@ -6,10 +6,12 @@ import com.example.shortudy.domain.like.service.ShortsLikeService;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
-import com.example.shortudy.domain.shorts.upload.service.ShortsUploadInitService;
+import com.example.shortudy.domain.upload.service.ShortsUploadInitService;
 import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.domain.user.entity.UserRole;
 import com.example.shortudy.domain.user.repository.UserRepository;
+import com.example.shortudy.global.config.S3Config;
+import com.example.shortudy.global.config.S3Service;
 import com.example.shortudy.global.security.principal.CustomUserDetails;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,12 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(properties = {
-    "aws.s3.bucket=test-bucket",
-    "cloud.aws.region.static=ap-northeast-2",
-    "cloud.aws.credentials.access-key=test",
-    "cloud.aws.credentials.secret-key=test"
-})
+@SpringBootTest
 @AutoConfigureMockMvc
 @DisplayName("좋아요 통합 테스트")
 public class ShortsLikeIntegrationTest {
@@ -64,12 +62,21 @@ public class ShortsLikeIntegrationTest {
     @MockitoBean
     private ShortsUploadInitService shortsUploadInitService;
 
+    @MockitoBean
+    private com.example.shortudy.global.config.S3Config s3Config;
+
+    @MockitoBean
+    private software.amazon.awssdk.services.s3.presigner.S3Presigner s3Presigner;
+
+    @MockitoBean
+    private software.amazon.awssdk.services.s3.S3Client s3Client;
+
     private User user;
     private Shorts shorts;
 
     @BeforeEach
     void setUp() {
-        user = User.create("test@example.com", "password", "nickname", UserRole.USER, "");
+        user = User.create("test@example.com", "password", "nickname", UserRole.USER);
         userRepository.save(user);
         customUserDetails = new CustomUserDetails(user);
 
