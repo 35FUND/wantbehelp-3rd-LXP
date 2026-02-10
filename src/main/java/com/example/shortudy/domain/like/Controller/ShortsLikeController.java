@@ -50,12 +50,12 @@ public class ShortsLikeController {
      * @return 내가 좋아요한 숏츠 목록 DTO
      */
     @GetMapping("/me/likes/shorts")
-    public ResponseEntity<ApiResponse<MyLikedShortsResponse>> getMyLikeShorts(
+    public ResponseEntity<ApiResponse<Page<MyLikedShortsResponse>>> getMyLikeShorts(
             @AuthenticationPrincipal CustomUserDetails me,
             @RequestParam(value = "sort", defaultValue = "latest") String sort,
             Pageable pageable
     ) {
-        MyLikedShortsResponse response = shortsLikeService.getMyLikedShorts(me.getId(), sort, pageable);
+        Page<MyLikedShortsResponse> response = shortsLikeService.getMyLikedShorts(me.getId(), sort, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(response));
     }
 

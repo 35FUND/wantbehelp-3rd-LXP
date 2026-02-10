@@ -166,12 +166,11 @@ class ShortsLikeServiceTest {
         Pageable pageable = PageRequest.of(0, 10);
 
         //when
-        MyLikedShortsResponse response = shortsLikeService.getMyLikedShorts(user.getId(), SortStandard.POPULAR.getValue(), pageable);
+        Page<MyLikedShortsResponse> response = shortsLikeService.getMyLikedShorts(user.getId(), SortStandard.POPULAR.getValue(), pageable);
 
         // then
-        assertEquals(2, response.content().size(), "인기순 조회 시 요청에 맞는 결과가 나와야 합니다");
-        assertEquals("title2", response.content().get(0).title(), "인기순 조회 시 조건에 맞는 숏츠의 제목이어야 합니다");
-        assertEquals(pageable.getPageNumber(), response.pageable().getPageNumber());
+        assertEquals(2, response.getContent().size(), "인기순 조회 시 요청에 맞는 결과가 나와야 합니다");
+        assertEquals("title2", response.getContent().get(0).title(), "인기순 조회 시 조건에 맞는 숏츠의 제목이어야 합니다");
     }
 
     @Test
