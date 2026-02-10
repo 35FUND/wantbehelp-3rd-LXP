@@ -84,6 +84,13 @@ public class Shorts {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
+    @Column(name = "published_at")
+    private LocalDateTime publishedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "visibility", nullable = false)
+    private ShortsVisibility visibility = ShortsVisibility.PUBLIC;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private ShortsStatus status;
@@ -117,6 +124,10 @@ public class Shorts {
         this.thumbnailUrl = thumbnailUrl;
         this.durationSec = durationSec;
         this.status = status;
+        this.visibility = ShortsVisibility.PUBLIC;
+        if (status == ShortsStatus.PUBLISHED) {
+            this.publishedAt = LocalDateTime.now();
+        }
         this.shortsKeywords = new ArrayList<>();
     }
 
@@ -184,7 +195,17 @@ public class Shorts {
         if (!isValidStatusTransition(this.status, nextStatus)) {
             throw new BaseException(ErrorCode.INVALID_INPUT, "허용되지 않는 숏츠 상태 전이입니다.");
         }
+        if (nextStatus == ShortsStatus.PUBLISHED && this.publishedAt == null) {
+            this.publishedAt = LocalDateTime.now();
+        }
         this.status = nextStatus;
+    }
+
+    public void changeVisibility(ShortsVisibility nextVisibility) {
+        if (nextVisibility == null || this.visibility == nextVisibility) {
+            return;
+        }
+        this.visibility = nextVisibility;
     }
 
     private boolean isValidStatusTransition(ShortsStatus currentStatus, ShortsStatus nextStatus) {
