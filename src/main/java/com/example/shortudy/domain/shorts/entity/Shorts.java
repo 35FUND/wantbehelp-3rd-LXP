@@ -88,6 +88,10 @@ public class Shorts {
     private LocalDateTime publishedAt;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "visibility", nullable = false)
+    private ShortsVisibility visibility = ShortsVisibility.PUBLIC;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private ShortsStatus status;
 
@@ -120,6 +124,7 @@ public class Shorts {
         this.thumbnailUrl = thumbnailUrl;
         this.durationSec = durationSec;
         this.status = status;
+        this.visibility = ShortsVisibility.PUBLIC;
         if (status == ShortsStatus.PUBLISHED) {
             this.publishedAt = LocalDateTime.now();
         }
@@ -194,6 +199,13 @@ public class Shorts {
             this.publishedAt = LocalDateTime.now();
         }
         this.status = nextStatus;
+    }
+
+    public void changeVisibility(ShortsVisibility nextVisibility) {
+        if (nextVisibility == null || this.visibility == nextVisibility) {
+            return;
+        }
+        this.visibility = nextVisibility;
     }
 
     private boolean isValidStatusTransition(ShortsStatus currentStatus, ShortsStatus nextStatus) {
