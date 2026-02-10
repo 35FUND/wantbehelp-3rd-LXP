@@ -83,7 +83,7 @@ public class ShortsQueryService {
                 .map(shorts -> new ShortsResponse(
                         original.shortsId(), original.title(), original.description(),
                         original.videoUrl(), original.thumbnailUrl(), original.durationSec(),
-                        original.status(), original.userId(), original.userNickname(),
+                        original.status(), original.visibility(), original.userId(), original.userNickname(),
                         original.userProfileUrl(), original.categoryId(), original.categoryName(),
                         shorts.getKeywords().stream().map(k -> k.getDisplayName()).toList(),
                         original.viewCount(), original.likeCount(), original.commentCount(),
@@ -120,7 +120,7 @@ public class ShortsQueryService {
         return new ShortsResponse(
                 original.shortsId(), original.title(), original.description(),
                 original.videoUrl(), original.thumbnailUrl(), original.durationSec(),
-                original.status(), original.userId(), original.userNickname(),
+                original.status(), original.visibility(), original.userId(), original.userNickname(),
                 fullProfileUrl, original.categoryId(), original.categoryName(),
                 original.keywords(), realTimeViewCount, original.likeCount(),
                 original.commentCount(), original.createdAt(), original.updatedAt(),

@@ -1,6 +1,7 @@
 package com.example.shortudy.domain.shorts.dto;
 
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
+import com.example.shortudy.domain.shorts.entity.ShortsVisibility;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 
@@ -15,6 +16,7 @@ public record ShortsUpdateRequest (
     @Min(value = 1, message = "영상 길이는 1초 이상이어야 합니다.")
     Integer durationSec,
     ShortsStatus status,
+    ShortsVisibility visibility,
     List<String> keywords
 ){
 }

@@ -2,6 +2,7 @@ package com.example.shortudy.domain.shorts.dto;
 
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
+import com.example.shortudy.domain.shorts.entity.ShortsVisibility;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
 import java.time.LocalDateTime;
@@ -37,6 +38,7 @@ public record ShortsResponse(
         String thumbnailUrl,
         Integer durationSec,
         ShortsStatus status,
+        ShortsVisibility visibility,
         Long userId,
         String userNickname,
         String userProfileUrl,
@@ -57,6 +59,7 @@ public record ShortsResponse(
         likeCount = likeCount != null ? likeCount : 0;
         commentCount = commentCount != null ? commentCount : 0L;
         isLiked = isLiked != null ? isLiked : false;
+        visibility = visibility != null ? visibility : ShortsVisibility.PUBLIC;
     }
 
     private static final String UNKNOWN_UPLOADER_NICKNAME = "알 수 없음";
@@ -93,6 +96,7 @@ public record ShortsResponse(
                 shorts.getThumbnailUrl(),
                 shorts.getDurationSec(),
                 shorts.getStatus(),
+                shorts.getVisibility(),
                 uploaderId,
                 uploaderNickname,
                 fullProfileUrl,
