@@ -56,8 +56,6 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    @CreatedDate
-    @Column(nullable = false)
     private LocalDateTime lastLoginAt;
 
     protected User() {}
