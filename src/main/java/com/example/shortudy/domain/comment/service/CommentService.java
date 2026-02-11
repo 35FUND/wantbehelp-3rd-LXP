@@ -185,19 +185,27 @@ public class CommentService {
     @Transactional(readOnly = true)
     public List<ReplyResponse> findReplies(Long parentId, Long myIdOrNull) {
 
-        // NOTE: 부모 댓글이 대댓글인 경우 예외 처리
         Comment parentComment = commentRepository.findById(parentId).orElseThrow(() ->
-                new BaseException(ErrorCode.COMMENT_NOT_FOUND));
+            new BaseException(ErrorCode.COMMENT_NOT_FOUND));
         if (parentComment.getParent() != null) {
-            // 이 경우는 대댓글인 경우
             throw new BaseException(ErrorCode.COMMENT_NOT_FOUND);
         }
 
         List<Comment> replies = commentRepository.findRepliesWithUser(parentId);
+        List<Long> replyIds = replies.stream().map(Comment::getId).toList();
+
+        // ✅ 내가 신고한 대댓글 id Set
+        Set<Long> reportedReplyIds = (myIdOrNull == null || replyIds.isEmpty())
+            ? Set.of()
+            : new HashSet<>(commentReportRepository.findReportedCommentIds(myIdOrNull, replyIds));
 
         return replies.stream()
-                .map(r -> ReplyResponse.from(r, myIdOrNull))
-                .toList();
+            .map(r -> ReplyResponse.from(
+                r,
+                myIdOrNull,
+                reportedReplyIds.contains(r.getId())
+            ))
+            .toList();
     }
 
     // 댓글 / 대댓글 신고 (comment_id를 받기 때문에 구분하진 않음 !)
