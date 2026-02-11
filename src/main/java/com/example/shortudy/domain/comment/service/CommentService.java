@@ -16,6 +16,8 @@ import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.domain.user.repository.UserRepository;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
+import java.util.HashSet;
+import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,11 +63,18 @@ public class CommentService {
 
         Map<Long, Long> replyCountMap = commentCountProvider.replyCountMap(parentIds);
 
+        // ✅ 내가 신고한 댓글 id Set (로그인 안 했으면 empty)
+        Set<Long> reportedIds = (myIdOrNull == null || parentIds.isEmpty())
+            ? Set.of()
+            : new HashSet<>(commentReportRepository.findReportedCommentIds(myIdOrNull, parentIds));
+
+
         List<CommentResponse> commentResponses = comments.stream()
                 .map(c -> CommentResponse.from(
                                 myIdOrNull,
                                 c,
-                                replyCountMap.getOrDefault(c.getId(), 0L)
+                                replyCountMap.getOrDefault(c.getId(), 0L),
+                                reportedIds.contains(c.getId())
                         )
                 ).toList();
 
@@ -213,8 +222,8 @@ public class CommentService {
         commentReportRepository.save(commentReport);
     }
 
-    private CommentResponse toCommentResponse(Long meIdOrNull, Comment comment, Map<Long, Long> replyCountMap) {
-        long replyCount = replyCountMap.getOrDefault(comment.getId(), 0L);
-        return CommentResponse.from(meIdOrNull, comment, replyCount);
-    }
+//    private CommentResponse toCommentResponse(Long meIdOrNull, Comment comment, Map<Long, Long> replyCountMap) {
+//        long replyCount = replyCountMap.getOrDefault(comment.getId(), 0L);
+//        return CommentResponse.from(meIdOrNull, comment, replyCount);
+//    }
 }
