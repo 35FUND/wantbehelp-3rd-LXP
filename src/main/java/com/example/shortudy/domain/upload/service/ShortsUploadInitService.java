@@ -90,8 +90,9 @@ public class ShortsUploadInitService {
 
         // 키워드 저장
         if (body.keywords() != null) {
-            body.keywords().forEach(k -> shorts.addKeyword(keywordService.getOrCreateKeyword(k)));
+            body.keywords().forEach(k -> shorts.addKeyword(keywordService.getValidKeyword(k)));
         }
+
 
         Shorts savedShorts = shortsRepository.save(shorts);
 

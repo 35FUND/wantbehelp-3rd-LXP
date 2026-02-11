@@ -17,6 +17,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 
 @Repository
@@ -153,6 +154,14 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
             "LEFT JOIN FETCH sk.keyword " +
             "WHERE s.id = :id")
     Optional<Shorts> findWithDetailsAndKeywordsById(@Param("id") Long id);
+
+    @Query("SELECT DISTINCT s FROM Shorts s " +
+            "JOIN FETCH s.user " +
+            "JOIN FETCH s.category " +
+            "LEFT JOIN FETCH s.shortsKeywords sk " +
+            "LEFT JOIN FETCH sk.keyword " +
+            "WHERE s.id IN :ids")
+    List<Shorts> findWithDetailsAndKeywordsByIdIn(@Param("ids") Collection<Long> ids);
 
     @EntityGraph(attributePaths = {"user", "category"})
     Page<Shorts> findAll(Pageable pageable);
