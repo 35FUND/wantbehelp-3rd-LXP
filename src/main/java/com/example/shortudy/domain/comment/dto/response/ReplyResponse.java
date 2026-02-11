@@ -11,10 +11,11 @@ public record ReplyResponse(
         String content,
         LocalDateTime createdAt,
         WriterResponse writer,
-        boolean isMine
+        boolean isMine,
+        boolean isReported
 ) {
 
-    public static ReplyResponse from(Comment reply, Long myId) {
+    public static ReplyResponse from(Comment reply, Long myId, boolean isReported) {
 
         return new ReplyResponse(
                 reply.getId(),
@@ -22,7 +23,8 @@ public record ReplyResponse(
                 reply.getStatus() == CommentStatus.DELETED ? "삭제된 댓글입니다." : reply.getContent(),
                 reply.getCreatedAt(),
                 WriterResponse.from(reply.getUser()),
-                myId != null && reply.isWrittenBy(myId)
+                myId != null && reply.isWrittenBy(myId),
+                isReported
         );
 
     }

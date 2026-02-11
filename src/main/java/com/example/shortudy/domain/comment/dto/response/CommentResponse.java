@@ -13,10 +13,11 @@ public record CommentResponse(
         LocalDateTime createdAt,
         WriterResponse writer,
         long replyCount,
-        boolean isMine
+        boolean isMine,
+        boolean isReported
 ) {
 
-    public static CommentResponse from(Long myId, Comment comment, long replyCount) {
+    public static CommentResponse from(Long myId, Comment comment, long replyCount, boolean isReported) {
 
         return new CommentResponse(
                 comment.getShorts().getId(),
@@ -25,7 +26,8 @@ public record CommentResponse(
                 comment.getCreatedAt(),
                 WriterResponse.from(comment.getUser()),
                 replyCount,
-                myId != null && comment.isWrittenBy(myId)
+                myId != null && comment.isWrittenBy(myId),
+                isReported
         );
     }
 }
