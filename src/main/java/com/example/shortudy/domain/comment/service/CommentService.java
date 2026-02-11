@@ -5,8 +5,10 @@ import com.example.shortudy.domain.comment.dto.response.CommentListResponse;
 import com.example.shortudy.domain.comment.dto.response.CommentResponse;
 import com.example.shortudy.domain.comment.dto.response.ReplyResponse;
 import com.example.shortudy.domain.comment.entity.Comment;
+import com.example.shortudy.domain.comment.entity.CommentReport;
 import com.example.shortudy.domain.comment.entity.CommentStatus;
 import com.example.shortudy.domain.comment.query.CommentCountProvider;
+import com.example.shortudy.domain.comment.repository.CommentReportRepository;
 import com.example.shortudy.domain.comment.repository.CommentRepository;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
@@ -14,6 +16,8 @@ import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.domain.user.repository.UserRepository;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
+import java.util.HashSet;
+import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,12 +28,14 @@ import java.util.Map;
 public class CommentService {
 
     private final CommentRepository commentRepository;
+    private final CommentReportRepository commentReportRepository;
     private final ShortsRepository shortsRepository;
     private final UserRepository userRepository;
     private final CommentCountProvider commentCountProvider;
 
-    public CommentService(CommentRepository commentRepository, ShortsRepository shortsRepository, UserRepository userRepository, CommentCountProvider commentCountProvider) {
+    public CommentService(CommentRepository commentRepository, CommentReportRepository commentReportRepository,ShortsRepository shortsRepository, UserRepository userRepository, CommentCountProvider commentCountProvider) {
         this.commentRepository = commentRepository;
+        this.commentReportRepository = commentReportRepository;
         this.shortsRepository = shortsRepository;
         this.userRepository = userRepository;
         this.commentCountProvider = commentCountProvider;
@@ -57,11 +63,18 @@ public class CommentService {
 
         Map<Long, Long> replyCountMap = commentCountProvider.replyCountMap(parentIds);
 
+        // ✅ 내가 신고한 댓글 id Set (로그인 안 했으면 empty)
+        Set<Long> reportedIds = (myIdOrNull == null || parentIds.isEmpty())
+            ? Set.of()
+            : new HashSet<>(commentReportRepository.findReportedCommentIds(myIdOrNull, parentIds));
+
+
         List<CommentResponse> commentResponses = comments.stream()
                 .map(c -> CommentResponse.from(
                                 myIdOrNull,
                                 c,
-                                replyCountMap.getOrDefault(c.getId(), 0L)
+                                replyCountMap.getOrDefault(c.getId(), 0L),
+                                reportedIds.contains(c.getId())
                         )
                 ).toList();
 
@@ -172,23 +185,53 @@ public class CommentService {
     @Transactional(readOnly = true)
     public List<ReplyResponse> findReplies(Long parentId, Long myIdOrNull) {
 
-        // NOTE: 부모 댓글이 대댓글인 경우 예외 처리
         Comment parentComment = commentRepository.findById(parentId).orElseThrow(() ->
-                new BaseException(ErrorCode.COMMENT_NOT_FOUND));
+            new BaseException(ErrorCode.COMMENT_NOT_FOUND));
         if (parentComment.getParent() != null) {
-            // 이 경우는 대댓글인 경우
             throw new BaseException(ErrorCode.COMMENT_NOT_FOUND);
         }
 
         List<Comment> replies = commentRepository.findRepliesWithUser(parentId);
+        List<Long> replyIds = replies.stream().map(Comment::getId).toList();
+
+        // ✅ 내가 신고한 대댓글 id Set
+        Set<Long> reportedReplyIds = (myIdOrNull == null || replyIds.isEmpty())
+            ? Set.of()
+            : new HashSet<>(commentReportRepository.findReportedCommentIds(myIdOrNull, replyIds));
 
         return replies.stream()
-                .map(r -> ReplyResponse.from(r, myIdOrNull))
-                .toList();
+            .map(r -> ReplyResponse.from(
+                r,
+                myIdOrNull,
+                reportedReplyIds.contains(r.getId())
+            ))
+            .toList();
     }
 
-    private CommentResponse toCommentResponse(Long meIdOrNull, Comment comment, Map<Long, Long> replyCountMap) {
-        long replyCount = replyCountMap.getOrDefault(comment.getId(), 0L);
-        return CommentResponse.from(meIdOrNull, comment, replyCount);
+    // 댓글 / 대댓글 신고 (comment_id를 받기 때문에 구분하진 않음 !)
+    @Transactional
+    public void reportComment(Long userId, Long commentId) {
+
+        // 신고할 댓글이 존재하는지 확인
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() ->
+                new BaseException(ErrorCode.COMMENT_NOT_FOUND));
+
+        // 내가 해당 댓글을 신고했는지 확인 (중복 신고 방지)
+        boolean alreadyReported = commentReportRepository.existsByCommentIdAndReporterId(commentId, userId);
+        if (alreadyReported) {
+            throw new BaseException(ErrorCode.COMMENT_ALREADY_REPORTED);
+        }
+
+        // Comment Report 엔티티 생성
+        String reason = "Inappropriate content"; // TODO: 실제로는 신고 사유를 받아와야 함
+        CommentReport commentReport = comment.reportByUser(userId, reason);
+
+        // 신고 저장
+        commentReportRepository.save(commentReport);
     }
+
+//    private CommentResponse toCommentResponse(Long meIdOrNull, Comment comment, Map<Long, Long> replyCountMap) {
+//        long replyCount = replyCountMap.getOrDefault(comment.getId(), 0L);
+//        return CommentResponse.from(meIdOrNull, comment, replyCount);
+//    }
 }
