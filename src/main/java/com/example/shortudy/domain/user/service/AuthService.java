@@ -35,6 +35,8 @@ public class AuthService {
 
         if (!passwordEncoder.matches(request.password(), user.getPassword())) throw new BaseException(ErrorCode.INVALID_PASSWORD);
 
+        user.updateLastLoginAt();
+
         return generateToken(user);
     }
 
