@@ -76,7 +76,8 @@ public class ShortsUploadCompleteService {
 
         // 5. 엔티티 및 세션 업데이트
         shorts.updateVideoUrl(videoUrl);
-        shorts.updateShorts(null, null, thumbnailUrl, null, null, ShortsStatus.PUBLISHED);
+        // 업로드 완료 시점에는 게시 전환하지 않고 PENDING 상태를 유지한다.
+        shorts.updateShorts(null, null, thumbnailUrl, null, null, ShortsStatus.PENDING);
 
         session.updateUploadedUrls(videoUrl, thumbnailUrl);
         session.markUploaded();
