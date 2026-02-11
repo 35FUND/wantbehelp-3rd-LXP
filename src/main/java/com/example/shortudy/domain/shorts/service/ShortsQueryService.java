@@ -15,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 숏츠 조회 전용 서비스
@@ -72,7 +74,8 @@ public class ShortsQueryService {
      */
     public Page<ShortsResponse> getMyShorts(Long userId, Pageable pageable) {
         Page<ShortsResponse> responses = shortsRepository.findMyResponses(userId, pageable);
-        return enrichAll(responses);
+        Page<ShortsResponse> enriched = enrichAll(responses);
+        return fillKeywords(enriched);
     }
 
     /**
@@ -83,12 +86,51 @@ public class ShortsQueryService {
                 .map(shorts -> new ShortsResponse(
                         original.shortsId(), original.title(), original.description(),
                         original.videoUrl(), original.thumbnailUrl(), original.durationSec(),
-                        original.status(), original.userId(), original.userNickname(),
+                        original.status(), original.visibility(), original.userId(), original.userNickname(),
                         original.userProfileUrl(), original.categoryId(), original.categoryName(),
                         shorts.getKeywords().stream().map(k -> k.getDisplayName()).toList(),
                         original.viewCount(), original.likeCount(), original.commentCount(),
                         original.createdAt(), original.updatedAt(), original.isLiked()
                 )).orElse(original);
+    }
+
+    /**
+     * 목록 응답의 키워드를 배치 조회로 채워 N+1을 방지한다.
+     */
+    private Page<ShortsResponse> fillKeywords(Page<ShortsResponse> responses) {
+        if (responses.isEmpty()) {
+            return responses;
+        }
+
+        List<Long> ids = responses.stream().map(ShortsResponse::shortsId).toList();
+        Map<Long, List<String>> keywordsByShortsId = shortsRepository.findWithDetailsAndKeywordsByIdIn(ids).stream()
+                .collect(Collectors.toMap(
+                        Shorts::getId,
+                        shorts -> shorts.getKeywords().stream().map(k -> k.getDisplayName()).toList()
+                ));
+
+        return responses.map(original -> new ShortsResponse(
+                original.shortsId(),
+                original.title(),
+                original.description(),
+                original.videoUrl(),
+                original.thumbnailUrl(),
+                original.durationSec(),
+                original.status(),
+                original.visibility(),
+                original.userId(),
+                original.userNickname(),
+                original.userProfileUrl(),
+                original.categoryId(),
+                original.categoryName(),
+                keywordsByShortsId.getOrDefault(original.shortsId(), List.of()),
+                original.viewCount(),
+                original.likeCount(),
+                original.commentCount(),
+                original.createdAt(),
+                original.updatedAt(),
+                original.isLiked()
+        ));
     }
 
     /**
@@ -120,7 +162,7 @@ public class ShortsQueryService {
         return new ShortsResponse(
                 original.shortsId(), original.title(), original.description(),
                 original.videoUrl(), original.thumbnailUrl(), original.durationSec(),
-                original.status(), original.userId(), original.userNickname(),
+                original.status(), original.visibility(), original.userId(), original.userNickname(),
                 fullProfileUrl, original.categoryId(), original.categoryName(),
                 original.keywords(), realTimeViewCount, original.likeCount(),
                 original.commentCount(), original.createdAt(), original.updatedAt(),

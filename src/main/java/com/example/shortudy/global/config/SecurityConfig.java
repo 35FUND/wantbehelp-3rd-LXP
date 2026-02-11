@@ -61,9 +61,9 @@ public class SecurityConfig {
 
                         // .authenticated() -> 해당 요청은 인증이 필요하다
                         .requestMatchers(HttpMethod.GET, "/api/v1/shorts/me").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/shorts/upload-status").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/playlists/me").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/playlists/{playlistId}").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/shorts/*/upload-status").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/playlists/me/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/me/likes/shorts").authenticated()
 
                         // GET 요청의 특정 데이터 조회는 누구나 가능하다.
                         .requestMatchers(HttpMethod.GET,
@@ -71,7 +71,7 @@ public class SecurityConfig {
                                 "/api/v1/categories/**",
                                 "/api/v1/comments/**",
                                 "/api/v1/keywords/**",
-                                "/api/v1/playlist/**").permitAll()
+                                "/api/v1/playlists/**").permitAll()
 
                         // 아래 요청에는 ADMIN이라는 역할이 필요하다.
                         .requestMatchers(HttpMethod.POST, "/api/v1/categories/**", "/api/v1/keywords/**").hasRole("ADMIN")

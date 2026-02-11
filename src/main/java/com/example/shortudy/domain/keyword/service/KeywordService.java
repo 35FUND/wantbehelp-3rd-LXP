@@ -106,8 +106,8 @@ public class KeywordService {
         keywordRepository.deleteById(id);
     }
 
-    @Transactional
-    public Keyword getOrCreateKeyword(String displayName) {
+    @Transactional(readOnly = true)
+    public Keyword getValidKeyword(String displayName) {
         String normalized = KeywordNormalizer.normalize(displayName);
 
         if (normalized == null || normalized.isBlank()) {
@@ -115,10 +115,7 @@ public class KeywordService {
         }
 
         return keywordRepository.findByNormalizedName(normalized)
-                .orElseGet(() -> {
-                    Keyword keyword = new Keyword(displayName, normalized);
-                    return keywordRepository.save(keyword);
-                });
+                .orElseThrow(() -> new BaseException(ErrorCode.KEYWORD_NOT_FOUND, "존재하지 않는 키워드입니다: " + displayName));
     }
 
     private KeywordResponse toResponse(Keyword k) {

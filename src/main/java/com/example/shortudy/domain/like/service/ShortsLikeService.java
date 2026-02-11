@@ -1,5 +1,6 @@
 package com.example.shortudy.domain.like.service;
 
+import com.example.shortudy.domain.comment.repository.CommentRepository;
 import com.example.shortudy.domain.keyword.entity.Keyword;
 import com.example.shortudy.domain.like.dto.LikeToggleResponse;
 import com.example.shortudy.domain.like.dto.MyLikedShortsResponse;
@@ -19,7 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * 좋아요 서비스 레이어
@@ -29,15 +32,18 @@ public class ShortsLikeService {
 
     private final ShortsLikeRepository shortsLikeRepository;
     private final ShortsRepository shortsRepository;
+    private final CommentRepository commentRepository;
     private final UserRepository userRepository;
 
     public ShortsLikeService(
             ShortsLikeRepository shortsLikeRepository,
             ShortsRepository shortsRepository,
+            CommentRepository commentRepository,
             UserRepository userRepository) {
         this.shortsRepository = shortsRepository;
         this.userRepository = userRepository;
         this.shortsLikeRepository = shortsLikeRepository;
+        this.commentRepository = commentRepository;
     }
 
     /**
@@ -67,22 +73,28 @@ public class ShortsLikeService {
      * @return 해당하는 좋아요 숏츠 목록 리스트
      */
     @Transactional(readOnly = true)
-    public MyLikedShortsResponse getMyLikedShorts(Long userId, String sort, Pageable pageable) {
+    public Page<MyLikedShortsResponse> getMyLikedShorts(Long userId, String sort, Pageable pageable) {
 
         Page<ShortsLike> likes = switch(SortStandard.fromValue(sort)) {
             case LATEST -> shortsLikeRepository.findAllByUserIdWithDetailsLatest(userId, pageable);
             case POPULAR -> shortsLikeRepository.findAllByUserIdWithDetailsPopular(userId, pageable);
         };
 
-        return MyLikedShortsResponse.from(
-            likes.map(
-                like -> MyLikedShortsResponse.MyLikedShorts.from(
-                        like.getShorts(),
-                        like.getShorts().getLikeCount(),
-                        like.getShorts().getKeywords().stream().map(Keyword::getDisplayName).toList()
-                )).stream().toList(),
-            likes.getPageable()
-        );
+        List<Long> shortsIds = likes.getContent().stream()
+                .map(sl -> sl.getShorts().getId())
+                .toList();
+
+        Map<Long, Long> commentCountMap = commentRepository.countByShortsIds(shortsIds).stream()
+                .collect(Collectors.toMap(
+                        result -> (Long)result[0],
+                        result -> (Long)result[1]
+                ));
+
+        return likes.map(like -> MyLikedShortsResponse.from(
+            like.getShorts(),
+            like.getShorts().getKeywords().stream().map(Keyword::getDisplayName).toList(),
+            commentCountMap.getOrDefault(like.getShorts().getId(), 0L).intValue()
+        ));
     }
 
     /**
@@ -132,5 +144,4 @@ public class ShortsLikeService {
                 existShortsLike
         );
     }
-
 }

@@ -75,13 +75,14 @@ class ShortsLikeControllerTest {
     @Test
     @DisplayName("TC-SLC-002: 인기순 파라미터와 함께 목록 조회 시 200 OK를 반환한다")
     void getMyLikedShorts_Api_Success() throws Exception {
-        MyLikedShortsResponse.MyLikedShorts response = createMockResponse();
-        // 2. 서비스가 이 '실제 데이터' 리스트를 반환하도록 설정
-        MyLikedShortsResponse pageResponse = new MyLikedShortsResponse(
-                List.of(createMockResponse()),
-                PageRequest.of(0, 10)
-        );
+        MyLikedShortsResponse mockItem = createMockResponse();
+        List<MyLikedShortsResponse> content = List.of(mockItem);
 
+        // 2. Pageable 및 PageImpl 생성 (전체 개수 1개로 설정)
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<MyLikedShortsResponse> pageResponse = new PageImpl<>(content, pageable, 1);
+
+        // 3. 서비스가 Page 객체를 반환하도록 설정
         given(shortsLikeService.getMyLikedShorts(anyLong(), anyString(), any(Pageable.class)))
                 .willReturn(pageResponse);
 
@@ -103,8 +104,8 @@ class ShortsLikeControllerTest {
                 .andExpect(jsonPath("$.data.pageable.pageSize").value(10));
     }
 
-    private MyLikedShortsResponse.MyLikedShorts createMockResponse() {
-        return new MyLikedShortsResponse.MyLikedShorts(
+    private MyLikedShortsResponse createMockResponse() {
+        return new MyLikedShortsResponse(
                 28L, "thumbUrl", "게임은 재미를 설계하는 일", "작성자", 10L,
                 LocalDateTime.now(), "설명", "카테고리", List.of("기획"),
                 "videoUrl", 50, 50, "userProfileUrl", 320

@@ -14,6 +14,12 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Query("select count(c) from Comment c where c.shorts.id = :shortsId and c.status = 'ACTIVE'")
     long countByShortsId(@Param("shortsId") Long shortsId);
 
+    // 여러 숏츠의 댓글 개수 조회
+    @Query("SELECT c.shorts.id, COUNT(c) FROM Comment c " +
+            "WHERE c.shorts.id IN :shortsIds " +
+            "GROUP BY c.shorts.id")
+    List<Object[]> countByShortsIds(@Param("shortsIds") List<Long> shortsIds);
+
     // 전체 숏츠의 댓글 개수 조회
     @Query("""
               select c.shorts.id as shortsId, count(c.id) as cnt

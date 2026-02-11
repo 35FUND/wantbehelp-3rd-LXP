@@ -3,6 +3,7 @@ package com.example.shortudy.domain.recommendation.service;
 import com.example.shortudy.domain.recommendation.dto.response.RecommendationResponse;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
+import com.example.shortudy.domain.shorts.entity.ShortsVisibility;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
 import com.example.shortudy.global.error.BaseException;
 import org.springframework.data.domain.PageRequest;
@@ -138,9 +139,10 @@ public class ShortsRecommendationService {
         // 1차: 같은 카테고리 후보 (최신순)
         if (collectedIds.size() < MAX_CANDIDATES) {
             int remaining = MAX_CANDIDATES - collectedIds.size();
-            List<Shorts> categoryCandidates = shortsRepository.findByCategoryIdAndStatus(
+            List<Shorts> categoryCandidates = shortsRepository.findByCategoryIdAndStatusAndVisibility(
                     baseShorts.getCategory().getId(),
                     ShortsStatus.PUBLISHED,
+                    ShortsVisibility.PUBLIC,
                     PageRequest.of(0, remaining, Sort.by(Sort.Direction.DESC, "createdAt"))
             ).getContent();
 

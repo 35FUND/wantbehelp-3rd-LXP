@@ -124,4 +124,15 @@ public class Comment {
         this.status = CommentStatus.DELETED;
         this.deletedAt = LocalDateTime.now();
     }
+
+    public CommentReport reportByUser(Long userId, String reason) {
+        // 작성자는 자신의 댓글을 신고할 수 없습니다.
+        if (isWrittenBy(userId)) {
+            throw new BaseException(ErrorCode.COMMENT_REPORT_FORBIDDEN);
+        }
+        return CommentReport.builder()
+            .commentId(this.id)
+            .reporterId(userId)
+            .reason(reason).build();
+    }
 }

@@ -9,6 +9,7 @@ import com.example.shortudy.domain.shorts.dto.ShortsResponse;
 import com.example.shortudy.domain.shorts.dto.ShortsUpdateRequest;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
+import com.example.shortudy.domain.shorts.entity.ShortsVisibility;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
 import com.example.shortudy.global.config.S3Service;
 import com.example.shortudy.global.error.BaseException;
@@ -70,7 +71,7 @@ public class ShortsService {
         }
 
         if (hasValidSortProperties(pageable)) {
-            return shortsRepository.findByStatus(ShortsStatus.PUBLISHED, pageable);
+            return shortsRepository.findByStatusAndVisibility(ShortsStatus.PUBLISHED, ShortsVisibility.PUBLIC, pageable);
         }
 
         return shortsRepository.findRandomPublishedShorts(pageable);
@@ -78,7 +79,7 @@ public class ShortsService {
 
     public Page<Shorts> getShortsEntityByCategory(Long categoryId, Pageable pageable) {
         Pageable safePageable = createSafePageable(pageable);
-        return shortsRepository.findByCategoryIdAndStatus(categoryId, ShortsStatus.PUBLISHED, safePageable);
+        return shortsRepository.findByCategoryIdAndStatusAndVisibility(categoryId, ShortsStatus.PUBLISHED, ShortsVisibility.PUBLIC, safePageable);
     }
 
     public Page<Shorts> getPopularShortsEntities(Integer days, Pageable pageable) {
@@ -113,11 +114,16 @@ public class ShortsService {
             request.status()
         );
 
+        if (request.visibility() != null) {
+            shorts.changeVisibility(request.visibility());
+        }
+
         if (request.keywords() != null) {
             shorts.clearKeywords();
             shortsRepository.flush();
-            request.keywords().forEach(k -> shorts.addKeyword(keywordService.getOrCreateKeyword(k)));
+            request.keywords().forEach(k -> shorts.addKeyword(keywordService.getValidKeyword(k)));
         }
+
 
         shortsRepository.saveAndFlush(shorts);
 

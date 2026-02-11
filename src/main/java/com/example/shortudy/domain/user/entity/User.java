@@ -56,6 +56,8 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    private LocalDateTime lastLoginAt;
+
     protected User() {}
 
     private User(String email, String password, String nickname, UserRole role) {
@@ -64,7 +66,6 @@ public class User {
         this.nickname = nickname;
         this.role = role;
         this.status = UserStatus.ACTIVE;
-        this.createdAt = LocalDateTime.now();
     }
 
     public static User create(String email, String password, String nickname, UserRole role) {
@@ -89,6 +90,10 @@ public class User {
 
     public void changeRole() {
         this.role = UserRole.ADMIN;
+    }
+
+    public void updateLastLoginAt() {
+        this.lastLoginAt = LocalDateTime.now();
     }
 }
 

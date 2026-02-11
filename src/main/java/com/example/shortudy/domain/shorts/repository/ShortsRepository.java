@@ -5,6 +5,7 @@ import com.example.shortudy.domain.like.entity.ShortsLike;
 import com.example.shortudy.domain.shorts.dto.ShortsResponse;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
+import com.example.shortudy.domain.shorts.entity.ShortsVisibility;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 
 @Repository
@@ -40,21 +42,22 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
      * 5. s.thumbnailUrl -> 썸네일 URL
      * 6. s.durationSec  -> 재생 시간
      * 7. s.status       -> 상태
-     * 8. u.id           -> 작성자 ID
-     * 9. u.nickname     -> 작성자 닉네임
-     * 10. u.profileUrl  -> 작성자 프로필 URL
-     * 11. c.id          -> 카테고리 ID
-     * 12. c.name        -> 카테고리명
-     * 13. null          -> 키워드 목록 (JPQL 생성자 내 컬렉션 주입 불가로 인한 placeholder)
-     * 14. s.viewCount   -> 조회수
-     * 15. s.likeCount   -> 좋아요수
-     * 16. (Subquery 1)  -> 댓글 총 개수
-     * 17. s.createdAt   -> 생성 일시
-     * 18. s.updatedAt   -> 수정 일시
-     * 19. (Subquery 2)  -> 로그인 유저의 좋아요 여부
+     * 8. s.visibility   -> 공개 여부
+     * 9. u.id           -> 작성자 ID
+     * 10. u.nickname    -> 작성자 닉네임
+     * 11. u.profileUrl  -> 작성자 프로필 URL
+     * 12. c.id          -> 카테고리 ID
+     * 13. c.name        -> 카테고리명
+     * 14. null          -> 키워드 목록 (JPQL 생성자 내 컬렉션 주입 불가로 인한 placeholder)
+     * 15. s.viewCount   -> 조회수
+     * 16. s.likeCount   -> 좋아요수
+     * 17. (Subquery 1)  -> 댓글 총 개수
+     * 18. s.createdAt   -> 생성 일시
+     * 19. s.updatedAt   -> 수정 일시
+     * 20. (Subquery 2)  -> 로그인 유저의 좋아요 여부
      */
     @Query("SELECT new com.example.shortudy.domain.shorts.dto.ShortsResponse(" +
-            "s.id, s.title, s.description, s.videoUrl, s.thumbnailUrl, s.durationSec, s.status, " +
+            "s.id, s.title, s.description, s.videoUrl, s.thumbnailUrl, s.durationSec, s.status, s.visibility, " +
             "u.id, u.nickname, u.profileUrl, " +
             "c.id, c.name, " +
             "null, " + 
@@ -66,14 +69,14 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
             "JOIN s.user u " +
             "JOIN s.category c " +
             "WHERE s.id = :id " +
-            "AND (s.status = 'PUBLISHED' OR s.user.id = :userId)")
+            "AND ((s.status = 'PUBLISHED' AND s.visibility = 'PUBLIC') OR s.user.id = :userId)")
     Optional<ShortsResponse> findResponseById(@Param("id") Long id, @Param("userId") Long userId);
 
     /**
      * [전체 목록 조회 쿼리]
      */
     @Query("SELECT new com.example.shortudy.domain.shorts.dto.ShortsResponse(" +
-            "s.id, s.title, s.description, s.videoUrl, s.thumbnailUrl, s.durationSec, s.status, " +
+            "s.id, s.title, s.description, s.videoUrl, s.thumbnailUrl, s.durationSec, s.status, s.visibility, " +
             "u.id, u.nickname, u.profileUrl, " +
             "c.id, c.name, " +
             "null, " + 
@@ -84,14 +87,14 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
             "FROM Shorts s " +
             "JOIN s.user u " +
             "JOIN s.category c " +
-            "WHERE s.status = :status")
+            "WHERE s.status = :status AND s.visibility = 'PUBLIC'")
     Page<ShortsResponse> findResponsesByStatus(@Param("status") ShortsStatus status, @Param("userId") Long userId, Pageable pageable);
 
     /**
      * [카테고리별 필터링 조회]
      */
     @Query("SELECT new com.example.shortudy.domain.shorts.dto.ShortsResponse(" +
-            "s.id, s.title, s.description, s.videoUrl, s.thumbnailUrl, s.durationSec, s.status, " +
+            "s.id, s.title, s.description, s.videoUrl, s.thumbnailUrl, s.durationSec, s.status, s.visibility, " +
             "u.id, u.nickname, u.profileUrl, " +
             "c.id, c.name, " +
             "null, " + 
@@ -102,14 +105,14 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
             "FROM Shorts s " +
             "JOIN s.user u " +
             "JOIN s.category c " +
-            "WHERE s.category.id = :categoryId AND s.status = :status")
+            "WHERE s.category.id = :categoryId AND s.status = :status AND s.visibility = 'PUBLIC'")
     Page<ShortsResponse> findResponsesByCategoryIdAndStatus(@Param("categoryId") Long categoryId, @Param("status") ShortsStatus status, @Param("userId") Long userId, Pageable pageable);
 
     /**
      * [인기 숏츠 조회]
      */
     @Query("SELECT new com.example.shortudy.domain.shorts.dto.ShortsResponse(" +
-            "s.id, s.title, s.description, s.videoUrl, s.thumbnailUrl, s.durationSec, s.status, " +
+            "s.id, s.title, s.description, s.videoUrl, s.thumbnailUrl, s.durationSec, s.status, s.visibility, " +
             "u.id, u.nickname, u.profileUrl, " +
             "c.id, c.name, " +
             "null, " + 
@@ -120,14 +123,14 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
             "FROM Shorts s " +
             "JOIN s.user u " +
             "JOIN s.category c " +
-            "WHERE s.status = 'PUBLISHED' AND s.createdAt >= :since")
+            "WHERE s.status = 'PUBLISHED' AND s.visibility = 'PUBLIC' AND s.createdAt >= :since")
     Page<ShortsResponse> findPopularResponses(@Param("since") LocalDateTime since, @Param("userId") Long userId, Pageable pageable);
 
     /**
      * [내 숏츠 조회]
      */
     @Query("SELECT new com.example.shortudy.domain.shorts.dto.ShortsResponse(" +
-            "s.id, s.title, s.description, s.videoUrl, s.thumbnailUrl, s.durationSec, s.status, " +
+            "s.id, s.title, s.description, s.videoUrl, s.thumbnailUrl, s.durationSec, s.status, s.visibility, " +
             "u.id, u.nickname, u.profileUrl, " +
             "c.id, c.name, " +
             "null, " + 
@@ -152,18 +155,29 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
             "WHERE s.id = :id")
     Optional<Shorts> findWithDetailsAndKeywordsById(@Param("id") Long id);
 
+    @Query("SELECT DISTINCT s FROM Shorts s " +
+            "JOIN FETCH s.user " +
+            "JOIN FETCH s.category " +
+            "LEFT JOIN FETCH s.shortsKeywords sk " +
+            "LEFT JOIN FETCH sk.keyword " +
+            "WHERE s.id IN :ids")
+    List<Shorts> findWithDetailsAndKeywordsByIdIn(@Param("ids") Collection<Long> ids);
+
     @EntityGraph(attributePaths = {"user", "category"})
     Page<Shorts> findAll(Pageable pageable);
 
     @EntityGraph(attributePaths = {"user", "category"})
     Page<Shorts> findByStatus(ShortsStatus status, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"user", "category"})
+    Page<Shorts> findByStatusAndVisibility(ShortsStatus status, ShortsVisibility visibility, Pageable pageable);
+
     /**
      * [랜덤 쇼츠 조회]
      * 1. 목적: 사용자에게 무작위 컨텐츠를 제공하여 탐색 경험 증대.
      * 2. 로직: rand() 함수를 활용하여 발행된 숏츠 중 무작위로 페이징 조회합니다. (DB 방언에 따라 자동 번역)
      */
-    @Query("SELECT s FROM Shorts s WHERE s.status = 'PUBLISHED' ORDER BY rand()")
+    @Query("SELECT s FROM Shorts s WHERE s.status = 'PUBLISHED' AND s.visibility = 'PUBLIC' ORDER BY rand()")
     Page<Shorts> findRandomPublishedShorts(Pageable pageable);
 
     @EntityGraph(attributePaths = {"user", "category"})
@@ -175,8 +189,12 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
     @EntityGraph(attributePaths = {"user", "category"})
     Page<Shorts> findByCategoryIdAndStatus(Long categoryId, ShortsStatus status, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"user", "category"})
+    Page<Shorts> findByCategoryIdAndStatusAndVisibility(Long categoryId, ShortsStatus status, ShortsVisibility visibility, Pageable pageable);
+
     @Query("SELECT s FROM Shorts s " +
             "WHERE s.status = 'PUBLISHED' " +
+            "AND s.visibility = 'PUBLIC' " +
             "AND s.createdAt >= :since " +
             "ORDER BY s.likeCount DESC, s.createdAt DESC")
     @EntityGraph(attributePaths = {"user", "category"})
@@ -185,6 +203,7 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
     @Query("SELECT s FROM Shorts s " +
             "LEFT JOIN ShortsLike l ON l.shorts = s " +
             "WHERE s.status = 'PUBLISHED' " +
+            "AND s.visibility = 'PUBLIC' " +
             "AND s.createdAt >= :since " +
             "GROUP BY s.id " +
             "ORDER BY COUNT(l.id) DESC, s.createdAt DESC")
@@ -208,6 +227,7 @@ public interface ShortsRepository extends JpaRepository<Shorts, Long> {
     @Query("SELECT s FROM Shorts s " +
             "WHERE s.id != :shortsId " +
             "AND s.status = :status " +
+            "AND s.visibility = 'PUBLIC' " +
             "ORDER BY rand()")
     List<Shorts> findRecommendationCandidates(
             @Param("shortsId") Long shortsId,
