@@ -118,6 +118,11 @@ public class KeywordService {
                 .orElseThrow(() -> new BaseException(ErrorCode.KEYWORD_NOT_FOUND, "존재하지 않는 키워드입니다: " + displayName));
     }
 
+
+        return keywordRepository.findByNormalizedName(normalized);
+
+    }
+
     private KeywordResponse toResponse(Keyword k) {
         return new KeywordResponse(k.getId(), k.getDisplayName(), k.getNormalizedName());
     }
