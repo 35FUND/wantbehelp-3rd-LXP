@@ -76,4 +76,15 @@ public class CommentController {
         commentService.deleteComment(me.getId(), commentId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResponse.success(null));
     }
+
+    // 댓글 신고
+    // - 로그인한 사용자들만 신고할 수 있어야 한다.
+    @PostMapping("/comments/{commentId}/reports")
+    public ResponseEntity<ApiResponse<Void>> reportComment(
+        @AuthenticationPrincipal CustomUserDetails me,
+        @PathVariable Long commentId
+    ) {
+        commentService.reportComment(me.getId(), commentId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(null));
+    }
 }
