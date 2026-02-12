@@ -7,6 +7,7 @@ import com.example.shortudy.domain.user.dto.request.UpdateProfileRequest;
 import com.example.shortudy.domain.user.dto.response.InfoResponse;
 import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.domain.user.entity.UserRole;
+import com.example.shortudy.domain.like.repository.ShortsLikeRepository;
 import com.example.shortudy.domain.user.repository.UserRepository;
 import com.example.shortudy.global.config.S3Service;
 import lombok.extern.slf4j.Slf4j;
@@ -26,13 +27,16 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final S3Service s3Service;
+    private final ShortsLikeRepository shortsLikeRepository;
 
     public UserService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
-                       S3Service s3Service) {
+                       S3Service s3Service,
+                       ShortsLikeRepository shortsLikeRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.s3Service = s3Service;
+        this.shortsLikeRepository = shortsLikeRepository;
     }
 
     @Transactional
@@ -177,6 +181,8 @@ public class UserService {
         User user = userRepository.findById(userId).orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
 
         try {
+            // 소프트 삭제 잔존 row까지 포함해 FK 충돌이 없도록 좋아요를 먼저 정리한다.
+            shortsLikeRepository.hardDeleteAllByUserId(userId);
             userRepository.delete(user);
             userRepository.flush();
         } catch (DataIntegrityViolationException e) {
