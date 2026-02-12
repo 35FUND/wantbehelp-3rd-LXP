@@ -56,6 +56,7 @@ public class ShortsUploadStatusService {
                 shortId,
                 uploadStatus,
                 shorts.getStatus(),
+                shorts.getStatusDescription(),
                 session.getVideoUrl(),
                 session.getThumbnailUrl(),
                 session.getDurationSec(),
