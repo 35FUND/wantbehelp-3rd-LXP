@@ -48,7 +48,8 @@ public class ShortsQueryService {
      */
     public Page<ShortsResponse> getShortsList(Pageable pageable, Long userId) {
         Page<ShortsResponse> responses = shortsRepository.findResponsesByStatus(ShortsStatus.PUBLISHED, userId, pageable);
-        return enrichAll(responses);
+        Page<ShortsResponse> enriched = enrichAll(responses);
+        return fillKeywords(enriched);
     }
 
     /**
@@ -56,7 +57,8 @@ public class ShortsQueryService {
      */
     public Page<ShortsResponse> getShortsByCategory(Long categoryId, Pageable pageable, Long userId) {
         Page<ShortsResponse> responses = shortsRepository.findResponsesByCategoryIdAndStatus(categoryId, ShortsStatus.PUBLISHED, userId, pageable);
-        return enrichAll(responses);
+        Page<ShortsResponse> enriched = enrichAll(responses);
+        return fillKeywords(enriched);
     }
 
     /**
@@ -65,8 +67,10 @@ public class ShortsQueryService {
     public Page<ShortsResponse> getPopularShorts(Integer days, Pageable pageable, Long userId) {
         if (days == null || days <= 0) days = 30;
         LocalDateTime since = LocalDateTime.now().minusDays(days);
+        // TODO : 이 부분에서 키워드가 채워지지 않는 이슈 있음.
         Page<ShortsResponse> responses = shortsRepository.findPopularResponses(since, userId, pageable);
-        return enrichAll(responses);
+        Page<ShortsResponse> enriched = enrichAll(responses);
+        return fillKeywords(enriched);
     }
 
     /**
