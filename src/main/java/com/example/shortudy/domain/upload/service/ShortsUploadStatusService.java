@@ -1,6 +1,8 @@
 package com.example.shortudy.domain.upload.service;
 
 import com.example.shortudy.domain.shorts.entity.Shorts;
+import com.example.shortudy.domain.shorts.entity.ShortsInspectionResults;
+import com.example.shortudy.domain.shorts.repository.ShortsInspectionResultsRepository;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
 import com.example.shortudy.domain.upload.dto.ShortsUploadStatusResponse;
 import com.example.shortudy.domain.upload.entity.ShortsUploadSession;
@@ -22,13 +24,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class ShortsUploadStatusService {
 
     private final ShortsUploadSessionRepository uploadSessionRepository;
+    private final ShortsInspectionResultsRepository shortsInspectionResultsRepository;
     private final ShortsRepository shortsRepository;
 
     public ShortsUploadStatusService(
             ShortsUploadSessionRepository uploadSessionRepository,
+            ShortsInspectionResultsRepository shortsInspectionResultsRepository,
             ShortsRepository shortsRepository
     ) {
         this.uploadSessionRepository = uploadSessionRepository;
+        this.shortsInspectionResultsRepository = shortsInspectionResultsRepository;
         this.shortsRepository = shortsRepository;
     }
 
@@ -52,10 +57,25 @@ public class ShortsUploadStatusService {
 
         String uploadStatus = mapUploadStatus(session.getStatus());
 
+        // NOTE : null로 반환하는 이유는 프론트에서 상태에 따라 UI를 다르게 처리하기 위함입니다.
+        ShortsInspectionResults shortsInspectionResult = shortsInspectionResultsRepository.findByShortsId(shortId)
+                .orElse(null);
+
+        String inspectionResult;
+
+        // default = 반려 사유를 inspection에서 맵핑해오는 로직
+        switch (shorts.getStatus()) {
+            case PENDING -> inspectionResult = "심사 대기 중입니다.";
+            case AI_CHECK -> inspectionResult = "AI 심사 중입니다.";
+            case PUBLISHED -> inspectionResult = "게시된 숏츠입니다.";
+            default -> inspectionResult = shortsInspectionResult != null ? shortsInspectionResult.getReason() : null;
+        }
+
         return new ShortsUploadStatusResponse(
                 shortId,
                 uploadStatus,
                 shorts.getStatus(),
+                inspectionResult,
                 session.getVideoUrl(),
                 session.getThumbnailUrl(),
                 session.getDurationSec(),
