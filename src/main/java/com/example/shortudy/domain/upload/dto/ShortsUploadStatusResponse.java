@@ -13,7 +13,7 @@ public record ShortsUploadStatusResponse(
         Long shortId,
         String uploadStatus,
         ShortsStatus shortsStatus,
-        String shortsStatusLabel,
+        String shortsStatusDescription,
         String videoUrl,
         String thumbnailUrl,
         Integer durationSec,
