@@ -12,6 +12,7 @@ import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
 import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.domain.user.repository.UserRepository;
+import com.example.shortudy.global.config.S3Service;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
 import org.springframework.data.domain.Page;
@@ -35,15 +36,19 @@ public class ShortsLikeService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
 
+    private final S3Service s3Service;
+
     public ShortsLikeService(
             ShortsLikeRepository shortsLikeRepository,
             ShortsRepository shortsRepository,
             CommentRepository commentRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            S3Service s3Service) {
         this.shortsRepository = shortsRepository;
         this.userRepository = userRepository;
         this.shortsLikeRepository = shortsLikeRepository;
         this.commentRepository = commentRepository;
+        this.s3Service = s3Service;
     }
 
     /**
@@ -93,7 +98,8 @@ public class ShortsLikeService {
         return likes.map(like -> MyLikedShortsResponse.from(
             like.getShorts(),
             like.getShorts().getKeywords().stream().map(Keyword::getDisplayName).toList(),
-            commentCountMap.getOrDefault(like.getShorts().getId(), 0L).intValue()
+            commentCountMap.getOrDefault(like.getShorts().getId(), 0L).intValue(),
+            s3Service.getFileUrl(like.getUser().getProfileUrl())
         ));
     }
 

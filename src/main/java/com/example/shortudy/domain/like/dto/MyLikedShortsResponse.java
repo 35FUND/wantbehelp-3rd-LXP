@@ -1,6 +1,7 @@
 package com.example.shortudy.domain.like.dto;
 
 import com.example.shortudy.domain.shorts.entity.Shorts;
+import com.example.shortudy.global.config.S3Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -38,7 +39,7 @@ public record MyLikedShortsResponse(
         String userProfileUrl,
         Integer durationSec
 ) {
-    public static MyLikedShortsResponse from(Shorts shorts, List<String> keywords, Integer commentCount) {
+    public static MyLikedShortsResponse from(Shorts shorts, List<String> keywords, Integer commentCount, String userProfileUrl) {
         return new MyLikedShortsResponse(
                 shorts.getId(),
                 shorts.getThumbnailUrl(),
@@ -52,7 +53,7 @@ public record MyLikedShortsResponse(
                 shorts.getVideoUrl(),
                 commentCount,
                 shorts.getLikeCount(),
-                shorts.getUser().getProfileUrl(),
+                userProfileUrl,
                 shorts.getDurationSec()
         );
     }
