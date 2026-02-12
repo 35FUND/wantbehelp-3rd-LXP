@@ -95,10 +95,6 @@ public class Shorts {
     @Column(name = "status")
     private ShortsStatus status;
 
-    // nullable
-    @Column(name = "reject_reason")
-    private String rejectReason;
-
     @OneToMany(mappedBy = "shorts", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ShortsKeyword> shortsKeywords = new ArrayList<>();
@@ -257,18 +253,4 @@ public class Shorts {
         return this.status == ShortsStatus.PENDING;
     }
 
-    // 숏츠의 상태에 따라 ShortsStatusDescription을 반환한다.
-    public String getStatusDescription() {
-        // reject reason이 있으면 반환
-        if (rejectReason != null && this.status == ShortsStatus.REJECT) {
-            return rejectReason;
-        }
-
-        return switch (this.status) {
-            case PENDING -> "검토 중..";
-            case AI_CHECK -> "1차 검수 완료";
-            case PUBLISHED -> "게시됨";
-            case REJECT -> "거부됨";
-        };
-    }
 }
