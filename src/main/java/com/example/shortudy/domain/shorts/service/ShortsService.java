@@ -161,7 +161,7 @@ public class ShortsService {
     }
 
     private void deleteShortsCascade(Long shortsId) {
-        shortsLikeRepository.deleteByShortsId(shortsId);
+        shortsLikeRepository.hardDeleteAllByShortsId(shortsId);
         commentRepository.deleteByShortsId(shortsId);
         shortsRepository.deleteById(shortsId);
     }
