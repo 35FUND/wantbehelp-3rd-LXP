@@ -1,6 +1,9 @@
 package com.example.shortudy.domain.recommendation.service;
 
+import com.example.shortudy.domain.comment.repository.CommentRepository;
+import com.example.shortudy.domain.like.repository.ShortsLikeRepository;
 import com.example.shortudy.domain.recommendation.dto.response.RecommendationResponse;
+import com.example.shortudy.domain.shorts.dto.ShortsResponse;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
 import com.example.shortudy.domain.shorts.entity.ShortsVisibility;
@@ -34,10 +37,19 @@ public class ShortsRecommendationService {
 
     private final ShortsRepository shortsRepository;
     private final EntityManager entityManager;
+    private final CommentRepository commentRepository;
+    private final ShortsLikeRepository shortsLikeRepository;
 
-    public ShortsRecommendationService(ShortsRepository shortsRepository, EntityManager entityManager) {
+    public ShortsRecommendationService(
+            ShortsRepository shortsRepository,
+            EntityManager entityManager,
+            CommentRepository commentRepository,
+            ShortsLikeRepository shortsLikeRepository
+    ) {
         this.shortsRepository = shortsRepository;
         this.entityManager = entityManager;
+        this.commentRepository = commentRepository;
+        this.shortsLikeRepository = shortsLikeRepository;
     }
 
     /**
@@ -47,14 +59,16 @@ public class ShortsRecommendationService {
      * 2. 2단계 fallback으로 후보 ID 수집 (최대 60개)
      * 3. 후보 상세 조회 (user, category, keywords 로딩)
      * 4. 자카드 유사도 계산 → 상위 60개 배치 구성 → 페이징
-     * 5. Response DTO 변환
+     * 5. 페이징된 숏츠에 대해 댓글 수, 좋아요 여부 배치 조회
+     * 6. ShortsResponse + similarity로 변환
      *
-     * @param shortsId 기준 숏츠 ID
-     * @param offset   페이징 오프셋
-     * @param limit    페이징 크기
+     * @param shortsId      기준 숏츠 ID
+     * @param currentUserId 현재 로그인 사용자 ID (비로그인 시 null)
+     * @param offset        페이징 오프셋
+     * @param limit         페이징 크기
      * @return 추천 숏츠 목록 (유사도 내림차순)
      */
-    public RecommendationResponse getRecommendations(Long shortsId, int offset, int limit) {
+    public RecommendationResponse getRecommendations(Long shortsId, Long currentUserId, int offset, int limit) {
         // 1. 기준 숏츠 조회 (keyword까지 fetch join)
         Shorts baseShorts = shortsRepository.findWithDetailsAndKeywordsById(shortsId)
                 .orElseThrow(() -> new BaseException(SHORTS_NOT_FOUND, "해당 숏츠를 찾을 수 없습니다."));
@@ -98,20 +112,41 @@ public class ShortsRecommendationService {
                 .limit(limit)
                 .toList();
 
-        // 7. Response 생성 (페이징된 결과만 Map 조회)
+        // 7. 페이징된 결과의 Shorts 엔티티 추출
         Set<Long> pagedShortsIds = pagedResults.stream()
                 .map(JaccardSimilarityCalculator.SimilarityResult::shortsId)
                 .collect(Collectors.toSet());
 
-        Map<Long, Shorts> candidateMap = candidateShortsList.stream()
+        List<Shorts> pagedShortsList = candidateShortsList.stream()
                 .filter(s -> pagedShortsIds.contains(s.getId()))
-                .collect(Collectors.toMap(Shorts::getId, Function.identity()));
+                .toList();
 
-        List<RecommendationResponse.ShortsRecommendation> recommendations = pagedResults.stream()
+        // 8. 댓글 수, 좋아요 여부 배치 조회 (페이징된 결과만)
+        List<Long> pagedShortsIdList = pagedShortsList.stream()
+                .map(Shorts::getId)
+                .toList();
+
+        Map<Long, Long> commentCounts = getCommentCounts(pagedShortsIdList);
+        Set<Long> likedShortsIds = getLikedShortsIds(currentUserId, pagedShortsIdList);
+
+        // 9. Shorts → ShortsResponse 변환 (commentCount, isLiked 포함)
+        Map<Long, ShortsResponse> shortsResponseMap = pagedShortsList.stream()
+                .collect(Collectors.toMap(
+                        Shorts::getId,
+                        shorts -> ShortsResponse.of(
+                                shorts,
+                                commentCounts.getOrDefault(shorts.getId(), 0L),
+                                shorts.getViewCount(),
+                                likedShortsIds.contains(shorts.getId())
+                        )
+                ));
+
+        // 10. ShortsResponse + similarity → RecommendedShorts 생성
+        List<RecommendationResponse.RecommendedShorts> recommendations = pagedResults.stream()
                 .map(result -> {
-                    Shorts recommendedShorts = candidateMap.get(result.shortsId());
-                    return RecommendationResponse.ShortsRecommendation.from(
-                            recommendedShorts,
+                    ShortsResponse shortsResponse = shortsResponseMap.get(result.shortsId());
+                    return RecommendationResponse.RecommendedShorts.of(
+                            shortsResponse,
                             result.similarity()
                     );
                 })
@@ -222,6 +257,44 @@ public class ShortsRecommendationService {
     private Set<String> extractKeywordNames(Shorts shorts) {
         return shorts.getShortsKeywords().stream()
                 .map(sk -> sk.getKeyword().getDisplayName())
+                .collect(Collectors.toSet());
+    }
+
+    // ==================== 배치 조회 헬퍼 메서드 ====================
+
+    /**
+     * 숏츠별 댓글 수 배치 조회
+     * - N+1 방지: 숏츠 개수만큼 COUNT 쿼리 실행 대신, 한 번의 쿼리로 모두 조회
+     *
+     * @param shortsIds 조회 대상 숏츠 ID 목록
+     * @return 숏츠 ID → 댓글 수 맵
+     */
+    private Map<Long, Long> getCommentCounts(List<Long> shortsIds) {
+        if (shortsIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return commentRepository.countAllCommentsByShortsIds(shortsIds).stream()
+                .collect(Collectors.toMap(
+                        p -> p.getShortsId(),
+                        p -> p.getCnt()
+                ));
+    }
+
+    /**
+     * 현재 사용자가 좋아요한 숏츠 ID Set 조회
+     * - 비로그인 사용자는 빈 Set 반환
+     * - N+1 방지: 한 번의 쿼리로 모든 좋아요 상태 확인
+     *
+     * @param currentUserId 현재 사용자 ID (null이면 비로그인)
+     * @param shortsIds     조회 대상 숏츠 ID 목록
+     * @return 좋아요한 숏츠 ID Set
+     */
+    private Set<Long> getLikedShortsIds(Long currentUserId, List<Long> shortsIds) {
+        if (currentUserId == null || shortsIds.isEmpty()) {
+            return Collections.emptySet();
+        }
+        return shortsLikeRepository.findByUserIdAndShortsIdIn(currentUserId, shortsIds).stream()
+                .map(like -> like.getShorts().getId())
                 .collect(Collectors.toSet());
     }
 }
