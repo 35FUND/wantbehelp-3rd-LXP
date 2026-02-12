@@ -58,6 +58,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/login").permitAll()
                         .requestMatchers("/api/v1/auth/refresh").permitAll()
                         .requestMatchers("/api/v1/users").permitAll()
+                        .requestMatchers("/api/v1/recommendations/shorts/*").permitAll()
 
                         // .authenticated() -> 해당 요청은 인증이 필요하다
                         .requestMatchers(HttpMethod.GET, "/api/v1/shorts/me").authenticated()

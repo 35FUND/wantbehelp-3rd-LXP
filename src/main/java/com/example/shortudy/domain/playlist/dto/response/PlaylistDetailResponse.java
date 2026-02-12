@@ -6,6 +6,7 @@ import com.example.shortudy.domain.playlist.entity.PlaylistShorts;
 import com.example.shortudy.domain.playlist.entity.PlaylistVisibility;
 import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
+import com.example.shortudy.domain.shorts.entity.ShortsVisibility;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -140,7 +141,8 @@ public record PlaylistDetailResponse(
                             commentCount,
                             shorts.getCreatedAt(),
                             shorts.getUpdatedAt(),
-                            isLiked
+                            isLiked,
+                            shorts.getVisibility()
                     ),
                     ps.getAddedAt()
             );
@@ -156,6 +158,7 @@ public record PlaylistDetailResponse(
      * - viewCount, likeCount, commentCount: 통계 정보
      * - createdAt, updatedAt: 시간 정보
      * - isLiked: 현재 사용자의 좋아요 여부
+     * - visibility: 숏츠 공개 여부
      */
     public record ShortsInfo(
             Long shortsId,              // 숏츠 ID
@@ -173,7 +176,8 @@ public record PlaylistDetailResponse(
             long commentCount,          // 댓글 수
             LocalDateTime createdAt,    // 생성 일시
             LocalDateTime updatedAt,    // 수정 일시
-            boolean isLiked             // 현재 사용자 좋아요 여부
+            boolean isLiked,            // 현재 사용자 좋아요 여부
+            ShortsVisibility visibility // 숏츠 공개 여부
     ) {
     }
 
