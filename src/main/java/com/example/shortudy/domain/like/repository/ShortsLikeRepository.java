@@ -81,12 +81,12 @@ public interface ShortsLikeRepository extends JpaRepository<ShortsLike, Long> {
     void deleteByShortsId(Long shortsId);
 
     // 소프트 삭제 여부와 관계없이 숏츠 기준 좋아요를 물리 삭제한다.
-    @Modifying(flushAutomatically = true,clearAutomatically = true)
+    @Modifying(clearAutomatically = true)
     @Query(value = "DELETE FROM shorts_like WHERE shorts_id = :shortsId", nativeQuery = true)
     void hardDeleteAllByShortsId(@Param("shortsId") Long shortsId);
 
     // 소프트 삭제 여부와 관계없이 유저 기준 좋아요를 물리 삭제한다.
-    @Modifying(flushAutomatically = true,clearAutomatically = true)
+    @Modifying(clearAutomatically = true)
     @Query(value = "DELETE FROM shorts_like WHERE user_id = :userId", nativeQuery = true)
     void hardDeleteAllByUserId(@Param("userId") Long userId);
 }
