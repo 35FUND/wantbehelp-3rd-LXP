@@ -4,8 +4,10 @@ import com.example.shortudy.domain.recommendation.dto.request.RecommendationRequ
 import com.example.shortudy.domain.recommendation.dto.response.RecommendationResponse;
 import com.example.shortudy.domain.recommendation.service.ShortsRecommendationService;
 import com.example.shortudy.global.common.ApiResponse;
+import com.example.shortudy.global.security.principal.CustomUserDetails;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,11 +24,15 @@ public class RecommendationController {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<RecommendationResponse> getRecommendations(
             @PathVariable Long shortsId,
-            @Valid RecommendationRequest request
+            @Valid RecommendationRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         Long seedShortsId = request.lastShortsId() != null ? request.lastShortsId() : shortsId;
+        Long currentUserId = userDetails != null ? userDetails.getId() : null;
+
         RecommendationResponse response = recommendationService.getRecommendations(
                 seedShortsId,
+                currentUserId,
                 request.offset(),
                 request.limit()
         );
