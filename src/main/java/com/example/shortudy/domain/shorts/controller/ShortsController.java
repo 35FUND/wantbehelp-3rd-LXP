@@ -1,6 +1,7 @@
 package com.example.shortudy.domain.shorts.controller;
 
 import com.example.shortudy.domain.shorts.dto.ShortsResponse;
+import com.example.shortudy.domain.shorts.dto.ShortsStatusDescriptionResponse;
 import com.example.shortudy.domain.shorts.dto.ShortsUpdateRequest;
 import com.example.shortudy.domain.shorts.service.ShortsQueryService;
 import com.example.shortudy.domain.shorts.service.ShortsService;
@@ -48,11 +49,11 @@ public class ShortsController {
 
     @GetMapping("/me")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<Page<ShortsResponse>> getMyShorts(
+    public ApiResponse<Page<ShortsStatusDescriptionResponse>> getMyShorts(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PageableDefault(size = 20, sort = "id", direction = DESC) Pageable pageable
     ) {
-        Page<ShortsResponse> response = shortsQueryService.getMyShorts(userDetails.getId(), pageable);
+        Page<ShortsStatusDescriptionResponse> response = shortsQueryService.getMyShorts(userDetails.getId(), pageable);
         return ApiResponse.success(response);
     }
 
