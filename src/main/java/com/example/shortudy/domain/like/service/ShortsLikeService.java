@@ -99,7 +99,7 @@ public class ShortsLikeService {
             like.getShorts(),
             like.getShorts().getKeywords().stream().map(Keyword::getDisplayName).toList(),
             commentCountMap.getOrDefault(like.getShorts().getId(), 0L).intValue(),
-            s3Service.getFileUrl(like.getUser().getProfileUrl())
+            s3Service.getFileUrl(like.getShorts().getUser().getProfileUrl())
         ));
     }
 
