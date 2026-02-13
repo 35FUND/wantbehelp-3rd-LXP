@@ -4,6 +4,7 @@ import com.example.shortudy.domain.comment.dto.request.CommentRequest;
 import com.example.shortudy.domain.comment.dto.response.CommentListResponse;
 import com.example.shortudy.domain.comment.dto.response.CommentResponse;
 import com.example.shortudy.domain.comment.dto.response.ReplyResponse;
+import com.example.shortudy.domain.comment.dto.response.WriterResponse;
 import com.example.shortudy.domain.comment.entity.Comment;
 import com.example.shortudy.domain.comment.entity.CommentReport;
 import com.example.shortudy.domain.comment.entity.CommentStatus;
@@ -14,6 +15,7 @@ import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
 import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.domain.user.repository.UserRepository;
+import com.example.shortudy.global.config.S3Service;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
 import java.util.HashSet;
@@ -32,13 +34,15 @@ public class CommentService {
     private final ShortsRepository shortsRepository;
     private final UserRepository userRepository;
     private final CommentCountProvider commentCountProvider;
+    private final S3Service s3Service;
 
-    public CommentService(CommentRepository commentRepository, CommentReportRepository commentReportRepository,ShortsRepository shortsRepository, UserRepository userRepository, CommentCountProvider commentCountProvider) {
+    public CommentService(CommentRepository commentRepository, CommentReportRepository commentReportRepository,ShortsRepository shortsRepository, UserRepository userRepository, CommentCountProvider commentCountProvider, S3Service s3Service) {
         this.commentRepository = commentRepository;
         this.commentReportRepository = commentReportRepository;
         this.shortsRepository = shortsRepository;
         this.userRepository = userRepository;
         this.commentCountProvider = commentCountProvider;
+        this.s3Service = s3Service;
     }
 
     // 댓글 생성
@@ -69,13 +73,14 @@ public class CommentService {
             : new HashSet<>(commentReportRepository.findReportedCommentIds(myIdOrNull, parentIds));
 
 
+        // TODO : 여기서 getFileUrl() 호출하는 부분 최적화 필요
         List<CommentResponse> commentResponses = comments.stream()
-                .map(c -> CommentResponse.from(
+                .map(c -> convertProfileUrl(CommentResponse.from(
                                 myIdOrNull,
                                 c,
                                 replyCountMap.getOrDefault(c.getId(), 0L),
                                 reportedIds.contains(c.getId())
-                        )
+                        ))
                 ).toList();
 
         // 전체 댓글 수 조회 (대댓글 포함, ACTIVE 상태만)
@@ -200,11 +205,11 @@ public class CommentService {
             : new HashSet<>(commentReportRepository.findReportedCommentIds(myIdOrNull, replyIds));
 
         return replies.stream()
-            .map(r -> ReplyResponse.from(
+            .map(r -> convertReplyUrl(ReplyResponse.from(
                 r,
                 myIdOrNull,
                 reportedReplyIds.contains(r.getId())
-            ))
+            )))
             .toList();
     }
 
@@ -234,4 +239,39 @@ public class CommentService {
 //        long replyCount = replyCountMap.getOrDefault(comment.getId(), 0L);
 //        return CommentResponse.from(meIdOrNull, comment, replyCount);
 //    }
+
+    private CommentResponse convertProfileUrl(CommentResponse response) {
+        String convertedProfileUrl = s3Service.getFileUrl(response.writer().profileImageUrl());
+        return new CommentResponse(
+                response.shortsId(),
+                response.commentId(),
+                response.content(),
+                response.createdAt(),
+                new WriterResponse(
+                        response.writer().userId(),
+                        response.writer().nickname(),
+                        convertedProfileUrl
+                ),
+                response.replyCount(),
+                response.isMine(),
+                response.isReported()
+        );
+    }
+
+    private ReplyResponse convertReplyUrl(ReplyResponse response) {
+        String convertedProfileUrl = s3Service.getFileUrl(response.writer().profileImageUrl());
+        return new ReplyResponse(
+                response.replyId(),
+                response.parentId(),
+                response.content(),
+                response.createdAt(),
+                new WriterResponse(
+                        response.writer().userId(),
+                        response.writer().nickname(),
+                        convertedProfileUrl
+                ),
+                response.isMine(),
+                response.isReported()
+        );
+    }
 }

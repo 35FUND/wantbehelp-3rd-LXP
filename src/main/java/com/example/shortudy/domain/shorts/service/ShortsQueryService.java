@@ -1,8 +1,11 @@
 package com.example.shortudy.domain.shorts.service;
 
 import com.example.shortudy.domain.shorts.dto.ShortsResponse;
+import com.example.shortudy.domain.shorts.dto.ShortsStatusDescriptionResponse;
 import com.example.shortudy.domain.shorts.entity.Shorts;
+import com.example.shortudy.domain.shorts.entity.ShortsInspectionResults;
 import com.example.shortudy.domain.shorts.entity.ShortsStatus;
+import com.example.shortudy.domain.shorts.repository.ShortsInspectionResultsRepository;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
 import com.example.shortudy.domain.shorts.view.repository.RedisShortsViewCountRepository;
 import com.example.shortudy.global.config.S3Service;
@@ -29,6 +32,7 @@ import java.util.stream.Collectors;
 public class ShortsQueryService {
 
     private final ShortsRepository shortsRepository;
+    private final ShortsInspectionResultsRepository shortsInspectionResultsRepository;
     private final RedisShortsViewCountRepository redisShortsViewCountRepository;
     private final S3Service s3Service;
 
@@ -67,7 +71,6 @@ public class ShortsQueryService {
     public Page<ShortsResponse> getPopularShorts(Integer days, Pageable pageable, Long userId) {
         if (days == null || days <= 0) days = 30;
         LocalDateTime since = LocalDateTime.now().minusDays(days);
-        // TODO : 이 부분에서 키워드가 채워지지 않는 이슈 있음.
         Page<ShortsResponse> responses = shortsRepository.findPopularResponses(since, userId, pageable);
         Page<ShortsResponse> enriched = enrichAll(responses);
         return fillKeywords(enriched);
@@ -76,10 +79,29 @@ public class ShortsQueryService {
     /**
      * 내 쇼츠 조회 - 내가 작성한 숏츠 목록을 집계 데이터와 함께 조회합니다.
      */
-    public Page<ShortsResponse> getMyShorts(Long userId, Pageable pageable) {
+    public Page<ShortsStatusDescriptionResponse> getMyShorts(Long userId, Pageable pageable) {
         Page<ShortsResponse> responses = shortsRepository.findMyResponses(userId, pageable);
         Page<ShortsResponse> enriched = enrichAll(responses);
-        return fillKeywords(enriched);
+        Page<ShortsResponse> withKeywords = fillKeywords(enriched);
+
+        // 1) 이번 페이지의 shortsId만 뽑아서
+        List<Long> shortsIds = withKeywords.getContent().stream()
+            .map(ShortsResponse::shortsId)
+            .toList();
+
+        // 2) 한방 조회 후 Map으로 변환 (shortsId -> reason)
+        Map<Long, String> reasonMap = shortsInspectionResultsRepository.findByShortsIdIn(shortsIds).stream()
+            .collect(Collectors.toMap(
+                r -> r.getShorts().getId(),   // 혹은 r.getShortsId() 형태면 그걸로
+                ShortsInspectionResults::getReason,
+                (a, b) -> a // 중복 시 첫 값 사용(보통은 중복 없어야 정상)
+            ));
+
+        // 3) 응답 매핑
+        return withKeywords.map(shorts -> {
+            String desc = reasonMap.get(shorts.shortsId()); // 없으면 null
+            return ShortsStatusDescriptionResponse.of(shorts, desc);
+        });
     }
 
     /**
