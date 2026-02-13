@@ -6,6 +6,7 @@ import com.example.shortudy.domain.playlist.dto.request.PlaylistCreateRequest;
 import com.example.shortudy.domain.playlist.dto.request.PlaylistShortsAddRequest;
 import com.example.shortudy.domain.playlist.dto.request.PlaylistShortsReorderRequest;
 import com.example.shortudy.domain.playlist.dto.request.PlaylistUpdateRequest;
+import com.example.shortudy.domain.playlist.dto.response.OwnerInfo;
 import com.example.shortudy.domain.playlist.dto.response.PlaylistDetailResponse;
 import com.example.shortudy.domain.playlist.dto.response.PlaylistResponse;
 import com.example.shortudy.domain.playlist.entity.Playlist;
@@ -17,6 +18,7 @@ import com.example.shortudy.domain.shorts.entity.Shorts;
 import com.example.shortudy.domain.shorts.repository.ShortsRepository;
 import com.example.shortudy.domain.user.entity.User;
 import com.example.shortudy.domain.user.repository.UserRepository;
+import com.example.shortudy.global.config.S3Service;
 import com.example.shortudy.global.error.BaseException;
 import com.example.shortudy.global.error.ErrorCode;
 import org.hibernate.Hibernate;
@@ -38,6 +40,7 @@ public class PlaylistService {
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
     private final ShortsLikeRepository shortsLikeRepository;
+    private final S3Service s3Service;
 
 
     public PlaylistService(
@@ -46,7 +49,8 @@ public class PlaylistService {
             ShortsRepository shortsRepository,
             UserRepository userRepository,
             CommentRepository commentRepository,
-            ShortsLikeRepository shortsLikeRepository
+            ShortsLikeRepository shortsLikeRepository,
+            S3Service s3Service
     ) {
         this.playlistRepository = playlistRepository;
         this.playlistShortsRepository = playlistShortsRepository;
@@ -54,6 +58,7 @@ public class PlaylistService {
         this.userRepository = userRepository;
         this.commentRepository = commentRepository;
         this.shortsLikeRepository = shortsLikeRepository;
+        this.s3Service = s3Service;
     }
 
     /**
@@ -97,7 +102,7 @@ public class PlaylistService {
 
         // 6. DB에 저장하고 응답 DTO로 변환하여 반환
         Playlist saved = playlistRepository.save(playlist);
-        return PlaylistResponse.from(saved);
+        return convertProfileUrl(PlaylistResponse.from(saved));
     }
 
     /**
@@ -159,7 +164,7 @@ public class PlaylistService {
             }
         }
 
-        return PlaylistResponse.from(playlist);
+        return convertProfileUrl(PlaylistResponse.from(playlist));
     }
 
     /**
@@ -185,7 +190,8 @@ public class PlaylistService {
      */
     public Page<PlaylistResponse> getMyPlaylists(Long userId, Pageable pageable) {
         return playlistRepository.findByUserId(userId, pageable)
-                .map(PlaylistResponse::from);
+                .map(PlaylistResponse::from)
+                .map(this::convertProfileUrl);
     }
 
     /**
@@ -193,7 +199,8 @@ public class PlaylistService {
      */
     public Page<PlaylistResponse> getUserPublicPlaylists(Long targetUserId, Pageable pageable) {
         return playlistRepository.findByUserId(targetUserId, pageable)
-                .map(PlaylistResponse::from);
+                .map(PlaylistResponse::from)
+                .map(this::convertProfileUrl);
     }
 
     /**
@@ -201,7 +208,8 @@ public class PlaylistService {
      */
     public Page<PlaylistResponse> getPublicPlaylists(Pageable pageable) {
         return playlistRepository.findByVisibility(PlaylistVisibility.PUBLIC, pageable)
-                .map(PlaylistResponse::from);
+                .map(PlaylistResponse::from)
+                .map(this::convertProfileUrl);
     }
 
     public Page<PlaylistResponse> searchPublicPlaylists(String query, Pageable pageable) {
@@ -212,7 +220,8 @@ public class PlaylistService {
                 query,
                 PlaylistVisibility.PUBLIC,
                 pageable
-        ).map(PlaylistResponse::from);
+        ).map(PlaylistResponse::from)
+        .map(this::convertProfileUrl);
     }
 
     /**
@@ -259,7 +268,11 @@ public class PlaylistService {
         return idPage.map(id -> items.stream()
                 .filter(ps -> ps.getId().equals(id))
                 .findFirst()
-                .map(ps -> PlaylistDetailResponse.PlaylistShortsItem.from(ps, commentCounts, likedShortsIds))
+                .map(ps -> {
+                    PlaylistDetailResponse.PlaylistShortsItem dto =
+                            PlaylistDetailResponse.PlaylistShortsItem.from(ps, commentCounts, likedShortsIds);
+                    return convertProfileUrl(dto);
+                })
                 .orElse(null));
     }
 
@@ -470,7 +483,7 @@ public class PlaylistService {
         Map<Long, Long> commentCounts = getCommentCounts(shortsIds);
         Set<Long> likedShortsIds = getLikedShortsIds(currentUserId, shortsIds);
 
-        return PlaylistDetailResponse.from(playlist, commentCounts, likedShortsIds);
+        return convertProfileUrl(PlaylistDetailResponse.from(playlist, commentCounts, likedShortsIds));
     }
 
     /**
@@ -521,5 +534,102 @@ public class PlaylistService {
         return shortsLikeRepository.findByUserIdAndShortsIdIn(currentUserId, shortsIds).stream()
                 .map(like -> like.getShorts().getId())
                 .collect(Collectors.toSet());
+    }
+
+
+    // 유저 프로필 URL S3 매핑해주기
+    private PlaylistResponse convertProfileUrl(PlaylistResponse response) {
+        String convertedUrl = s3Service.getFileUrl(response.owner().profileUrl());
+        return new PlaylistResponse(
+                response.id(),
+                response.title(),
+                response.description(),
+                response.visibility(),
+                response.thumbnailUrl(),
+                response.thumbnailCustom(),
+                response.shortsCount(),
+                new OwnerInfo(
+                        response.owner().id(),
+                        response.owner().nickname(),
+                        convertedUrl
+                ),
+                response.createdAt(),
+                response.updatedAt()
+        );
+    }
+
+    private PlaylistDetailResponse convertProfileUrl(PlaylistDetailResponse response) {
+        // owner.profileUrl null-safe 변환
+        String ownerProfile = response.owner() != null ? response.owner().profileUrl() : null;
+        String convertedOwnerUrl = ownerProfile == null ? null : s3Service.getFileUrl(ownerProfile);
+
+        // items 내부의 uploader.profileUrl도 변환 (null-safe)
+        List<PlaylistDetailResponse.PlaylistShortsItem> convertedItems = null;
+        if (response.items() != null) {
+            convertedItems = response.items().stream()
+                    .map(this::convertProfileUrl)
+                    .toList();
+        }
+
+        return new PlaylistDetailResponse(
+                response.id(),
+                response.title(),
+                response.description(),
+                response.visibility(),
+                response.thumbnailUrl(),
+                response.thumbnailCustom(),
+                response.shortsCount(),
+                new OwnerInfo(
+                        response.owner() != null ? response.owner().id() : null,
+                        response.owner() != null ? response.owner().nickname() : null,
+                        convertedOwnerUrl
+                ),
+                convertedItems,
+                response.createdAt(),
+                response.updatedAt()
+        );
+    }
+
+    // PlaylistShortsItem 내부의 업로더 프로필 URL을 S3 URL로 변환
+    private PlaylistDetailResponse.PlaylistShortsItem convertProfileUrl(PlaylistDetailResponse.PlaylistShortsItem item) {
+        if (item == null) return null;
+
+        PlaylistDetailResponse.ShortsInfo s = item.shorts();
+        PlaylistDetailResponse.UploaderInfo uploader = s.uploader();
+
+        String converted = s3Service.getFileUrl(uploader.profileUrl());
+
+        PlaylistDetailResponse.UploaderInfo newUploader = new PlaylistDetailResponse.UploaderInfo(
+                uploader.id(),
+                uploader.nickname(),
+                converted
+        );
+
+        PlaylistDetailResponse.ShortsInfo newShorts = new PlaylistDetailResponse.ShortsInfo(
+                s.shortsId(),
+                s.title(),
+                s.description(),
+                s.videoUrl(),
+                s.thumbnailUrl(),
+                s.durationSec(),
+                s.status(),
+                newUploader,
+                s.category(),
+                s.keywords(),
+                s.viewCount(),
+                s.likeCount(),
+                s.commentCount(),
+                s.createdAt(),
+                s.updatedAt(),
+                s.isLiked(),
+                s.visibility()
+        );
+
+        return new PlaylistDetailResponse.PlaylistShortsItem(
+                item.itemId(),
+                item.position(),
+                newShorts,
+                item.addedAt()
+        );
     }
 }
